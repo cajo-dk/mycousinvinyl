@@ -17,3 +17,4 @@ TRUNCATE TABLE
   discogs_cache_releases
 CASCADE;
 
+
