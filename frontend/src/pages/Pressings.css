@@ -1,0 +1,256 @@
+.pressings-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pressings-search {
+  margin-bottom: 2rem;
+}
+
+.pressings-search form {
+  display: flex;
+  gap: 1rem;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #ff6b35;
+}
+
+.search-button {
+  padding: 0.75rem 2rem;
+  background-color: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover {
+  background-color: #ff8555;
+}
+
+/* Hierarchical grouping styles */
+.pressings-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.artist-group {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.artist-header {
+  padding: 1rem 1.5rem;
+  background-color: #222;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: background-color 0.2s;
+  user-select: none;
+}
+
+.artist-header:hover {
+  background-color: #2a2a2a;
+}
+
+.expand-icon {
+  color: #ff6b35;
+  font-size: 0.8rem;
+  min-width: 1rem;
+  display: inline-block;
+}
+
+.artist-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.5rem;
+  flex: 1;
+}
+
+.artist-count {
+  color: #999;
+  font-size: 0.9rem;
+  font-weight: normal;
+}
+
+.albums-list {
+  padding: 0;
+}
+
+.album-section {
+  border-top: 1px solid #333;
+}
+
+.album-header {
+  padding: 0.75rem 1.5rem 0.75rem 3rem;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: background-color 0.2s;
+  user-select: none;
+}
+
+.album-header:hover {
+  background-color: #252525;
+}
+
+.album-header h3 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.2rem;
+  flex: 1;
+}
+
+.album-year {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.pressing-count {
+  color: #999;
+  font-size: 0.85rem;
+  font-weight: normal;
+}
+
+.masters-list {
+  padding: 0;
+}
+
+.master-section {
+  border-top: 1px solid #333;
+}
+
+.master-header {
+  padding: 0.75rem 1.5rem 0.75rem 4.5rem;
+  background-color: #1a1a1a;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: background-color 0.2s;
+  user-select: none;
+}
+
+.master-header:hover {
+  background-color: #252525;
+}
+
+.master-title {
+  margin: 0;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 500;
+  flex: 1;
+}
+
+.master-count {
+  color: #999;
+  font-size: 0.85rem;
+  font-weight: normal;
+}
+
+.pressing-table {
+  margin: 0;
+  border-top: none;
+}
+
+.pressing-table thead {
+  background-color: #2a2a2a;
+}
+
+.pressing-table tbody tr:hover {
+  background-color: #252525;
+}
+
+.pressing-cover-cell {
+  width: 64px;
+}
+
+.pressing-cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.pressing-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.owned-cell {
+  width: 70px;
+  text-align: center;
+}
+
+.owned-cell .owners-grid {
+  margin: 0 auto;
+}
+
+.pressing-master-badge {
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: #ffd27a;
+  color: #3b2a00;
+}
+
+.btn-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #218838;
+}
+
+@media (max-width: 768px) {
+  .pressings-search form {
+    flex-direction: column;
+  }
+
+  .search-button {
+    width: 100%;
+  }
+
+  .artist-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .album-header h3 {
+    font-size: 1rem;
+  }
+}

@@ -1,0 +1,94 @@
+.album-wizard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Step Indicator */
+.wizard-steps {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid #2d6a6a;
+}
+
+.wizard-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.wizard-step.active {
+  opacity: 1;
+}
+
+.wizard-step.completed {
+  opacity: 0.7;
+}
+
+.wizard-step-number {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  background: #2d6a6a;
+  color: #e0e0e0;
+  border: 2px solid #2d6a6a;
+}
+
+.wizard-step.active .wizard-step-number {
+  background: #3d8a8a;
+  border-color: #4d9a9a;
+  box-shadow: 0 0 0 3px rgba(77, 154, 154, 0.2);
+}
+
+.wizard-step.completed .wizard-step-number {
+  background: #2d7a2d;
+  border-color: #3d9a3d;
+}
+
+.wizard-step.completed .wizard-step-number::after {
+  content: '✓';
+  position: absolute;
+}
+
+.wizard-step-label {
+  font-size: 0.9rem;
+  color: #b0b0b0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.wizard-step.active .wizard-step-label {
+  color: #e0e0e0;
+  font-weight: 500;
+}
+
+/* Content Area */
+.wizard-content {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(70vh - 250px);
+}
+
+/* Navigation */
+.wizard-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid #2d6a6a;
+}
+
+.wizard-navigation button {
+  min-width: 100px;
+}

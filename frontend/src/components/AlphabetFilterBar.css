@@ -1,0 +1,50 @@
+.alphabet-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 20px 0 1rem;
+}
+
+.alphabet-filter--panel {
+  margin: 0.2rem 0 0;
+}
+
+.alphabet-filter-button {
+  width: 25px;
+  min-width: 25px;
+  height: 25px;
+  border-radius: 6px;
+  border: 1px solid #3a3a3a;
+  background: #1f1f1f;
+  color: #888;
+  font-size: 0.81rem;
+  font-weight: 600;
+  cursor: default;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.alphabet-filter-button.is-enabled {
+  cursor: pointer;
+  color: #ddd;
+  border-color: #4a4a4a;
+}
+
+.alphabet-filter-button.is-enabled:hover {
+  background: #2a2a2a;
+  border-color: #666;
+}
+
+.alphabet-filter-button.is-active {
+  background: #1f5fcc;
+  border-color: #1f5fcc;
+  color: #fff;
+}
+
+.alphabet-filter-button.is-active:hover {
+  background: #235fd0;
+  border-color: #235fd0;
+}
+
+.alphabet-filter-button.is-disabled {
+  opacity: 0.4;
+}

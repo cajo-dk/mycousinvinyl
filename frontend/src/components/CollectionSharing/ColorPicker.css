@@ -1,0 +1,130 @@
+/**
+ * ColorPicker Component Styles
+ *
+ * Provides styling for dual-input color picker with HTML5 color input
+ * and text input for hex code entry.
+ */
+
+.color-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.color-picker-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #999;
+}
+
+.color-picker-inputs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  flex-wrap: wrap;
+}
+
+.color-picker-visual {
+  /* HTML5 color input */
+  width: 60px;
+  height: 40px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #fff;
+}
+
+.color-picker-visual:hover {
+  border-color: #1976d2;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.15);
+}
+
+.color-picker-visual:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.color-picker-text {
+  flex: 1;
+  max-width: 140px;
+  height: 40px;
+  padding: 0 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+
+.color-picker-text:hover {
+  border-color: #bdbdbd;
+}
+
+.color-picker-text:focus {
+  outline: none;
+  border-color: #1976d2;
+  box-shadow: 0 0 0 3px rgba(25, 118, 210, 0.1);
+}
+
+.color-picker-text-invalid {
+  border-color: #d32f2f;
+  background-color: #ffebee;
+}
+
+.color-picker-text-invalid:focus {
+  border-color: #d32f2f;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1);
+}
+
+.color-picker-text:disabled,
+.color-picker-visual:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.color-picker-transparent-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #999;
+  cursor: pointer;
+  user-select: none;
+}
+
+.color-picker-checkbox {
+  cursor: pointer;
+}
+
+.color-picker-error {
+  position: absolute;
+  top: 100%;
+  left: 72px; /* Offset by width of visual picker + gap */
+  margin-top: 4px;
+  font-size: 12px;
+  color: #d32f2f;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .color-picker-inputs {
+    flex-wrap: wrap;
+  }
+
+  .color-picker-text {
+    max-width: 100%;
+  }
+
+  .color-picker-error {
+    position: static;
+    white-space: normal;
+  }
+}

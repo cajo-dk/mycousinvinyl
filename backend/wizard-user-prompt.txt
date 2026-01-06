@@ -1,0 +1,5 @@
+Look at the provided image and extract the Artist Name and the Album Name. If you are unable to determine the name of an artist or of an album, you must truthfully answer "I don't know" for that name.
+
+Also, indicate if the provided input is a valid image.
+
+Your answer MUST be a JSON o bject.

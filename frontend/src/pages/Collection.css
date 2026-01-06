@@ -1,0 +1,364 @@
+.collection {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.collection-header {
+  margin-bottom: 2rem;
+}
+
+.collection-header h1 {
+  font-size: 2rem;
+  margin: 0 0 0.5rem 0;
+  color: #fff;
+}
+
+.collection-header p {
+  color: #999;
+  margin: 0;
+  font-size: 1rem;
+}
+
+.collection-search {
+  margin-bottom: 2rem;
+}
+
+.collection-search form {
+  display: flex;
+  gap: 1rem;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #ff6b35;
+}
+
+.search-button {
+  padding: 0.75rem 2rem;
+  background-color: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover {
+  background-color: #ff8555;
+}
+
+/* Hierarchical grouping styles */
+.collection-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.artist-group {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.artist-header {
+  padding: 1rem 1.5rem;
+  background-color: #222;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: background-color 0.2s;
+  user-select: none;
+}
+
+.artist-header:hover {
+  background-color: #2a2a2a;
+}
+
+.expand-icon {
+  color: #ff6b35;
+  font-size: 0.8rem;
+  min-width: 1rem;
+  display: inline-block;
+}
+
+.artist-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.5rem;
+  flex: 1;
+}
+
+.artist-count {
+  color: #999;
+  font-size: 0.9rem;
+  font-weight: normal;
+}
+
+.albums-list {
+  padding: 0;
+}
+
+.album-section {
+  border-top: 1px solid #333;
+}
+
+.album-table {
+  margin: 0;
+}
+
+.album-table thead {
+  background-color: #2a2a2a;
+}
+
+.album-table tbody tr:hover {
+  background-color: #252525;
+}
+
+.collection-cover-cell {
+  width: 64px;
+}
+
+.collection-cover {
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.collection-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.owned-cell {
+  width: 70px;
+  text-align: center;
+}
+
+.owned-cell .owners-grid {
+  margin: 0 auto;
+}
+
+.collection-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.collection-item-card {
+  transition: all 0.2s;
+}
+
+.collection-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.collection-item-main {
+  flex: 1;
+}
+
+.collection-item-main h3 {
+  margin: 0 0 1rem 0;
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.collection-item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #999;
+  min-width: 100px;
+}
+
+.condition-badge {
+  background-color: #2a2a2a;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ff6b35;
+}
+
+.collection-item-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.rating {
+  font-size: 1.2rem;
+}
+
+.play-count,
+.date-added {
+  white-space: nowrap;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-state h2 {
+  color: #fff;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: #999;
+}
+
+/* Album title with updated date */
+.album-title-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.album-title {
+  color: #fff;
+  font-weight: 500;
+}
+
+.album-updated {
+  color: #999;
+  font-size: 0.75rem;
+}
+
+/* Estimated price styling */
+.estimated-price {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.price-line {
+  color: #ccc;
+  font-size: 0.85rem;
+}
+
+.price-median {
+  color: #fff;
+  font-weight: 600;
+}
+
+.price-pending {
+  color: #666;
+  font-style: italic;
+}
+
+@media (max-width: 768px) {
+  .collection-item {
+    flex-direction: column;
+  }
+
+  .collection-item-meta {
+    align-items: flex-start;
+  }
+
+  .collection-search form {
+    flex-direction: column;
+  }
+
+  .search-button {
+    width: 100%;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 499px) {
+  .album-table .col-year,
+  .album-table .col-purchase,
+  .album-table .col-est,
+  .album-table .col-condition,
+  .album-table .col-owned {
+    display: none;
+  }
+
+  .album-table .btn-action-edit,
+  .album-table .btn-action-delete {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) and (min-width: 500px) and (max-width: 999px) {
+  .album-table .col-year,
+  .album-table .col-purchase,
+  .album-table .col-est,
+  .album-table .col-owned {
+    display: none;
+  }
+
+  .album-table .btn-action-edit,
+  .album-table .btn-action-delete {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) and (min-width: 1000px) and (max-width: 1139px) {
+  .album-table .actions-cell {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    justify-content: end;
+    gap: 0.35rem 0.5rem;
+  }
+
+  .album-table .actions-cell .btn-action {
+    margin-left: 0;
+  }
+
+  .album-table .btn-action-view {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .album-table .btn-action-edit {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .album-table .btn-action-delete {
+    grid-column: 2;
+    grid-row: 2;
+  }
+}

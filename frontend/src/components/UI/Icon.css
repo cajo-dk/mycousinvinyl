@@ -1,0 +1,10 @@
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.btn-icon {
+  margin-right: 0.5rem;
+}

@@ -1,0 +1,89 @@
+name: MyCousinVinyl
+slug: mycousinvinyl
+version: 0.1.0
+description: MyCousinVinyl single-container stack with MQTT support.
+arch:
+  - amd64
+  - aarch64
+  - armv7
+startup: services
+boot: auto
+init: false
+ports:
+  80/tcp: 3000
+  8000/tcp: 8000
+  8001/tcp: 8001
+ports_description:
+  80/tcp: Web UI (nginx)
+  8000/tcp: API (FastAPI)
+  8001/tcp: Discogs service
+webui: "http://[HOST]:[PORT:80]"
+panel_icon: mdi:album
+options:
+  message_broker: mqtt
+  mqtt_url: mqtt://core-mosquitto:1883
+  mqtt_username: ""
+  mqtt_password: ""
+  mqtt_topic_prefix: MyCousinVinyl
+  activemq_url: stomp://activemq:61613
+  database_url: postgresql://postgres:postgres@core-postgres:5432/mycousinvinyl
+  activity_topic: /topic/system.activity
+  activity_bridge_url: http://127.0.0.1:8000
+  activity_bridge_token: ""
+  azure_tenant_id: ""
+  azure_client_id: ""
+  azure_audience: ""
+  azure_group_admin: ""
+  azure_group_editor: ""
+  azure_group_viewer: ""
+  discogs_service_url: http://127.0.0.1:8001
+  discogs_user_agent: MyCousinVinyl/1.0
+  discogs_key: ""
+  discogs_secret: ""
+  discogs_oauth_token: ""
+  discogs_oauth_token_secret: ""
+  album_wizard_api_url: ""
+  album_wizard_api_key: ""
+  album_wizard_model_id: ""
+  log_level: INFO
+  vite_api_url: ""
+  vite_azure_client_id: ""
+  vite_azure_tenant_id: ""
+  vite_azure_redirect_uri: ""
+  vite_azure_group_admin: ""
+  vite_debug_admin: false
+  vite_debug_nav: false
+schema:
+  message_broker: list(mqtt|activemq)
+  mqtt_url: str
+  mqtt_username: str
+  mqtt_password: str
+  mqtt_topic_prefix: str
+  activemq_url: str
+  database_url: str
+  activity_topic: str
+  activity_bridge_url: str
+  activity_bridge_token: str
+  azure_tenant_id: str
+  azure_client_id: str
+  azure_audience: str
+  azure_group_admin: str
+  azure_group_editor: str
+  azure_group_viewer: str
+  discogs_service_url: str
+  discogs_user_agent: str
+  discogs_key: str
+  discogs_secret: str
+  discogs_oauth_token: str
+  discogs_oauth_token_secret: str
+  album_wizard_api_url: str
+  album_wizard_api_key: str
+  album_wizard_model_id: str
+  log_level: str
+  vite_api_url: str
+  vite_azure_client_id: str
+  vite_azure_tenant_id: str
+  vite_azure_redirect_uri: str
+  vite_azure_group_admin: str
+  vite_debug_admin: bool
+  vite_debug_nav: bool

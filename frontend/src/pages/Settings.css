@@ -1,0 +1,301 @@
+.settings-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.settings-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.settings-tab {
+  border: 1px solid #333;
+  background: #141414;
+  color: #cfcfcf;
+  padding: 0.45rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.settings-tab.active {
+  border-color: #ff6b35;
+  color: #fff;
+  background: #1a1a1a;
+}
+
+.settings-section {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.settings-section-header h2 {
+  margin: 0 0 0.25rem 0;
+  color: #fff;
+}
+
+.settings-section-header p {
+  margin: 0 0 1rem 0;
+  color: #999;
+}
+
+.settings-form-row {
+  display: grid;
+  grid-template-columns: 1.2fr 2fr 0.8fr auto;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.settings-form-row--compact {
+  grid-template-columns: 1fr auto;
+}
+
+.settings-form-row input,
+.settings-form-row select {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 4px;
+  padding: 0.5rem 0.65rem;
+}
+
+.settings-form-row input:focus,
+.settings-form-row select:focus {
+  outline: none;
+  border-color: #ff6b35;
+}
+
+.settings-section .table-container {
+  margin: 0;
+}
+
+.settings-section .data-table input,
+.settings-section .data-table select {
+  width: 100%;
+  background-color: #111;
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 4px;
+  padding: 0.4rem 0.5rem;
+}
+
+.settings-section .data-table input:focus,
+.settings-section .data-table select:focus {
+  outline: none;
+  border-color: #ff6b35;
+}
+
+.settings-section .empty-cell {
+  text-align: center;
+  color: #777;
+}
+
+.import-status {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #111;
+  color: #cfcfcf;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.import-status--error {
+  border-color: #9f2d2d;
+  color: #f1b2b2;
+  background: #1a1010;
+}
+
+.import-status--success {
+  border-color: #2f6f3d;
+  color: #c3e6c9;
+  background: #101a12;
+}
+
+.import-connection {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.settings-section--import .import-connection-status {
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.settings-section--import .import-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 300px;
+}
+
+.settings-section--import .import-field label {
+  font-weight: 500;
+  color: #fff;
+  font-size: 0.9rem;
+}
+
+.settings-section--import .import-field input {
+  padding: 0.75rem;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.settings-section--import .import-field input:focus {
+  outline: none;
+  border-color: #007bff;
+  background: #333;
+}
+
+.import-pat-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.import-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.import-csv-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.settings-section--import .import-csv-row input[type="file"] {
+  padding: 0.5rem;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #ddd;
+  font-size: 1rem;
+  font-family: inherit;
+  flex: 1;
+  min-width: 240px;
+}
+
+.import-connection-status {
+  color: #cfcfcf;
+  font-size: 0.9rem;
+}
+
+.import-divider {
+  margin: 1rem 0 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #2a2a2a;
+  color: #999;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.import-status-rows {
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.import-status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  background: #151515;
+  border: 1px solid #2a2a2a;
+  font-size: 0.85rem;
+}
+
+.import-status-row--success {
+  border-color: rgba(58, 168, 85, 0.5);
+  color: #bfe7c9;
+}
+
+.import-status-row--fail {
+  border-color: rgba(190, 72, 72, 0.5);
+  color: #f1b2b2;
+}
+
+.follows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+}
+
+.follows-status {
+  padding: 20px;
+  text-align: center;
+  color: #cfcfcf;
+}
+
+.follows-status--empty {
+  color: #777;
+}
+
+.follow-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background-color: #151515;
+}
+
+.follow-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
+}
+
+.follow-item-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.follow-item-name {
+  font-weight: 500;
+  font-size: 14px;
+  color: #fff;
+}
+
+.follow-item-handle {
+  font-size: 12px;
+  color: #999;
+}
+
+@media (max-width: 900px) {
+  .settings-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .follows-list {
+    max-width: 100%;
+  }
+
+  .settings-section--import .import-field {
+    width: 100%;
+  }
+}

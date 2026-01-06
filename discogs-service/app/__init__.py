@@ -1,0 +1,3 @@
+"""
+Discogs service package.
+"""

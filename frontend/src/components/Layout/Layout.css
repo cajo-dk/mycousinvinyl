@@ -1,0 +1,53 @@
+.layout {
+  min-height: 100dvh;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--app-bg);
+}
+
+body.album-wizard-portrait .layout {
+  height: 100%;
+  min-height: 100%;
+}
+
+body.album-wizard-portrait .layout-content {
+  height: 100%;
+}
+
+.layout-content {
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem;
+  animation: app-fade 180ms ease-out;
+}
+
+body.album-wizard-portrait .layout-content {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+@keyframes app-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .layout-content {
+    padding: 1.1rem 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .layout-content {
+    animation: none;
+  }
+}

@@ -1,0 +1,154 @@
+.albums-page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.albums-search {
+  margin-bottom: 2rem;
+}
+
+.albums-search form {
+  display: flex;
+  gap: 1rem;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #ff6b35;
+}
+
+.search-button {
+  padding: 0.75rem 2rem;
+  background-color: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover {
+  background-color: #ff8555;
+}
+
+/* Hierarchical grouping styles */
+.albums-grouped {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.artist-group {
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.artist-header {
+  padding: 1rem 1.5rem;
+  background-color: #222;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: background-color 0.2s;
+  user-select: none;
+}
+
+.artist-header:hover {
+  background-color: #2a2a2a;
+}
+
+.expand-icon {
+  color: #ff6b35;
+  font-size: 0.8rem;
+  min-width: 1rem;
+  display: inline-block;
+}
+
+.artist-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.5rem;
+  flex: 1;
+}
+
+.artist-count {
+  color: #999;
+  font-size: 0.9rem;
+  font-weight: normal;
+}
+
+.albums-list {
+  padding: 0;
+}
+
+.albums-list .data-table {
+  margin: 0;
+  border-top: 1px solid #333;
+}
+
+.albums-list .data-table thead {
+  background-color: #2a2a2a;
+}
+
+.albums-list .data-table tbody tr:hover {
+  background-color: #252525;
+}
+
+.album-cover-cell {
+  width: 60px;
+}
+
+.album-cover {
+  width: 44px;
+  height: 44px;
+  border-radius: 6px;
+  background-color: #2a2a2a;
+  border: 1px solid #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #999;
+}
+
+.album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.owned-cell {
+  width: 70px;
+  text-align: center;
+}
+
+.owned-cell .owners-grid {
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .albums-search form {
+    flex-direction: column;
+  }
+
+  .search-button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "build_from": {
+    "amd64": "python:3.12-slim",
+    "aarch64": "python:3.12-slim",
+    "armv7": "python:3.12-slim"
+  },
+  "args": {
+    "VITE_API_URL": "",
+    "VITE_AZURE_CLIENT_ID": "",
+    "VITE_AZURE_TENANT_ID": "",
+    "VITE_AZURE_REDIRECT_URI": "",
+    "VITE_AZURE_GROUP_ADMIN": "",
+    "VITE_DEBUG_ADMIN": "false",
+    "VITE_DEBUG_NAV": "false"
+  }
+}

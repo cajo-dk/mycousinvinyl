@@ -1,0 +1,25 @@
+services:
+  api:
+    depends_on:
+      activemq:
+        condition: service_healthy
+
+  outbox-processor:
+    depends_on:
+      activemq:
+        condition: service_healthy
+
+  worker:
+    depends_on:
+      activemq:
+        condition: service_healthy
+
+  pricing-worker:
+    depends_on:
+      activemq:
+        condition: service_healthy
+
+  activity-bridge:
+    depends_on:
+      activemq:
+        condition: service_healthy

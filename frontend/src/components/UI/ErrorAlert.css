@@ -1,0 +1,46 @@
+.error-alert {
+  background-color: #2a1515;
+  border: 1px solid #ff4444;
+  border-radius: 8px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+
+.error-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.error-content {
+  flex: 1;
+}
+
+.error-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #ff6b6b;
+  font-size: 1rem;
+}
+
+.error-content p {
+  margin: 0 0 1rem 0;
+  color: #ffcccc;
+  font-size: 0.9rem;
+}
+
+.error-retry-button {
+  background-color: #ff6b35;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.error-retry-button:hover {
+  background-color: #ff8555;
+}

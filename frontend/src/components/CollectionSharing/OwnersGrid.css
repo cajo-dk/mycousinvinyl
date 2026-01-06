@@ -1,0 +1,134 @@
+/**
+ * OwnersGrid Component Styles
+ *
+ * Provides a compact 2×2 grid layout for displaying ownership icons.
+ */
+
+.owners-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  background-color: transparent;
+  box-sizing: border-box;
+}
+
+.owners-grid.owners-grid-row {
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 1fr;
+}
+
+.owners-grid-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.owners-grid-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  cursor: help;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.owners-grid-icon:hover {
+  transform: scale(1.15);
+  z-index: 10;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.owners-grid-fallback {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.owners-grid-empty {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  border-radius: 3px;
+  box-sizing: border-box;
+}
+
+.owners-grid-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 12px;
+  height: 12px;
+  padding: 0 3px;
+  background-color: #d32f2f;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 12px;
+  text-align: center;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+/* Ensure icons scale properly within grid cells */
+.owners-grid-icon svg {
+  display: block;
+}
+
+/* Responsive sizing for different contexts */
+@media (max-width: 768px) {
+  .owners-grid {
+    width: 40px;
+    height: 40px;
+  }
+
+  .owners-grid-badge {
+    font-size: 8px;
+    min-width: 11px;
+    height: 11px;
+    line-height: 11px;
+  }
+}
+
+/* Larger variant for detail pages (optional, use class modifier) */
+.owners-grid.owners-grid-large {
+  width: 60px;
+  height: 60px;
+  gap: 4px;
+  padding: 3px;
+}
+
+.owners-grid.owners-grid-large.owners-grid-row {
+  width: 140px;
+  height: 40px;
+  gap: 6px;
+  padding: 3px;
+}
+
+.owners-grid.owners-grid-large .owners-grid-icon {
+  border-radius: 4px;
+}
+
+.owners-grid.owners-grid-large .owners-grid-badge {
+  min-width: 14px;
+  height: 14px;
+  font-size: 10px;
+  line-height: 14px;
+  border-radius: 7px;
+}
