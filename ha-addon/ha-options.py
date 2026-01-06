@@ -31,6 +31,8 @@ OPTION_KEYS = {
     "album_wizard_api_key": "ALBUM_WIZARD_API_KEY",
     "album_wizard_model_id": "ALBUM_WIZARD_MODEL_ID",
     "log_level": "LOG_LEVEL",
+    "cors_allow_origins": "CORS_ALLOW_ORIGINS",
+    "cors_allow_origin_regex": "CORS_ALLOW_ORIGIN_REGEX",
     "vite_api_url": "VITE_API_URL",
     "vite_azure_client_id": "VITE_AZURE_CLIENT_ID",
     "vite_azure_tenant_id": "VITE_AZURE_TENANT_ID",

@@ -61,7 +61,9 @@ class Settings(BaseSettings):
     album_wizard_model_id: str = ""
 
     # Frontend
-    frontend_base_url: str = "https://ws01.cajo.dk"
+    frontend_base_url: str = "https://example.com"
+    cors_allow_origins: str = ""
+    cors_allow_origin_regex: str = ""
 
     class Config:
         env_file = ".env"

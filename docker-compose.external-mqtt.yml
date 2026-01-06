@@ -1,0 +1,39 @@
+services:
+  activemq:
+    profiles:
+      - activemq
+
+  api:
+    environment:
+      MESSAGE_BROKER: mqtt
+      MQTT_URL: ${MQTT_URL}
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+
+  outbox-processor:
+    environment:
+      MESSAGE_BROKER: mqtt
+      MQTT_URL: ${MQTT_URL}
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+
+  worker:
+    environment:
+      MESSAGE_BROKER: mqtt
+      MQTT_URL: ${MQTT_URL}
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+
+  pricing-worker:
+    environment:
+      MESSAGE_BROKER: mqtt
+      MQTT_URL: ${MQTT_URL}
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+
+  activity-bridge:
+    environment:
+      MESSAGE_BROKER: mqtt
+      MQTT_URL: ${MQTT_URL}
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}

@@ -41,12 +41,12 @@ app = FastAPI(
 # CORS configuration
 settings = get_settings()
 cors_allow_origins = [
-    "https://ws01.cajo.dk",  # Local development
-    "http://localhost:5173",      # Vite dev server
-    "https://mcv.cajo.dk",        # Production
+    origin.strip()
+    for origin in settings.cors_allow_origins.split(",")
+    if origin.strip()
 ]
-cors_allow_origin_regex = None
-if settings.environment.lower() != "production":
+cors_allow_origin_regex = settings.cors_allow_origin_regex or None
+if not cors_allow_origin_regex and settings.environment.lower() != "production":
     cors_allow_origin_regex = r"^http://(localhost|127\.0\.0\.1)(:\d+)?$"
 
 app.add_middleware(

@@ -46,6 +46,8 @@ options:
   album_wizard_api_key: ""
   album_wizard_model_id: ""
   log_level: INFO
+  cors_allow_origins: ""
+  cors_allow_origin_regex: ""
   vite_api_url: ""
   vite_azure_client_id: ""
   vite_azure_tenant_id: ""
@@ -80,6 +82,8 @@ schema:
   album_wizard_api_key: str
   album_wizard_model_id: str
   log_level: str
+  cors_allow_origins: str
+  cors_allow_origin_regex: str
   vite_api_url: str
   vite_azure_client_id: str
   vite_azure_tenant_id: str
