@@ -27,7 +27,15 @@ const httpsConfig = selectedPfxPath
   : undefined
 
 const manifestEnv = (process.env.VITE_MANIFEST_ENV || 'local').toLowerCase()
-const manifestShortName = manifestEnv === 'nas' ? 'MCVinyl' : 'Vinyl-DEV'
+const isHaAddon = manifestEnv === 'nas'
+const manifestShortName = isHaAddon ? 'MCVinyl' : 'MCV-DEV'
+const manifestIcon192 = isHaAddon ? '/icons/icon-192-ha.png' : '/icons/icon-192-dev.png'
+const manifestIcon512 = isHaAddon ? '/icons/icon-512-ha.png' : '/icons/icon-512-dev.png'
+const manifestBackgroundColor = isHaAddon ? '#000000' : '#1d4ed8'
+const manifestThemeColor = manifestBackgroundColor
+const manifestIncludeAssets = isHaAddon
+  ? ['icons/icon-192-ha.png', 'icons/icon-512-ha.png']
+  : ['icons/icon-192-dev.png', 'icons/icon-512-dev.png']
 
 export default defineConfig({
   plugins: [
@@ -38,10 +46,7 @@ export default defineConfig({
       devOptions: {
         enabled: true,
       },
-      includeAssets: [
-        'icons/icon-192.png',
-        'icons/icon-512.png',
-      ],
+      includeAssets: manifestIncludeAssets,
       manifest: {
         name: 'MyCousinVinyl',
         short_name: manifestShortName,
@@ -49,17 +54,17 @@ export default defineConfig({
         start_url: '/',
         scope: '/',
         display: 'standalone',
-        background_color: '#0b0f14',
-        theme_color: '#0b0f14',
+        background_color: manifestBackgroundColor,
+        theme_color: manifestThemeColor,
         icons: [
           {
-            src: '/icons/icon-192.png',
+            src: manifestIcon192,
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any maskable',
           },
           {
-            src: '/icons/icon-512.png',
+            src: manifestIcon512,
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable',
