@@ -11,12 +11,10 @@ import os
 from datetime import datetime
 
 from app.adapters.postgres.discogs_cache_repository_adapter import PostgresDiscogsCacheRepository
+from app.logging_config import configure_logging
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+configure_logging(os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
 
 

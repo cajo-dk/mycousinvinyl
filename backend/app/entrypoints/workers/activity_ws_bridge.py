@@ -14,9 +14,10 @@ from stomp import Connection
 from stomp.listener import ConnectionListener
 
 from app.config import get_settings
+from app.logging_config import configure_logging
 from app.adapters.mqtt.utils import parse_mqtt_url, mqtt_publish_topic
 
-logging.basicConfig(level=logging.INFO)
+configure_logging(get_settings().log_level)
 logger = logging.getLogger(__name__)
 
 

@@ -12,6 +12,7 @@ from typing import Annotated
 import logging
 
 from app.config import get_settings, Settings
+from app.logging_config import configure_logging
 from app.entrypoints.http.auth import get_current_user, User
 from app.entrypoints.http.routers import (
     artists_router,
@@ -28,7 +29,7 @@ from app.entrypoints.http.routers import (
 from app.entrypoints.http.activity_ws import router as activity_ws_router
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+configure_logging(get_settings().log_level)
 logger = logging.getLogger(__name__)
 
 # Create FastAPI app

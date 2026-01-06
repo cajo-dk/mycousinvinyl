@@ -14,6 +14,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from app.config import get_settings
+from app.logging_config import configure_logging
 from app.adapters.postgres.database import AsyncSessionLocal
 from app.adapters.postgres.unit_of_work import SqlAlchemyUnitOfWork
 from app.adapters.postgres.market_data_repository_adapter import MarketDataRepositoryAdapter
@@ -21,7 +22,7 @@ from app.adapters.postgres.pressing_repository_adapter import PressingRepository
 from app.adapters.http.discogs_client import DiscogsClientAdapter
 from app.application.services.pricing_service import PricingService
 
-logging.basicConfig(level=logging.INFO)
+configure_logging(get_settings().log_level)
 logger = logging.getLogger(__name__)
 
 

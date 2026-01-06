@@ -1,0 +1,11 @@
+import logging
+
+
+def configure_logging(log_level: str) -> None:
+    level_name = (log_level or "INFO").upper()
+    level = getattr(logging, level_name, logging.INFO)
+    logging.basicConfig(level=level)
+
+    # SQLAlchemy engine logs are very noisy at INFO; suppress unless debugging.
+    engine_level = logging.INFO if level <= logging.DEBUG else logging.WARNING
+    logging.getLogger("sqlalchemy.engine").setLevel(engine_level)
