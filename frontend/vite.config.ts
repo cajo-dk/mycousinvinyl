@@ -28,7 +28,7 @@ const httpsConfig = selectedPfxPath
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
-  const manifestEnv = (env.VITE_MANIFEST_ENV || process.env.VITE_MANIFEST_ENV || 'local').toLowerCase()
+  const manifestEnv = (env.VITE_MANIFEST_ENV || process.env.VITE_MANIFEST_ENV || 'nas').toLowerCase()
   const isHaAddon = manifestEnv === 'nas'
   const manifestShortName = isHaAddon ? 'MCVinyl' : 'MCV-DEV'
   const manifestIcon192 = isHaAddon ? '/icons/icon-192-ha.png' : '/icons/icon-192-dev.png'
