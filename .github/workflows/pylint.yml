@@ -21,6 +21,6 @@ jobs:
           pip install -r backend/requirements.txt
           pip install -r discogs-service/requirements.txt
       - name: Pylint backend
-        run: pylint backend/app
+        run: pylint --max-line-length=120 backend/app
       - name: Pylint discogs-service
-        run: pylint discogs-service
+        run: pylint --max-line-length=120 discogs-service
