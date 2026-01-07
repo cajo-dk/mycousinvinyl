@@ -271,6 +271,7 @@ services:
         VITE_AZURE_TENANT_ID: ${AZURE_TENANT_ID}
         VITE_AZURE_REDIRECT_URI: ${VITE_AZURE_REDIRECT_URI:-https://example.com}
         VITE_AZURE_GROUP_ADMIN: ${AZURE_GROUP_ADMIN:-}
+        VITE_MANIFEST_ENV: ${VITE_MANIFEST_ENV:-local}
     container_name: mycousinvinyl-frontend
     restart: unless-stopped
     ports:
