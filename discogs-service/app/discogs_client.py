@@ -401,9 +401,6 @@ class DiscogsClient:
         data = await self._get_json_with_retry(url, headers, signed_params)
 
         # Fetch master details to get the title
-        import logging
-        logger = logging.getLogger(__name__)
-
         master_details = await self.get_album(master_id, "master")
         master_title = master_details.get("title")
 
@@ -486,8 +483,6 @@ class DiscogsClient:
         total_count = pagination.get("items", 0)
 
         # Debug logging
-        import logging
-        logger = logging.getLogger(__name__)
         logger.info(f"Pagination data: {pagination}")
         logger.info(f"Total count: {total_count}")
 
