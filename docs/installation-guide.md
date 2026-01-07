@@ -12,6 +12,11 @@ This guide describes how to install, configure, and operate the application in D
 - Dedicated server/NAS: Docker Engine + Docker Compose.
 - Home Assistant add-on: separate add-on repo (single container), if needed.
 
+### Python version note (local tooling)
+
+- For local Python tooling (linters/tests), use Python 3.12 to match CI.
+- On Windows, some dependencies (for example `asyncpg`) need Microsoft C++ Build Tools if you install them outside Docker.
+
 ### docker-compose.yml overview
 
 `docker-compose.yml` defines the main services:

@@ -196,6 +196,7 @@ class LookupRepositoryAdapter(LookupRepository):
         return Country(
             code=model.code,
             name=model.name,
+            created_at=model.created_at,
             display_order=model.display_order
         ) if model else None
 

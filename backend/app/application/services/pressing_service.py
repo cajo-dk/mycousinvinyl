@@ -257,9 +257,6 @@ class PressingService:
             pressing_exists = await self.uow.pressing_repository.exists(pressing_id)
             if not pressing_exists:
                 raise ValueError(f"Pressing {pressing_id} does not exist")
-            sleeve_type_entry = await self.uow.lookup_repository.get_sleeve_type(sleeve_type)
-            if not sleeve_type_entry:
-                raise ValueError(f"Sleeve type '{sleeve_type}' is not configured")
 
         matrix = Matrix(
             pressing_id=pressing_id,

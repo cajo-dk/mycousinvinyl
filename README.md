@@ -43,7 +43,7 @@ MyCousinVinyl/
 
 - Docker Desktop or Docker Engine + Compose
 - Node.js 20+
-- Python 3.12+
+- Python 3.12+ (for local tooling/tests)
 - Azure Entra ID tenant and app registration
 
 ## Quick start (local Docker)

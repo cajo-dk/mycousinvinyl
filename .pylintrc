@@ -1,0 +1,5 @@
+[MESSAGES CONTROL]
+disable=C,R,W,E1102
+
+[FORMAT]
+max-line-length=120
