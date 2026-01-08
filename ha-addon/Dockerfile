@@ -50,7 +50,7 @@ COPY backend /opt/mycousinvinyl/backend
 COPY discogs-service /opt/mycousinvinyl/discogs-service
 
 COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/nginx.conf
 COPY supervisord.conf /etc/supervisord.conf
 COPY run.sh /usr/local/bin/run.sh
 COPY ha-options.py /usr/local/bin/ha-options.py
