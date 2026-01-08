@@ -1,6 +1,6 @@
 name: MyCousinVinyl
 slug: mycousinvinyl
-version: 0.1.0
+version: 0.1.1
 description: MyCousinVinyl single-container stack with MQTT support.
 arch:
   - amd64
@@ -114,3 +114,4 @@ schema:
   vite_azure_group_admin: str
   vite_debug_admin: bool
   vite_debug_nav: bool
+  vite_manifest_env: str

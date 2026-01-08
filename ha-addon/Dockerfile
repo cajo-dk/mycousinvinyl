@@ -44,7 +44,35 @@ COPY ha-addon/nginx.conf /etc/nginx/conf.d/default.conf
 COPY ha-addon/supervisord.conf /etc/supervisord.conf
 COPY ha-addon/run.sh /usr/local/bin/run.sh
 COPY ha-addon/ha-options.py /usr/local/bin/ha-options.py
-COPY ha-addon/write-env-config.py /usr/local/bin/write-env-config.py
+RUN cat <<'PY' > /usr/local/bin/write-env-config.py
+import json
+import os
+from pathlib import Path
+
+
+ENV_KEYS = {
+    "VITE_API_URL": "VITE_API_URL",
+    "VITE_AZURE_CLIENT_ID": "VITE_AZURE_CLIENT_ID",
+    "VITE_AZURE_TENANT_ID": "VITE_AZURE_TENANT_ID",
+    "VITE_AZURE_REDIRECT_URI": "VITE_AZURE_REDIRECT_URI",
+    "VITE_AZURE_GROUP_ADMIN": "VITE_AZURE_GROUP_ADMIN",
+    "VITE_DEBUG_ADMIN": "VITE_DEBUG_ADMIN",
+    "VITE_DEBUG_NAV": "VITE_DEBUG_NAV",
+}
+
+
+def main() -> None:
+    payload = {}
+    for key in ENV_KEYS.values():
+        payload[key] = os.getenv(key, "")
+
+    target = Path("/usr/share/nginx/html/env-config.js")
+    target.write_text("window.__ENV = " + json.dumps(payload) + ";\n")
+
+
+if __name__ == "__main__":
+    main()
+PY
 
 RUN chmod +x /usr/local/bin/run.sh
 
