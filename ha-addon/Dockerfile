@@ -1,4 +1,4 @@
-ARG BUILD_FROM=python:3.12-slim
+ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest
 
 FROM node:20-alpine AS frontend-build
 WORKDIR /app
@@ -25,25 +25,33 @@ FROM ${BUILD_FROM}
 ENV PYTHONUNBUFFERED=1
 WORKDIR /opt/mycousinvinyl
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apk add --no-cache \
+    bash \
     gcc \
+    libffi-dev \
+    musl-dev \
     nginx \
+    openssl-dev \
     postgresql-client \
-    supervisor \
-    && rm -rf /var/lib/apt/lists/*
+    python3 \
+    python3-dev \
+    py3-pip \
+    py3-setuptools \
+    py3-wheel \
+    supervisor
 
 COPY backend/requirements.txt /tmp/backend-requirements.txt
 COPY discogs-service/requirements.txt /tmp/discogs-requirements.txt
-RUN pip install --no-cache-dir -r /tmp/backend-requirements.txt -r /tmp/discogs-requirements.txt
+RUN python3 -m pip install --no-cache-dir -r /tmp/backend-requirements.txt -r /tmp/discogs-requirements.txt
 
 COPY backend /opt/mycousinvinyl/backend
 COPY discogs-service /opt/mycousinvinyl/discogs-service
 
 COPY --from=frontend-build /app/frontend/dist /usr/share/nginx/html
-COPY ha-addon/nginx.conf /etc/nginx/conf.d/default.conf
-COPY ha-addon/supervisord.conf /etc/supervisord.conf
-COPY ha-addon/run.sh /usr/local/bin/run.sh
-COPY ha-addon/ha-options.py /usr/local/bin/ha-options.py
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY supervisord.conf /etc/supervisord.conf
+COPY run.sh /usr/local/bin/run.sh
+COPY ha-options.py /usr/local/bin/ha-options.py
 RUN cat <<'PY' > /usr/local/bin/write-env-config.py
 import json
 import os
