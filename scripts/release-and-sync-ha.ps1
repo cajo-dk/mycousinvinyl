@@ -19,8 +19,8 @@ function Parse-Version {
     if ($clean.StartsWith("v")) {
         $clean = $clean.Substring(1)
     }
-    if ($clean -notmatch '^\d+\.\d+\.\d+$') {
-        throw "Unsupported version format: $Value (expected vX.Y.Z)"
+    if ($clean -notmatch '^\d+\.\d+\.\d+(\.\d+)?$') {
+        throw "Unsupported version format: $Value (expected vX.Y.Z or vX.Y.Z.W)"
     }
     return [Version]$clean
 }
@@ -82,7 +82,20 @@ try {
             throw "No local tags found. Pass -Version vX.Y.Z."
         }
         $latestVersion = Parse-Version $latestTag
-        $nextVersion = New-Object System.Version($latestVersion.Major, $latestVersion.Minor, $latestVersion.Build + 1)
+        if ($latestVersion.Revision -ge 0) {
+            $nextVersion = New-Object System.Version(
+                $latestVersion.Major,
+                $latestVersion.Minor,
+                $latestVersion.Build,
+                $latestVersion.Revision + 1
+            )
+        } else {
+            $nextVersion = New-Object System.Version(
+                $latestVersion.Major,
+                $latestVersion.Minor,
+                $latestVersion.Build + 1
+            )
+        }
         $suggested = "v$nextVersion"
         $input = Read-Host "Release tag (default $suggested)"
         if ($input) {
