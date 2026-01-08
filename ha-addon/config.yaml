@@ -68,6 +68,7 @@ options:
   vite_azure_group_admin: ""
   vite_debug_admin: false
   vite_debug_nav: false
+  vite_manifest_env: ""
 schema:
   message_broker: list(mqtt|activemq)
   mqtt_url: str
