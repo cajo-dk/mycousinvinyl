@@ -33,6 +33,16 @@ OPTION_KEYS = {
     "log_level": "LOG_LEVEL",
     "cors_allow_origins": "CORS_ALLOW_ORIGINS",
     "cors_allow_origin_regex": "CORS_ALLOW_ORIGIN_REGEX",
+    "backup_schedule_days": "BACKUP_SCHEDULE_DAYS",
+    "backup_schedule_time": "BACKUP_SCHEDULE_TIME",
+    "backup_external_path": "BACKUP_EXTERNAL_PATH",
+    "backup_sharepoint_site": "BACKUP_SHAREPOINT_SITE",
+    "backup_sharepoint_library": "BACKUP_SHAREPOINT_LIBRARY",
+    "backup_sharepoint_folder": "BACKUP_SHAREPOINT_FOLDER",
+    "backup_sharepoint_tenant_id": "BACKUP_SHAREPOINT_TENANT_ID",
+    "backup_sharepoint_client_id": "BACKUP_SHAREPOINT_CLIENT_ID",
+    "backup_sharepoint_client_secret": "BACKUP_SHAREPOINT_CLIENT_SECRET",
+    "backup_timezone": "BACKUP_TIMEZONE",
     "vite_api_url": "VITE_API_URL",
     "vite_azure_client_id": "VITE_AZURE_CLIENT_ID",
     "vite_azure_tenant_id": "VITE_AZURE_TENANT_ID",
@@ -40,6 +50,7 @@ OPTION_KEYS = {
     "vite_azure_group_admin": "VITE_AZURE_GROUP_ADMIN",
     "vite_debug_admin": "VITE_DEBUG_ADMIN",
     "vite_debug_nav": "VITE_DEBUG_NAV",
+    "vite_manifest_env": "VITE_MANIFEST_ENV",
 }
 
 

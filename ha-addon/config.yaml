@@ -19,6 +19,9 @@ ports_description:
   8001/tcp: Discogs service
 webui: "http://[HOST]:[PORT:80]"
 panel_icon: mdi:album
+map:
+  - share:rw
+  - media:rw
 options:
   message_broker: mqtt
   mqtt_url: mqtt://core-mosquitto:1883
@@ -48,6 +51,16 @@ options:
   log_level: INFO
   cors_allow_origins: ""
   cors_allow_origin_regex: ""
+  backup_schedule_days: ""
+  backup_schedule_time: ""
+  backup_external_path: "/share/mycousinvinyl-backups"
+  backup_sharepoint_site: ""
+  backup_sharepoint_library: ""
+  backup_sharepoint_folder: ""
+  backup_sharepoint_tenant_id: ""
+  backup_sharepoint_client_id: ""
+  backup_sharepoint_client_secret: ""
+  backup_timezone: ""
   vite_api_url: ""
   vite_azure_client_id: ""
   vite_azure_tenant_id: ""
@@ -84,6 +97,16 @@ schema:
   log_level: str
   cors_allow_origins: str
   cors_allow_origin_regex: str
+  backup_schedule_days: str
+  backup_schedule_time: str
+  backup_external_path: str
+  backup_sharepoint_site: str
+  backup_sharepoint_library: str
+  backup_sharepoint_folder: str
+  backup_sharepoint_tenant_id: str
+  backup_sharepoint_client_id: str
+  backup_sharepoint_client_secret: str
+  backup_timezone: str
   vite_api_url: str
   vite_azure_client_id: str
   vite_azure_tenant_id: str
