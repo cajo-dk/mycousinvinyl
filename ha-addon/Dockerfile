@@ -42,7 +42,9 @@ RUN apk add --no-cache \
 
 COPY backend/requirements.txt /tmp/backend-requirements.txt
 COPY discogs-service/requirements.txt /tmp/discogs-requirements.txt
-RUN python3 -m pip install --no-cache-dir -r /tmp/backend-requirements.txt -r /tmp/discogs-requirements.txt
+RUN python3 -m pip install --no-cache-dir --break-system-packages \
+    -r /tmp/backend-requirements.txt \
+    -r /tmp/discogs-requirements.txt
 
 COPY backend /opt/mycousinvinyl/backend
 COPY discogs-service /opt/mycousinvinyl/discogs-service
