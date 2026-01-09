@@ -37,6 +37,12 @@
   gap: 1rem;
 }
 
+.collection-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .collection-item-card-title {
   color: #fff;
   font-size: 0.9rem;

@@ -97,8 +97,13 @@ export function Home() {
     );
   };
 
-  const topArtists = (stats?.top_artists || []).filter((entry) => entry.collected_count > 1);
-  const topAlbums = (stats?.top_albums || []).filter((entry) => entry.collected_count > 1);
+  const isExcludedArtist = (name: string) => name.trim().toLowerCase() === 'various';
+  const topArtists = (stats?.top_artists || [])
+    .filter((entry) => entry.collected_count > 1)
+    .filter((entry) => !isExcludedArtist(entry.artist_name));
+  const topAlbums = (stats?.top_albums || [])
+    .filter((entry) => entry.collected_count > 1)
+    .filter((entry) => !isExcludedArtist(entry.artist_name));
 
   return (
     <div className="home">
@@ -312,7 +317,7 @@ export function Home() {
               <div className="top-ten-header">TOP 10 ALBUMS (ALL USERS)</div>
               {topAlbums.length > 0 ? (
                 <div className="top-ten-table">
-                  <div className="top-ten-row top-ten-row-header">
+                  <div className="top-ten-row top-ten-row-header top-ten-row-album">
                     <span>#</span>
                     <span>Album</span>
                     <span>Artist</span>

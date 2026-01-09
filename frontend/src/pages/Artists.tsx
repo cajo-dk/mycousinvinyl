@@ -54,7 +54,7 @@ export function Artists() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const fetchArtists = async () => {
+  const fetchArtists = async (options?: { resetPage?: boolean }) => {
     try {
       setLoading(true);
       setError(null);
@@ -68,7 +68,9 @@ export function Artists() {
       });
 
       setArtists(response.items);
-      setCurrentPage(1);
+      if (options?.resetPage ?? true) {
+        setCurrentPage(1);
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Failed to load artists');
     } finally {
@@ -77,7 +79,7 @@ export function Artists() {
   };
 
   useEffect(() => {
-    fetchArtists();
+    fetchArtists({ resetPage: true });
   }, []);
 
   useEffect(() => {
@@ -118,7 +120,7 @@ export function Artists() {
   };
 
   const handleSearch = () => {
-    fetchArtists();
+    fetchArtists({ resetPage: true });
   };
 
   const handleFilterChange = (newFilters: ArtistFilterValues) => {
@@ -127,7 +129,7 @@ export function Artists() {
 
   const handleResetFilters = () => {
     setFilters({});
-    fetchArtists();
+    fetchArtists({ resetPage: true });
   };
 
   const handlePageChange = (page: number) => {
@@ -142,7 +144,7 @@ export function Artists() {
 
     try {
       await artistsApi.delete(artistId);
-      fetchArtists();
+      fetchArtists({ resetPage: false });
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to delete artist');
     }
@@ -561,7 +563,7 @@ export function Artists() {
         <ArtistForm
           onSuccess={() => {
             setShowCreateModal(false);
-            fetchArtists();
+            fetchArtists({ resetPage: false });
           }}
           onCancel={() => setShowCreateModal(false)}
         />
@@ -582,7 +584,7 @@ export function Artists() {
             onSuccess={() => {
               setShowEditModal(false);
               setSelectedArtistId(null);
-              fetchArtists();
+              fetchArtists({ resetPage: false });
             }}
             onCancel={() => {
               setShowEditModal(false);
@@ -775,7 +777,7 @@ export function Artists() {
           onSuccess={() => {
             setShowAlbumModal(false);
             setSelectedArtistForAlbum(null);
-            fetchArtists();
+            fetchArtists({ resetPage: false });
           }}
         />
       )}

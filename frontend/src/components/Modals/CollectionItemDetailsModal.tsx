@@ -17,11 +17,11 @@ import type {
   StyleResponse,
 } from '@/types/api';
 import { OwnersGrid } from '@/components/CollectionSharing';
-import { AlbumForm, PressingForm } from '@/components/Forms';
+import { AlbumForm, CollectionItemForm } from '@/components/Forms';
 import { PressingListItem } from '@/components/PressingListItem';
 import { AddToCollectionModal } from './AddToCollectionModal';
 import { PressingWizardModal } from './PressingWizardModal';
-import { mdiPencilOutline, mdiPlus, mdiMusicBoxOutline } from '@mdi/js';
+import { mdiPencilOutline, mdiPlus, mdiMusicBoxOutline, mdiTrashCanOutline } from '@mdi/js';
 import { usePressingOwners } from '@/hooks/usePressingOwners';
 import './AlbumDetailsModal.css';
 import './CollectionItemDetailsModal.css';
@@ -59,8 +59,8 @@ export function CollectionItemDetailsModal({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditAlbumModal, setShowEditAlbumModal] = useState(false);
-  const [showEditPressingModal, setShowEditPressingModal] = useState(false);
-  const [selectedPressingId, setSelectedPressingId] = useState<string | null>(null);
+  const [showEditCollectionItemModal, setShowEditCollectionItemModal] = useState(false);
+  const [selectedCollectionItemId, setSelectedCollectionItemId] = useState<string | null>(null);
   const [showAddPressingModal, setShowAddPressingModal] = useState(false);
   const [showPressingPickerModal, setShowPressingPickerModal] = useState(false);
   const [pressingPickerPage, setPressingPickerPage] = useState(1);
@@ -188,6 +188,20 @@ export function CollectionItemDetailsModal({
       setCollectionItems(response.items);
     } catch (err) {
       console.error('Failed to refresh collection items:', err);
+    }
+  };
+
+  const handleDeleteCollectionItem = async (collectionItemId: string) => {
+    if (!confirm('Remove this item from your collection? This does not delete the pressing.')) {
+      return;
+    }
+    try {
+      await collectionApi.removeItem(collectionItemId);
+      await refreshCollectionItems();
+      await fetchData();
+      onCollectionChange?.();
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to remove collection item');
     }
   };
 
@@ -434,18 +448,29 @@ export function CollectionItemDetailsModal({
                       <div key={item.id} className="collection-item-card">
                         <div className="collection-item-card-header">
                           <span className="collection-item-card-title">Pressing Details</span>
-                          <button
-                            type="button"
-                            className="btn-action"
-                            onClick={() => {
-                              setSelectedPressingId(pressing.id);
-                              setShowEditPressingModal(true);
-                            }}
-                            aria-label="Edit Pressing"
-                            title="Edit Pressing"
-                          >
-                            <Icon path={mdiPencilOutline} />
-                          </button>
+                          <div className="collection-item-actions">
+                            <button
+                              type="button"
+                              className="btn-action"
+                              onClick={() => {
+                                setSelectedCollectionItemId(item.id);
+                                setShowEditCollectionItemModal(true);
+                              }}
+                              aria-label="Edit Collection Item"
+                              title="Edit Collection Item"
+                            >
+                              <Icon path={mdiPencilOutline} />
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-action btn-danger"
+                              onClick={() => handleDeleteCollectionItem(item.id)}
+                              aria-label="Delete Collection Item"
+                              title="Delete Collection Item"
+                            >
+                              <Icon path={mdiTrashCanOutline} />
+                            </button>
+                          </div>
                         </div>
                         <div className="collection-item-card-main">
                           <div className="collection-item-cover-stack">
@@ -539,27 +564,28 @@ export function CollectionItemDetailsModal({
         </Modal>
       )}
 
-      {selectedPressingId && (
+      {selectedCollectionItemId && (
         <Modal
-          isOpen={showEditPressingModal}
+          isOpen={showEditCollectionItemModal}
           onClose={() => {
-            setShowEditPressingModal(false);
-            setSelectedPressingId(null);
+            setShowEditCollectionItemModal(false);
+            setSelectedCollectionItemId(null);
           }}
-          title="Edit Pressing"
+          title="Edit Collection Item"
           size="large"
         >
-          <PressingForm
-            pressingId={selectedPressingId}
+          <CollectionItemForm
+            collectionItemId={selectedCollectionItemId}
             onSuccess={() => {
-              setShowEditPressingModal(false);
-              setSelectedPressingId(null);
+              setShowEditCollectionItemModal(false);
+              setSelectedCollectionItemId(null);
+              refreshCollectionItems();
               fetchData();
               onCollectionChange?.();
             }}
             onCancel={() => {
-              setShowEditPressingModal(false);
-              setSelectedPressingId(null);
+              setShowEditCollectionItemModal(false);
+              setSelectedCollectionItemId(null);
             }}
           />
         </Modal>
