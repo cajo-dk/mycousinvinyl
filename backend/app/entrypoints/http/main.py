@@ -5,7 +5,7 @@ This module defines the HTTP API entrypoint with authentication
 and authorization enforced at the boundary.
 """
 
-from fastapi import FastAPI, Depends, status
+from fastapi import FastAPI, Depends, status, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from typing import Annotated
@@ -41,6 +41,21 @@ app = FastAPI(
 
 # CORS configuration
 settings = get_settings()
+if settings.environment.lower() == "production":
+    missing_groups = [
+        name for name, value in (
+            ("AZURE_GROUP_ADMIN", settings.azure_group_admin),
+            ("AZURE_GROUP_EDITOR", settings.azure_group_editor),
+            ("AZURE_GROUP_VIEWER", settings.azure_group_viewer),
+        )
+        if not value
+    ]
+    if missing_groups:
+        raise RuntimeError(
+            "Missing required RBAC group configuration: "
+            + ", ".join(missing_groups)
+        )
+
 cors_allow_origins = [
     origin.strip()
     for origin in settings.cors_allow_origins.split(",")
@@ -83,8 +98,12 @@ app.include_router(activity_ws_router)
 # ============================================================================
 
 @app.get("/health")
-async def health_check():
-    """Health check endpoint (no authentication required)."""
+async def health_check(
+    x_health_token: str | None = Header(default=None, alias="X-Health-Token"),
+):
+    """Health check endpoint (optional shared secret)."""
+    if settings.health_check_token and x_health_token != settings.health_check_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid health token")
     return {"status": "healthy", "service": "api"}
 
 

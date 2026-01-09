@@ -6,6 +6,9 @@ from pathlib import Path
 
 OPTION_KEYS = {
     "message_broker": "MESSAGE_BROKER",
+    "environment": "ENVIRONMENT",
+    "rbac_strict": "RBAC_STRICT",
+    "health_check_token": "HEALTH_CHECK_TOKEN",
     "mqtt_url": "MQTT_URL",
     "mqtt_username": "MQTT_USERNAME",
     "mqtt_password": "MQTT_PASSWORD",

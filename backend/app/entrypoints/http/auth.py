@@ -8,6 +8,7 @@ Domain and application layers remain security-agnostic.
 from typing import Annotated, List, Optional
 from uuid import UUID, uuid5, NAMESPACE_DNS
 from fastapi import Depends, HTTPException, status
+import logging
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 import jwt
 from jwt import PyJWKClient
@@ -16,6 +17,7 @@ from app.config import get_settings, Settings
 
 
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 
 class User:
@@ -121,16 +123,19 @@ def validate_token(token: str, settings: Settings) -> User:
         return User(sub=user_id, email=email, groups=groups, name=name, alternate_ids=alternate_ids)
 
     except jwt.ExpiredSignatureError:
+        logger.warning("Auth failed: token expired")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
         )
     except PyJWKClientError as e:
+        logger.error("Auth failed: unable to validate token (JWKS error): %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=f"Unable to validate token: {str(e)}",
         )
     except jwt.InvalidTokenError as e:
+        logger.warning("Auth failed: invalid token: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {str(e)}",

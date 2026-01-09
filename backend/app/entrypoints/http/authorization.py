@@ -6,12 +6,14 @@ Roles are mapped to Azure AD groups and enforced at the HTTP entrypoint level.
 """
 
 from typing import Annotated, List, Callable
-from fastapi import Depends
+from fastapi import Depends, HTTPException, status
+import logging
 from app.config import get_settings, Settings
 from app.entrypoints.http.auth import User, get_current_user, require_any_group
 from app.entrypoints.http.dependencies import get_preferences_service
 from app.application.services.preferences_service import PreferencesService
 
+logger = logging.getLogger(__name__)
 
 # ============================================================================
 # ROLE DEFINITIONS
@@ -58,6 +60,11 @@ def get_group_ids_for_role(role: str, settings: Settings) -> List[str]:
     return group_ids
 
 
+def _is_rbac_strict(settings: Settings) -> bool:
+    env = (settings.environment or "").lower()
+    return settings.rbac_strict or env == "production"
+
+
 # ============================================================================
 # AUTHORIZATION DEPENDENCIES
 # ============================================================================
@@ -86,11 +93,17 @@ def require_admin() -> Callable:
     ) -> User:
         group_ids = get_group_ids_for_role(Role.ADMIN, settings)
         if not group_ids:
+            if _is_rbac_strict(settings):
+                logger.warning("RBAC blocked: missing group config for admin role")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="RBAC group IDs are not configured",
+                )
             # If no groups configured, allow all authenticated users (development mode)
             return user
 
         if not user.has_any_group(group_ids):
-            from fastapi import HTTPException, status
+            logger.warning("RBAC denied: admin access for user %s", user.sub)
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User does not have required group membership"
@@ -115,11 +128,17 @@ def require_editor() -> Callable:
     ) -> User:
         group_ids = get_group_ids_for_role(Role.EDITOR, settings)
         if not group_ids:
+            if _is_rbac_strict(settings):
+                logger.warning("RBAC blocked: missing group config for editor role")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="RBAC group IDs are not configured",
+                )
             # If no groups configured, allow all authenticated users (development mode)
             return user
 
         if not user.has_any_group(group_ids):
-            from fastapi import HTTPException, status
+            logger.warning("RBAC denied: editor access for user %s", user.sub)
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User does not have required group membership"
@@ -144,11 +163,17 @@ def require_viewer() -> Callable:
     ) -> User:
         group_ids = get_group_ids_for_role(Role.VIEWER, settings)
         if not group_ids:
+            if _is_rbac_strict(settings):
+                logger.warning("RBAC blocked: missing group config for viewer role")
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="RBAC group IDs are not configured",
+                )
             # If no groups configured, allow all authenticated users (development mode)
             return user
 
         if not user.has_any_group(group_ids):
-            from fastapi import HTTPException, status
+            logger.warning("RBAC denied: viewer access for user %s", user.sub)
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="User does not have required group membership"

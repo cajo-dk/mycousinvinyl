@@ -116,9 +116,9 @@ export function ActivityStatusBar() {
       });
 
       const baseUrl = getEnv('VITE_API_URL') || '';
-      const wsUrl = `${toWebSocketUrl(baseUrl)}/ws/activity?access_token=${encodeURIComponent(response.accessToken)}`;
+      const wsUrl = `${toWebSocketUrl(baseUrl)}/ws/activity`;
 
-      const ws = new WebSocket(wsUrl);
+      const ws = new WebSocket(wsUrl, ['bearer', response.accessToken]);
       wsRef.current = ws;
 
       ws.onmessage = (event) => {

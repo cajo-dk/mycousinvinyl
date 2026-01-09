@@ -34,8 +34,8 @@ class ActivityConnectionManager:
         self._connections: List[WebSocket] = []
         self._lock = asyncio.Lock()
 
-    async def connect(self, websocket: WebSocket) -> None:
-        await websocket.accept()
+    async def connect(self, websocket: WebSocket, subprotocol: str | None = None) -> None:
+        await websocket.accept(subprotocol=subprotocol)
         async with self._lock:
             self._connections.append(websocket)
 
@@ -59,13 +59,27 @@ manager = ActivityConnectionManager()
 router = APIRouter(tags=["Activity"])
 
 
+def _extract_ws_token(websocket: WebSocket) -> tuple[str | None, str | None]:
+    auth_header = websocket.headers.get("authorization")
+    if auth_header and auth_header.lower().startswith("bearer "):
+        return auth_header[7:].strip(), None
+
+    protocol_header = websocket.headers.get("sec-websocket-protocol")
+    if protocol_header:
+        protocols = [p.strip() for p in protocol_header.split(",") if p.strip()]
+        if len(protocols) >= 2 and protocols[0].lower() == "bearer":
+            return protocols[1], protocols[0]
+
+    return None, None
+
+
 @router.websocket("/ws/activity")
 async def activity_ws(
     websocket: WebSocket,
     settings: Settings = Depends(get_settings),
 ):
     """Websocket endpoint for activity messages."""
-    token = websocket.query_params.get("access_token") or websocket.query_params.get("token")
+    token, subprotocol = _extract_ws_token(websocket)
     if not token:
         await websocket.close(code=1008)
         return
@@ -76,7 +90,7 @@ async def activity_ws(
         await websocket.close(code=1008)
         return
 
-    await manager.connect(websocket)
+    await manager.connect(websocket, subprotocol=subprotocol)
     try:
         while True:
             await websocket.receive_text()

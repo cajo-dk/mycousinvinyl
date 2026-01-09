@@ -24,6 +24,9 @@ map:
   - media:rw
 options:
   message_broker: mqtt
+  environment: production
+  rbac_strict: true
+  health_check_token: ""
   mqtt_url: mqtt://core-mosquitto:1883
   mqtt_username: ""
   mqtt_password: ""
@@ -71,6 +74,9 @@ options:
   vite_manifest_env: ""
 schema:
   message_broker: list(mqtt|activemq)
+  environment: str
+  rbac_strict: bool
+  health_check_token: str
   mqtt_url: str
   mqtt_username: str
   mqtt_password: str
