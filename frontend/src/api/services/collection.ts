@@ -13,6 +13,8 @@ import type {
   Condition,
   CollectionItemDetailResponse,
   CollectionImportResponse,
+  AlbumPlayIncrementResponse,
+  PlayedAlbumEntry,
 } from '@/types/api';
 
 export const collectionApi = {
@@ -154,6 +156,31 @@ export const collectionApi = {
    */
   getStatistics: async (): Promise<CollectionStatistics> => {
     const response = await apiClient.get<CollectionStatistics>('/api/v1/collection/statistics');
+    return response.data;
+  },
+
+  /**
+   * Increment album play count.
+   */
+  incrementAlbumPlayCount: async (albumId: string): Promise<AlbumPlayIncrementResponse> => {
+    const response = await apiClient.post<AlbumPlayIncrementResponse>(
+      `/api/v1/collection/albums/${albumId}/play`
+    );
+    return response.data;
+  },
+
+  /**
+   * Get played albums for the year.
+   */
+  getPlayedAlbumsYtd: async (params?: {
+    year?: number;
+    limit?: number;
+    offset?: number;
+  }): Promise<PaginatedResponse<PlayedAlbumEntry>> => {
+    const response = await apiClient.get<PaginatedResponse<PlayedAlbumEntry>>(
+      '/api/v1/collection/plays/ytd',
+      { params }
+    );
     return response.data;
   },
 

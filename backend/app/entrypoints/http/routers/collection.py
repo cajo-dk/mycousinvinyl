@@ -7,6 +7,7 @@ User ID is extracted from authenticated context, never from request body.
 
 from typing import Annotated, List
 from uuid import UUID
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File
 from fastapi.responses import StreamingResponse
 import asyncio
@@ -23,7 +24,8 @@ from app.entrypoints.http.schemas.collection import (
     CollectionItemCreate, CollectionItemUpdate, CollectionItemResponse,
     ConditionUpdateRequest, PurchaseInfoUpdateRequest, RatingUpdateRequest,
     CollectionSearchParams, CollectionStatistics, CollectionItemDetailResponse,
-    ArtistSummary, AlbumSummary, MarketDataSummary
+    ArtistSummary, AlbumSummary, MarketDataSummary,
+    AlbumPlayIncrementResponse, PlayedAlbumEntry
 )
 from app.entrypoints.http.schemas.collection_import import (
     CollectionImportResponse,
@@ -616,6 +618,62 @@ async def increment_play_count(
             detail=f"Collection item {item_id} not found or access denied"
         )
     return item
+
+
+@router.post(
+    "/albums/{album_id}/play",
+    response_model=AlbumPlayIncrementResponse,
+    summary="Increment album play count",
+    dependencies=[Depends(require_editor())]
+)
+async def increment_album_play_count(
+    album_id: UUID,
+    service: Annotated[CollectionService, Depends(get_collection_service)],
+    user: Annotated[User, Depends(get_current_user)]
+):
+    """
+    Increment play count for an album for the current user.
+    """
+    try:
+        result = await service.increment_album_play_count(
+            album_id=album_id,
+            user_id=user.sub
+        )
+        return AlbumPlayIncrementResponse(**result)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc))
+
+
+@router.get(
+    "/plays/ytd",
+    response_model=PaginatedResponse[PlayedAlbumEntry],
+    summary="Get played albums for the year",
+    dependencies=[Depends(require_viewer())]
+)
+async def get_played_albums_ytd(
+    service: Annotated[CollectionService, Depends(get_collection_service)],
+    user: Annotated[User, Depends(get_current_user)],
+    year: int = Query(None, ge=1900, le=2100),
+    limit: int = Query(50, ge=1, le=1000),
+    offset: int = Query(0, ge=0)
+):
+    """
+    Get played albums for the given year (YTD) for the current user.
+    """
+    resolved_year = year or datetime.utcnow().year
+    items, total = await service.get_played_albums_ytd(
+        user_id=user.sub,
+        year=resolved_year,
+        limit=limit,
+        offset=offset
+    )
+    response_items = [PlayedAlbumEntry(**entry) for entry in items]
+    return PaginatedResponse(
+        items=response_items,
+        total=total,
+        limit=limit,
+        offset=offset
+    )
 
 
 @router.delete(

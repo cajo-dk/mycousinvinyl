@@ -5,20 +5,28 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collectionApi } from '@/api/services';
-import { CollectionItemDetailResponse, CollectionStatistics } from '@/types/api';
+import { CollectionItemDetailResponse, CollectionStatistics, PlayedAlbumEntry } from '@/types/api';
 import { Card, Loading, ErrorAlert, Icon } from '@/components/UI';
 import { mdiEyeOutline } from '@mdi/js';
-import { formatDecimal, parseLocaleNumber } from '@/utils/format';
+import { formatDecimal, parseLocaleNumber, formatDateTime } from '@/utils/format';
 import { useViewControls } from '@/components/Layout/ViewControlsContext';
 import './Home.css';
 
 export function Home() {
   const [stats, setStats] = useState<CollectionStatistics | null>(null);
   const [latestAdditions, setLatestAdditions] = useState<CollectionItemDetailResponse[]>([]);
+  const [playedYearItems, setPlayedYearItems] = useState<PlayedAlbumEntry[]>([]);
+  const [playedYearTotal, setPlayedYearTotal] = useState(0);
+  const [playedYearLoading, setPlayedYearLoading] = useState(false);
+  const [playedYearError, setPlayedYearError] = useState<string | null>(null);
+  const [playedYearPage, setPlayedYearPage] = useState(1);
+  const [playedYearPageSize, setPlayedYearPageSize] = useState(50);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { setControls } = useViewControls();
   const navigate = useNavigate();
+  const currentYear = new Date().getFullYear();
+  const playedYearTotalPages = Math.max(1, Math.ceil(playedYearTotal / playedYearPageSize));
 
   const fetchStats = async () => {
     try {
@@ -55,6 +63,28 @@ export function Home() {
   useEffect(() => {
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    const fetchPlayedYear = async () => {
+      try {
+        setPlayedYearLoading(true);
+        setPlayedYearError(null);
+        const response = await collectionApi.getPlayedAlbumsYtd({
+          year: currentYear,
+          limit: playedYearPageSize,
+          offset: (playedYearPage - 1) * playedYearPageSize,
+        });
+        setPlayedYearItems(response.items || []);
+        setPlayedYearTotal(response.total || 0);
+      } catch (err: any) {
+        setPlayedYearError(err.response?.data?.detail || 'Failed to load played albums');
+      } finally {
+        setPlayedYearLoading(false);
+      }
+    };
+
+    fetchPlayedYear();
+  }, [currentYear, playedYearPage, playedYearPageSize]);
 
   useEffect(() => {
     setControls(null);
@@ -350,6 +380,82 @@ export function Home() {
         </div>
       )}
 
+      <div className="played-year-section">
+        <Card className="played-year-card">
+          <div className="played-year-header">
+            <h2>PLAYED THIS YEAR</h2>
+            <span>{playedYearTotal} albums</span>
+          </div>
+          {playedYearLoading && (
+            <div className="played-year-status">Loading plays...</div>
+          )}
+          {playedYearError && !playedYearLoading && (
+            <div className="played-year-status played-year-error">{playedYearError}</div>
+          )}
+          {!playedYearLoading && !playedYearError && playedYearItems.length === 0 && (
+            <div className="played-year-status">No plays logged yet this year.</div>
+          )}
+          {!playedYearLoading && !playedYearError && playedYearItems.length > 0 && (
+            <div className="played-year-table">
+              <div className="played-year-row played-year-header-row">
+                <span>#</span>
+                <span>Plays YTD</span>
+                <span>Artist</span>
+                <span>Album</span>
+                <span>Last Played</span>
+              </div>
+              {playedYearItems.map((entry, index) => (
+                <div key={`${entry.album_id}-${index}`} className="played-year-row">
+                  <span>{(playedYearPage - 1) * playedYearPageSize + index + 1}</span>
+                  <span>{entry.play_count_ytd}</span>
+                  <span className="played-year-name">{entry.artist_name}</span>
+                  <span className="played-year-name">{entry.album_title}</span>
+                  <span>{formatDateTime(entry.last_played_at || undefined)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {playedYearTotalPages > 1 && (
+            <div className="played-year-pagination">
+              <div className="pagination-controls">
+                <button
+                  onClick={() => setPlayedYearPage((prev) => Math.max(1, prev - 1))}
+                  disabled={playedYearPage === 1}
+                  className="pagination-button"
+                >
+                  Previous
+                </button>
+                <div className="pagination-info">
+                  Page {playedYearPage} of {playedYearTotalPages}
+                </div>
+                <button
+                  onClick={() => setPlayedYearPage((prev) => Math.min(playedYearTotalPages, prev + 1))}
+                  disabled={playedYearPage === playedYearTotalPages}
+                  className="pagination-button"
+                >
+                  Next
+                </button>
+              </div>
+              <div className="items-per-page">
+                <span>Per page</span>
+                <select
+                  value={playedYearPageSize}
+                  onChange={(e) => {
+                    setPlayedYearPageSize(Number(e.target.value));
+                    setPlayedYearPage(1);
+                  }}
+                >
+                  {[25, 50, 100, 200].map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }

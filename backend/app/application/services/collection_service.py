@@ -252,6 +252,44 @@ class CollectionService:
 
         return result
 
+    async def increment_album_play_count(
+        self,
+        album_id: UUID,
+        user_id: UUID,
+    ) -> Dict[str, Any]:
+        """
+        Increment per-user album play count.
+        """
+        async with self.uow:
+            has_album = await self.uow.collection_repository.user_has_album(user_id, album_id)
+            if not has_album:
+                raise ValueError("Album not found in user's collection")
+
+            result = await self.uow.collection_repository.increment_album_play_count(
+                user_id=user_id,
+                album_id=album_id,
+            )
+            await self.uow.commit()
+            return result
+
+    async def get_played_albums_ytd(
+        self,
+        user_id: UUID,
+        year: int,
+        limit: int = 50,
+        offset: int = 0
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """
+        Get played albums for a user in a given year.
+        """
+        async with self.uow:
+            return await self.uow.collection_repository.get_played_albums_ytd(
+                user_id=user_id,
+                year=year,
+                limit=limit,
+                offset=offset
+            )
+
     async def update_purchase_info(
         self,
         item_id: UUID,

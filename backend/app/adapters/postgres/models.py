@@ -795,6 +795,34 @@ class UserPreferencesModel(Base):
         )
 
 
+class UserAlbumPlayModel(Base):
+    """Per-user album play counts (overall)."""
+    __tablename__ = 'user_album_plays'
+
+    user_id = Column(UUID(as_uuid=True), primary_key=True)
+    album_id = Column(UUID(as_uuid=True), ForeignKey('albums.id', ondelete='CASCADE'), primary_key=True)
+    play_count = Column(Integer, nullable=False, default=0)
+    last_played_at = Column(DateTime, nullable=True)
+
+    # System metadata
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class UserAlbumPlayYearModel(Base):
+    """Per-user album play counts by year."""
+    __tablename__ = 'user_album_play_years'
+
+    user_id = Column(UUID(as_uuid=True), primary_key=True)
+    album_id = Column(UUID(as_uuid=True), ForeignKey('albums.id', ondelete='CASCADE'), primary_key=True)
+    year = Column(Integer, primary_key=True)
+    play_count = Column(Integer, nullable=False, default=0)
+
+    # System metadata
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class DiscogsOAuthRequestModel(Base):
     """Discogs OAuth request token SQLAlchemy model."""
     __tablename__ = 'discogs_oauth_requests'

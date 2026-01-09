@@ -225,3 +225,21 @@ class CollectionStatistics(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class AlbumPlayIncrementResponse(BaseModel):
+    """Response for incrementing album play count."""
+    album_id: UUID
+    play_count: int
+    play_count_ytd: int
+    last_played_at: datetime
+
+
+class PlayedAlbumEntry(BaseModel):
+    """Played album entry for YTD stats."""
+    album_id: UUID
+    album_title: str
+    artist_id: UUID
+    artist_name: str
+    play_count_ytd: int
+    last_played_at: Optional[datetime] = None

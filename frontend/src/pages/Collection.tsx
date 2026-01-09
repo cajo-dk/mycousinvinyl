@@ -10,7 +10,7 @@ import { Loading, ErrorAlert, Modal, Icon } from '@/components/UI';
 import { CollectionItemForm } from '@/components/Forms';
 import { CollectionItemDetailsModal } from '@/components/Modals';
 import { OwnersGrid } from '@/components/CollectionSharing';
-import { mdiEyeOutline, mdiPencilOutline, mdiTrashCanOutline } from '@mdi/js';
+import { mdiEyeOutline, mdiPencilOutline, mdiTrashCanOutline, mdiPlus } from '@mdi/js';
 import { formatDecimal, parseLocaleNumber } from '@/utils/format';
 import { AlphabetFilterBar } from '@/components/AlphabetFilterBar';
 import { getInitialToken } from '@/utils/alpha';
@@ -55,6 +55,7 @@ export function Collection() {
   const [initialFilter, setInitialFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [playIncrementing, setPlayIncrementing] = useState<Set<string>>(new Set());
   const { preferences } = usePreferences();
   const { setControls } = useViewControls();
 
@@ -198,6 +199,24 @@ export function Collection() {
     }
   };
 
+  const handleIncrementPlay = async (albumId: string) => {
+    if (playIncrementing.has(albumId)) {
+      return;
+    }
+    setPlayIncrementing((prev) => new Set(prev).add(albumId));
+    try {
+      await collectionApi.incrementAlbumPlayCount(albumId);
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to increment play count');
+    } finally {
+      setPlayIncrementing((prev) => {
+        const next = new Set(prev);
+        next.delete(albumId);
+        return next;
+      });
+    }
+  };
+
   const toggleArtist = (artistId: string) => {
     const newExpanded = new Set(expandedArtists);
     if (newExpanded.has(artistId)) {
@@ -330,6 +349,7 @@ export function Collection() {
                       <th className="col-est">Est. Sales Price</th>
                       <th className="col-condition">Condition (Media/Sleeve)</th>
                       <th className="col-owned">Owned</th>
+                      <th className="col-play">Play</th>
                       <th className="col-actions">Actions</th>
                     </tr>
                   </thead>
@@ -368,6 +388,20 @@ export function Collection() {
                                 className="owners-grid-large"
                               />
                             </td>
+                            {index === 0 && (
+                              <td rowSpan={album.items.length} className="col-play">
+                                <button
+                                  className="btn-action btn-action-play"
+                                  onClick={() => handleIncrementPlay(album.albumId)}
+                                  disabled={playIncrementing.has(album.albumId)}
+                                  title="Add play"
+                                  aria-label="Add play"
+                                >
+                                  <Icon path={mdiPlus} size={16} />
+                                  <span className="play-count-label">1</span>
+                                </button>
+                              </td>
+                            )}
                             <td className="actions-cell col-actions">
                               <button
                                 className="btn-action btn-action-view"

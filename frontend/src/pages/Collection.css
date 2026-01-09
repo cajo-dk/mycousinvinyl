@@ -161,6 +161,23 @@
   margin: 0 auto;
 }
 
+.col-play {
+  width: 64px;
+  text-align: center;
+}
+
+.btn-action-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.play-count-label {
+  font-size: 0.8rem;
+  color: #fff;
+  line-height: 1;
+}
+
 .collection-list {
   display: flex;
   flex-direction: column;
@@ -309,7 +326,8 @@
   .album-table .col-purchase,
   .album-table .col-est,
   .album-table .col-condition,
-  .album-table .col-owned {
+  .album-table .col-owned,
+  .album-table .col-play {
     display: none;
   }
 
@@ -323,7 +341,8 @@
   .album-table .col-year,
   .album-table .col-purchase,
   .album-table .col-est,
-  .album-table .col-owned {
+  .album-table .col-owned,
+  .album-table .col-play {
     display: none;
   }
 

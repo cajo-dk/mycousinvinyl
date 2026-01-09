@@ -199,6 +199,80 @@
   font-size: 0.95rem;
 }
 
+.played-year-section {
+  margin-top: 2rem;
+}
+
+.played-year-card {
+  width: 100%;
+}
+
+.played-year-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.played-year-header h2 {
+  margin: 0;
+  color: #fff;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.played-year-header span {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.played-year-status {
+  color: #777;
+  font-size: 0.95rem;
+  padding: 0.5rem 0;
+}
+
+.played-year-error {
+  color: #ff8888;
+}
+
+.played-year-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.played-year-row {
+  display: grid;
+  grid-template-columns: 40px 100px minmax(0, 1fr) minmax(0, 1fr) 170px;
+  align-items: center;
+  gap: 0.75rem;
+  color: #e5e5e5;
+  font-size: 0.92rem;
+}
+
+.played-year-header-row {
+  color: #8e8e8e;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.played-year-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.played-year-pagination {
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .latest-addition {
   display: flex;
   flex-direction: column;
@@ -312,6 +386,16 @@
 
   .top-ten-row-album {
     grid-template-columns: 28px minmax(0, 1fr) minmax(0, 1fr) 70px 26px;
+  }
+
+  .played-year-row {
+    grid-template-columns: 28px 70px minmax(0, 1fr) minmax(0, 1fr) 120px;
+    font-size: 0.85rem;
+  }
+
+  .played-year-pagination {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

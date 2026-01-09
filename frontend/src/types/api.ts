@@ -709,6 +709,22 @@ export interface CollectionStatistics {
   top_albums: TopAlbumEntry[];
 }
 
+export interface AlbumPlayIncrementResponse {
+  album_id: string;
+  play_count: number;
+  play_count_ytd: number;
+  last_played_at: string;
+}
+
+export interface PlayedAlbumEntry {
+  album_id: string;
+  album_title: string;
+  artist_id: string;
+  artist_name: string;
+  play_count_ytd: number;
+  last_played_at?: string | null;
+}
+
 export interface TopArtistEntry {
   artist_id: string;
   artist_name: string;

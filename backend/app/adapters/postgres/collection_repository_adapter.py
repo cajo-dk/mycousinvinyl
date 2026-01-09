@@ -3,7 +3,9 @@
 from typing import Optional, List, Tuple, Dict, Any
 from uuid import UUID
 from decimal import Decimal
+from datetime import datetime
 from sqlalchemy import select, func, and_, or_, cast, String
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.application.ports.collection_repository import CollectionRepository
@@ -15,6 +17,8 @@ from app.adapters.postgres.models import (
     ArtistModel,
     MarketDataModel,
     UserPreferencesModel,
+    UserAlbumPlayModel,
+    UserAlbumPlayYearModel,
 )
 
 
@@ -486,6 +490,172 @@ class CollectionRepositoryAdapter(CollectionRepository):
             "high_est_sales_price": high_est_sales_price,
             "currency": currency
         }
+
+    async def user_has_album(self, user_id: UUID, album_id: UUID) -> bool:
+        """
+        Check whether a user has any collection items for an album.
+        """
+        result = await self.session.execute(
+            select(func.count())
+            .select_from(CollectionItemModel)
+            .join(PressingModel, CollectionItemModel.pressing_id == PressingModel.id)
+            .where(
+                and_(
+                    CollectionItemModel.user_id == user_id,
+                    PressingModel.album_id == album_id,
+                )
+            )
+        )
+        return result.scalar_one() > 0
+
+    async def increment_album_play_count(
+        self,
+        user_id: UUID,
+        album_id: UUID
+    ) -> Dict[str, Any]:
+        """
+        Increment album play count (overall + current year) for a user.
+        """
+        timestamp = datetime.utcnow()
+        year = timestamp.year
+
+        overall_stmt = insert(UserAlbumPlayModel).values(
+            user_id=user_id,
+            album_id=album_id,
+            play_count=1,
+            last_played_at=timestamp,
+            created_at=timestamp,
+            updated_at=timestamp,
+        ).on_conflict_do_update(
+            index_elements=[UserAlbumPlayModel.user_id, UserAlbumPlayModel.album_id],
+            set_={
+                "play_count": UserAlbumPlayModel.play_count + 1,
+                "last_played_at": timestamp,
+                "updated_at": timestamp,
+            }
+        )
+        await self.session.execute(overall_stmt)
+
+        year_stmt = insert(UserAlbumPlayYearModel).values(
+            user_id=user_id,
+            album_id=album_id,
+            year=year,
+            play_count=1,
+            created_at=timestamp,
+            updated_at=timestamp,
+        ).on_conflict_do_update(
+            index_elements=[UserAlbumPlayYearModel.user_id, UserAlbumPlayYearModel.album_id, UserAlbumPlayYearModel.year],
+            set_={
+                "play_count": UserAlbumPlayYearModel.play_count + 1,
+                "updated_at": timestamp,
+            }
+        )
+        await self.session.execute(year_stmt)
+
+        overall_result = await self.session.execute(
+            select(UserAlbumPlayModel.play_count, UserAlbumPlayModel.last_played_at)
+            .where(
+                and_(
+                    UserAlbumPlayModel.user_id == user_id,
+                    UserAlbumPlayModel.album_id == album_id,
+                )
+            )
+        )
+        overall_row = overall_result.one()
+
+        year_result = await self.session.execute(
+            select(UserAlbumPlayYearModel.play_count)
+            .where(
+                and_(
+                    UserAlbumPlayYearModel.user_id == user_id,
+                    UserAlbumPlayYearModel.album_id == album_id,
+                    UserAlbumPlayYearModel.year == year,
+                )
+            )
+        )
+        year_count = year_result.scalar_one()
+
+        return {
+            "album_id": album_id,
+            "play_count": overall_row.play_count,
+            "play_count_ytd": year_count,
+            "last_played_at": overall_row.last_played_at,
+        }
+
+    async def get_played_albums_ytd(
+        self,
+        user_id: UUID,
+        year: int,
+        limit: int = 50,
+        offset: int = 0
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """
+        Get played albums for a user in a given year.
+        """
+        base_query = (
+            select(UserAlbumPlayYearModel)
+            .where(
+                and_(
+                    UserAlbumPlayYearModel.user_id == user_id,
+                    UserAlbumPlayYearModel.year == year,
+                    UserAlbumPlayYearModel.play_count > 0,
+                )
+            )
+        )
+
+        count_query = select(func.count()).select_from(base_query.subquery())
+        count_result = await self.session.execute(count_query)
+        total = count_result.scalar_one()
+
+        data_query = (
+            select(
+                UserAlbumPlayYearModel.play_count.label("play_count_ytd"),
+                AlbumModel.id.label("album_id"),
+                AlbumModel.title.label("album_title"),
+                ArtistModel.id.label("artist_id"),
+                ArtistModel.name.label("artist_name"),
+                UserAlbumPlayModel.last_played_at.label("last_played_at"),
+            )
+            .join(AlbumModel, AlbumModel.id == UserAlbumPlayYearModel.album_id)
+            .join(ArtistModel, ArtistModel.id == AlbumModel.primary_artist_id)
+            .outerjoin(
+                UserAlbumPlayModel,
+                and_(
+                    UserAlbumPlayModel.user_id == UserAlbumPlayYearModel.user_id,
+                    UserAlbumPlayModel.album_id == UserAlbumPlayYearModel.album_id,
+                )
+            )
+            .where(
+                and_(
+                    UserAlbumPlayYearModel.user_id == user_id,
+                    UserAlbumPlayYearModel.year == year,
+                    UserAlbumPlayYearModel.play_count > 0,
+                )
+            )
+            .order_by(
+                UserAlbumPlayYearModel.play_count.desc(),
+                AlbumModel.title.asc(),
+                AlbumModel.id.asc(),
+            )
+            .limit(limit)
+            .offset(offset)
+        )
+
+        result = await self.session.execute(data_query)
+        rows = result.all()
+
+        items = []
+        for row in rows:
+            items.append({
+                "album_id": row.album_id,
+                "album_title": row.album_title,
+                "artist_id": row.artist_id,
+                "artist_name": row.artist_name,
+                "play_count_ytd": row.play_count_ytd,
+                "last_played_at": row.last_played_at,
+            })
+
+        return items, total
 
     async def get_top_artists_global(self, limit: int = 10) -> List[Dict[str, Any]]:
         """

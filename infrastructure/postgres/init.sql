@@ -265,6 +265,34 @@ CREATE TABLE collection_items (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Per-user album play counts (overall)
+CREATE TABLE user_album_plays (
+    user_id UUID NOT NULL,
+    album_id UUID NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
+    play_count INT DEFAULT 0 CHECK (play_count >= 0),
+    last_played_at TIMESTAMP,
+
+    -- System metadata
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (user_id, album_id)
+);
+
+-- Per-user album play counts by year
+CREATE TABLE user_album_play_years (
+    user_id UUID NOT NULL,
+    album_id UUID NOT NULL REFERENCES albums(id) ON DELETE CASCADE,
+    year INT NOT NULL,
+    play_count INT DEFAULT 0 CHECK (play_count >= 0),
+
+    -- System metadata
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (user_id, album_id, year)
+);
+
 -- Collection import jobs table
 CREATE TABLE collection_imports (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -477,6 +505,10 @@ CREATE INDEX idx_matrices_pressing ON matrices(pressing_id);
 CREATE INDEX idx_packaging_pressing ON packaging(pressing_id);
 CREATE INDEX idx_collection_items_user ON collection_items(user_id);
 CREATE INDEX idx_collection_items_pressing ON collection_items(pressing_id);
+CREATE INDEX idx_user_album_plays_user ON user_album_plays(user_id);
+CREATE INDEX idx_user_album_plays_last_played ON user_album_plays(user_id, last_played_at DESC);
+CREATE INDEX idx_user_album_play_years_user_year ON user_album_play_years(user_id, year);
+CREATE INDEX idx_user_album_play_years_user_year_count ON user_album_play_years(user_id, year, play_count DESC, album_id);
 CREATE INDEX idx_media_assets_entity ON media_assets(entity_type, entity_id);
 CREATE INDEX idx_external_refs_entity ON external_references(entity_type, entity_id);
 CREATE INDEX idx_discogs_cache_pages_key ON discogs_cache_pages(cache_key);
@@ -563,6 +595,12 @@ CREATE TRIGGER update_packaging_updated_at
 
 CREATE TRIGGER update_collection_items_updated_at
     BEFORE UPDATE ON collection_items
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_user_album_plays_updated_at
+    BEFORE UPDATE ON user_album_plays
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_user_album_play_years_updated_at
+    BEFORE UPDATE ON user_album_play_years
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_media_assets_updated_at
@@ -757,6 +795,8 @@ COMMENT ON TABLE pressings IS 'Physical vinyl pressings of albums';
 COMMENT ON TABLE matrices IS 'Matrix/runout codes etched on vinyl records';
 COMMENT ON TABLE packaging IS 'Packaging details for pressings';
 COMMENT ON TABLE collection_items IS 'User-owned vinyl records';
+COMMENT ON TABLE user_album_plays IS 'Per-user album play counts and last played timestamp';
+COMMENT ON TABLE user_album_play_years IS 'Per-user album play counts by year';
 COMMENT ON TABLE collection_imports IS 'Imports of external collection data (Discogs CSV)';
 COMMENT ON TABLE collection_import_rows IS 'Row-level status for collection imports';
 COMMENT ON TABLE media_assets IS 'Images and videos associated with entities';

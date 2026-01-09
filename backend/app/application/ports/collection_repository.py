@@ -160,6 +160,37 @@ class CollectionRepository(ABC):
         pass
 
     @abstractmethod
+    async def user_has_album(self, user_id: UUID, album_id: UUID) -> bool:
+        """
+        Check if user has any collection items for an album.
+        """
+        pass
+
+    @abstractmethod
+    async def increment_album_play_count(
+        self,
+        user_id: UUID,
+        album_id: UUID,
+    ) -> Dict[str, Any]:
+        """
+        Increment album play count (overall + current year) for a user.
+        """
+        pass
+
+    @abstractmethod
+    async def get_played_albums_ytd(
+        self,
+        user_id: UUID,
+        year: int,
+        limit: int = 50,
+        offset: int = 0
+    ) -> Tuple[List[Dict[str, Any]], int]:
+        """
+        Get played albums for a user in a given year.
+        """
+        pass
+
+    @abstractmethod
     async def get_top_artists_global(self, limit: int = 10) -> List[Dict[str, Any]]:
         """
         Get top artists by collection item count across all users.
