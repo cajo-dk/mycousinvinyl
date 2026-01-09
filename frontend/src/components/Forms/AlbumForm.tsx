@@ -163,6 +163,29 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
     setFormData((prev) => ({ ...prev, [field]: values }));
   };
 
+  const handleMultiSelectClick = (e: React.MouseEvent<HTMLSelectElement>, field: 'genre_ids' | 'style_ids') => {
+    const clickedOption = (e.target as HTMLElement).closest('option') as HTMLOptionElement | null;
+    if (!clickedOption) return;
+
+    const value = clickedOption.value;
+    setFormData((prev) => {
+      const currentValues = prev[field];
+      let newValues: string[];
+
+      if (e.ctrlKey || e.metaKey) {
+        if (currentValues.includes(value)) {
+          newValues = currentValues.filter((v) => v !== value);
+        } else {
+          newValues = [...currentValues, value];
+        }
+      } else {
+        newValues = [value];
+      }
+
+      return { ...prev, [field]: newValues };
+    });
+  };
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) {
@@ -550,6 +573,7 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
             size={5}
             value={formData.genre_ids}
             onChange={(e) => handleMultiSelect(e, 'genre_ids')}
+            onClick={(e) => handleMultiSelectClick(e, 'genre_ids')}
           >
             {genres.map((genre) => (
               <option key={genre.id} value={genre.id}>
@@ -557,7 +581,7 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
               </option>
             ))}
           </select>
-          <small>Hold Ctrl/Cmd to select multiple</small>
+          <small>Click to select. Hold Ctrl/Cmd for multiple</small>
         </div>
 
         <div className="form-group">
@@ -569,6 +593,7 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
             size={5}
             value={formData.style_ids}
             onChange={(e) => handleMultiSelect(e, 'style_ids')}
+            onClick={(e) => handleMultiSelectClick(e, 'style_ids')}
           >
             {styles.map((style) => (
               <option key={style.id} value={style.id}>
@@ -576,7 +601,7 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
               </option>
             ))}
           </select>
-          <small>Hold Ctrl/Cmd to select multiple</small>
+          <small>Click to select. Hold Ctrl/Cmd for multiple</small>
         </div>
       </div>
 

@@ -122,8 +122,15 @@ export function Albums() {
 
     setGroupedData(grouped);
 
-    // Start collapsed
-    setExpandedArtists(new Set());
+    setExpandedArtists((prev) => {
+      const next = new Set<string>();
+      prev.forEach((artistId) => {
+        if (artistMap.has(artistId)) {
+          next.add(artistId);
+        }
+      });
+      return next;
+    });
   };
 
   useEffect(() => {

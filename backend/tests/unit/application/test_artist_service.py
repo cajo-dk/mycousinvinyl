@@ -338,6 +338,33 @@ class TestUpdateArtist:
         artist_event = next(evt for evt in events if isinstance(evt, ArtistUpdated))
         assert artist_event.updated_fields == {"country": "UK"}
 
+    @pytest.mark.asyncio
+    async def test_update_artist_begin_date_clears_active_years(self, artist_service, mock_uow):
+        """Should clear active_years so it can be rebuilt from begin/end dates."""
+        artist_id = uuid4()
+        existing_artist = Artist(
+            id=artist_id,
+            name="The Beatles",
+            begin_date="1960",
+            end_date="1970",
+            active_years="1960-1970"
+        )
+        updated_artist = Artist(
+            id=artist_id,
+            name="The Beatles",
+            begin_date="1961",
+            end_date="1970",
+            active_years=None
+        )
+
+        mock_uow.artist_repository.get.return_value = existing_artist
+        mock_uow.artist_repository.update.return_value = updated_artist
+
+        result = await artist_service.update_artist(artist_id, begin_date="1961")
+
+        assert result.begin_date == "1961"
+        assert existing_artist.active_years is None
+
 
 class TestDeleteArtist:
     """Test artist deletion."""

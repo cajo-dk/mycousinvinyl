@@ -35,6 +35,8 @@ export function ArtistForm({ artistId, onSuccess, onCancel }: ArtistFormProps) {
   const [artistTypes, setArtistTypes] = useState<ArtistTypeResponse[]>([]);
   const isEditMode = !!artistId;
   const [imageTouched, setImageTouched] = useState(false);
+  const [beginDateTouched, setBeginDateTouched] = useState(false);
+  const [endDateTouched, setEndDateTouched] = useState(false);
   const [discogsResults, setDiscogsResults] = useState<DiscogsArtistSearchResult[]>([]);
   const [discogsLoading, setDiscogsLoading] = useState(false);
   const [discogsError, setDiscogsError] = useState<string | null>(null);
@@ -68,6 +70,8 @@ export function ArtistForm({ artistId, onSuccess, onCancel }: ArtistFormProps) {
             discogs_id: artist.discogs_id ?? null,
           });
           setImageTouched(false);
+          setBeginDateTouched(false);
+          setEndDateTouched(false);
         }
         if (!artistId && artistTypesResp.length > 0) {
           setFormData((prev) => ({
@@ -104,8 +108,12 @@ export function ArtistForm({ artistId, onSuccess, onCancel }: ArtistFormProps) {
       if (imageTouched) {
         payload.image_url = formData.image_url ? formData.image_url : null;
       }
-      if (formData.begin_date) payload.begin_date = formData.begin_date;
-      if (formData.end_date) payload.end_date = formData.end_date;
+      if (formData.begin_date || beginDateTouched) {
+        payload.begin_date = formData.begin_date ? formData.begin_date : null;
+      }
+      if (formData.end_date || endDateTouched) {
+        payload.end_date = formData.end_date ? formData.end_date : null;
+      }
       if (formData.discogs_id) payload.discogs_id = formData.discogs_id;
 
       if (isEditMode && artistId) {
@@ -131,6 +139,12 @@ export function ArtistForm({ artistId, onSuccess, onCancel }: ArtistFormProps) {
       setDiscogsResults([]);
       setDiscogsError(null);
       setDiscogsSelectedId(null);
+    }
+    if (e.target.name === 'begin_date') {
+      setBeginDateTouched(true);
+    }
+    if (e.target.name === 'end_date') {
+      setEndDateTouched(true);
     }
     setFormData({
       ...formData,

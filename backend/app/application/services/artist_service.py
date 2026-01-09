@@ -160,6 +160,9 @@ class ArtistService:
 
             # Apply updates using domain entity method
             artist.update(**updates)
+            if 'begin_date' in updates or 'end_date' in updates:
+                # Force active_years recompute from begin/end on save.
+                artist.active_years = None
 
             result = await self.uow.artist_repository.update(artist)
 
