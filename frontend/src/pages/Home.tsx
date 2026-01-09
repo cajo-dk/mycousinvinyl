@@ -3,9 +3,11 @@
  */
 
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { collectionApi } from '@/api/services';
 import { CollectionItemDetailResponse, CollectionStatistics } from '@/types/api';
-import { Card, Loading, ErrorAlert } from '@/components/UI';
+import { Card, Loading, ErrorAlert, Icon } from '@/components/UI';
+import { mdiEyeOutline } from '@mdi/js';
 import { formatDecimal, parseLocaleNumber } from '@/utils/format';
 import { useViewControls } from '@/components/Layout/ViewControlsContext';
 import './Home.css';
@@ -16,6 +18,7 @@ export function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { setControls } = useViewControls();
+  const navigate = useNavigate();
 
   const fetchStats = async () => {
     try {
@@ -93,6 +96,9 @@ export function Home() {
       </div>
     );
   };
+
+  const topArtists = (stats?.top_artists || []).filter((entry) => entry.collected_count > 1);
+  const topAlbums = (stats?.top_albums || []).filter((entry) => entry.collected_count > 1);
 
   return (
     <div className="home">
@@ -266,6 +272,76 @@ export function Home() {
               </div>
             </Card>
           ))}
+
+          <Card className="latest-addition-card top-ten-card">
+            <div className="top-ten">
+              <div className="top-ten-header">TOP 10 ARTISTS (ALL USERS)</div>
+              {topArtists.length > 0 ? (
+                <div className="top-ten-table">
+                  <div className="top-ten-row top-ten-row-header">
+                    <span>#</span>
+                    <span>Artist</span>
+                    <span>Collected</span>
+                    <span />
+                  </div>
+                  {topArtists.map((entry, index) => (
+                    <div key={entry.artist_id} className="top-ten-row">
+                      <span>{index + 1}</span>
+                      <span className="top-ten-name">{entry.artist_name}</span>
+                      <span>{entry.collected_count}</span>
+                      <button
+                        type="button"
+                        className="top-ten-view"
+                        onClick={() => navigate('/artists', { state: { selectedArtistId: entry.artist_id } })}
+                        aria-label={`View ${entry.artist_name}`}
+                        title="View artist"
+                      >
+                        <Icon path={mdiEyeOutline} size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="top-ten-empty">Not enough shared collection data yet.</div>
+              )}
+            </div>
+          </Card>
+
+          <Card className="latest-addition-card top-ten-card">
+            <div className="top-ten">
+              <div className="top-ten-header">TOP 10 ALBUMS (ALL USERS)</div>
+              {topAlbums.length > 0 ? (
+                <div className="top-ten-table">
+                  <div className="top-ten-row top-ten-row-header">
+                    <span>#</span>
+                    <span>Album</span>
+                    <span>Artist</span>
+                    <span>Collected</span>
+                    <span />
+                  </div>
+                  {topAlbums.map((entry, index) => (
+                    <div key={entry.album_id} className="top-ten-row top-ten-row-album">
+                      <span>{index + 1}</span>
+                      <span className="top-ten-name">{entry.album_title}</span>
+                      <span className="top-ten-name">{entry.artist_name}</span>
+                      <span>{entry.collected_count}</span>
+                      <button
+                        type="button"
+                        className="top-ten-view"
+                        onClick={() => navigate('/albums', { state: { selectedAlbumId: entry.album_id } })}
+                        aria-label={`View ${entry.album_title}`}
+                        title="View album"
+                      >
+                        <Icon path={mdiEyeOutline} size={16} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="top-ten-empty">Not enough shared collection data yet.</div>
+              )}
+            </div>
+          </Card>
         </div>
       )}
 

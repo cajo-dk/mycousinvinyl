@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { artistsApi, albumsApi } from '@/api/services';
 import { AlbumDetailResponse, ArtistResponse } from '@/types/api';
 import { Loading, ErrorAlert, Modal, Icon } from '@/components/UI';
@@ -50,6 +51,8 @@ export function Artists() {
   const [initialFilter, setInitialFilter] = useState<string | null>(null);
   const { preferences } = usePreferences();
   const { setControls } = useViewControls();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const fetchArtists = async () => {
     try {
@@ -228,6 +231,34 @@ export function Artists() {
     setSelectedArtist(artist);
     setShowViewModal(true);
   };
+
+  useEffect(() => {
+    const navState = location.state as { selectedArtistId?: string } | null;
+    if (!navState?.selectedArtistId) {
+      return;
+    }
+
+    const targetId = navState.selectedArtistId;
+    const existing = artists.find((artist) => artist.id === targetId);
+    if (existing) {
+      openViewModal(existing);
+      navigate('/artists', { replace: true, state: {} });
+      return;
+    }
+
+    const loadArtist = async () => {
+      try {
+        const artist = await artistsApi.getById(targetId);
+        openViewModal(artist);
+      } catch (err) {
+        console.error('Failed to load artist for navigation:', err);
+      } finally {
+        navigate('/artists', { replace: true, state: {} });
+      }
+    };
+
+    loadArtist();
+  }, [artists, location.state, navigate]);
 
   const availableInitials = useMemo(() => {
     const initials = new Set<string>();

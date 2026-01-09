@@ -705,6 +705,22 @@ export interface CollectionStatistics {
   avg_est_sales_price: number;
   high_est_sales_price: number;
   currency: string;
+  top_artists: TopArtistEntry[];
+  top_albums: TopAlbumEntry[];
+}
+
+export interface TopArtistEntry {
+  artist_id: string;
+  artist_name: string;
+  collected_count: number;
+}
+
+export interface TopAlbumEntry {
+  album_id: string;
+  album_title: string;
+  artist_id: string;
+  artist_name: string;
+  collected_count: number;
 }
 
 export interface CollectionImportResponse {

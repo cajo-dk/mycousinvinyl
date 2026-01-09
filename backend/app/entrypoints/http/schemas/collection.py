@@ -193,6 +193,22 @@ class CollectionSearchParams(BaseModel):
     offset: int = Field(default=0, ge=0)
 
 
+class TopArtistEntry(BaseModel):
+    """Top artist entry for collection statistics."""
+    artist_id: UUID
+    artist_name: str
+    collected_count: int
+
+
+class TopAlbumEntry(BaseModel):
+    """Top album entry for collection statistics."""
+    album_id: UUID
+    album_title: str
+    artist_id: UUID
+    artist_name: str
+    collected_count: int
+
+
 class CollectionStatistics(BaseModel):
     """Collection statistics response."""
     total_albums: int = Field(..., example=150)
@@ -204,6 +220,8 @@ class CollectionStatistics(BaseModel):
     avg_est_sales_price: float = Field(..., example=4200.00)
     high_est_sales_price: float = Field(..., example=6500.00)
     currency: str = Field(..., example="DKK")
+    top_artists: List[TopArtistEntry] = Field(default_factory=list)
+    top_albums: List[TopAlbumEntry] = Field(default_factory=list)
 
     class Config:
         from_attributes = True

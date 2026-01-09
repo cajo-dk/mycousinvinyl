@@ -487,6 +487,76 @@ class CollectionRepositoryAdapter(CollectionRepository):
             "currency": currency
         }
 
+    async def get_top_artists_global(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get top artists by collection item count across all users.
+        """
+        query = (
+            select(
+                ArtistModel.id.label("artist_id"),
+                ArtistModel.name.label("artist_name"),
+                func.count(CollectionItemModel.id).label("collected_count"),
+            )
+            .join(AlbumModel, AlbumModel.primary_artist_id == ArtistModel.id)
+            .join(PressingModel, PressingModel.album_id == AlbumModel.id)
+            .join(CollectionItemModel, CollectionItemModel.pressing_id == PressingModel.id)
+            .group_by(ArtistModel.id, ArtistModel.name)
+            .having(func.count(CollectionItemModel.id) > 1)
+            .order_by(
+                func.count(CollectionItemModel.id).desc(),
+                ArtistModel.name.asc(),
+                ArtistModel.id.asc(),
+            )
+            .limit(limit)
+        )
+
+        result = await self.session.execute(query)
+        return [
+            {
+                "artist_id": row.artist_id,
+                "artist_name": row.artist_name,
+                "collected_count": row.collected_count,
+            }
+            for row in result.all()
+        ]
+
+    async def get_top_albums_global(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get top albums by collection item count across all users.
+        """
+        query = (
+            select(
+                AlbumModel.id.label("album_id"),
+                AlbumModel.title.label("album_title"),
+                ArtistModel.id.label("artist_id"),
+                ArtistModel.name.label("artist_name"),
+                func.count(CollectionItemModel.id).label("collected_count"),
+            )
+            .join(ArtistModel, AlbumModel.primary_artist_id == ArtistModel.id)
+            .join(PressingModel, PressingModel.album_id == AlbumModel.id)
+            .join(CollectionItemModel, CollectionItemModel.pressing_id == PressingModel.id)
+            .group_by(AlbumModel.id, AlbumModel.title, ArtistModel.id, ArtistModel.name)
+            .having(func.count(CollectionItemModel.id) > 1)
+            .order_by(
+                func.count(CollectionItemModel.id).desc(),
+                AlbumModel.title.asc(),
+                AlbumModel.id.asc(),
+            )
+            .limit(limit)
+        )
+
+        result = await self.session.execute(query)
+        return [
+            {
+                "album_id": row.album_id,
+                "album_title": row.album_title,
+                "artist_id": row.artist_id,
+                "artist_name": row.artist_name,
+                "collected_count": row.collected_count,
+            }
+            for row in result.all()
+        ]
+
     async def get_owners_for_pressing(
         self,
         pressing_id: UUID,

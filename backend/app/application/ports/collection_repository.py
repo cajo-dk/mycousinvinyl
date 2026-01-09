@@ -160,6 +160,26 @@ class CollectionRepository(ABC):
         pass
 
     @abstractmethod
+    async def get_top_artists_global(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get top artists by collection item count across all users.
+
+        Returns:
+            List of dicts with artist_id, artist_name, collected_count.
+        """
+        pass
+
+    @abstractmethod
+    async def get_top_albums_global(self, limit: int = 10) -> List[Dict[str, Any]]:
+        """
+        Get top albums by collection item count across all users.
+
+        Returns:
+            List of dicts with album_id, album_title, artist_id, artist_name, collected_count.
+        """
+        pass
+
+    @abstractmethod
     async def exists_for_user_pressing(self, user_id: UUID, pressing_id: UUID) -> bool:
         """
         Check if user already has a pressing in their collection.

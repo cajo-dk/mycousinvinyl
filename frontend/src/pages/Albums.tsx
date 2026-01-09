@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import { albumsApi } from '@/api/services';
 import { AlbumDetailResponse } from '@/types/api';
@@ -52,6 +53,8 @@ export function Albums() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const { preferences } = usePreferences();
   const { setControls } = useViewControls();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const fetchAlbums = useCallback(async (query?: string) => {
     try {
@@ -166,6 +169,17 @@ export function Albums() {
       setInitialFilter(null);
     }
   }, [availableInitials, initialFilter]);
+
+  useEffect(() => {
+    const navState = location.state as { selectedAlbumId?: string } | null;
+    if (!navState?.selectedAlbumId) {
+      return;
+    }
+
+    setSelectedAlbumForDetails(navState.selectedAlbumId);
+    setShowAlbumDetailsModal(true);
+    navigate('/albums', { replace: true, state: {} });
+  }, [location.state, navigate]);
 
   const handleSearch = () => {
     fetchAlbums(searchQuery);

@@ -417,5 +417,7 @@ class CollectionService:
         """
         async with self.uow:
             stats = await self.uow.collection_repository.get_statistics(user_id)
+            stats["top_artists"] = await self.uow.collection_repository.get_top_artists_global()
+            stats["top_albums"] = await self.uow.collection_repository.get_top_albums_global()
             stats["currency"] = await self._get_preferred_currency(user_id)
             return stats
