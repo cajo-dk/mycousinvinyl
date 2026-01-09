@@ -203,6 +203,9 @@ export function Collection() {
     if (playIncrementing.has(albumId)) {
       return;
     }
+    if (!confirm('Log a play for this album?')) {
+      return;
+    }
     setPlayIncrementing((prev) => new Set(prev).add(albumId));
     try {
       await collectionApi.incrementAlbumPlayCount(albumId);
