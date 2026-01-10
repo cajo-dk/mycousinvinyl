@@ -634,7 +634,7 @@ class CollectionRepositoryAdapter(CollectionRepository):
             )
             .order_by(
                 UserAlbumPlayYearModel.play_count.desc(),
-                AlbumModel.title.asc(),
+                UserAlbumPlayModel.last_played_at.desc().nullslast(),
                 AlbumModel.id.asc(),
             )
             .limit(limit)
