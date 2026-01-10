@@ -220,6 +220,12 @@ export function Collection() {
     }
   };
 
+  const openAlbumDetails = (album: AlbumGroup) => {
+    setSelectedAlbumId(album.albumId);
+    setSelectedAlbumItems(album.items);
+    setShowAlbumDetailsModal(true);
+  };
+
   const toggleArtist = (artistId: string) => {
     const newExpanded = new Set(expandedArtists);
     if (newExpanded.has(artistId)) {
@@ -263,7 +269,11 @@ export function Collection() {
     );
   };
 
-  const formatAlbumTitle = (albumTitle: string, item: CollectionItemDetailResponse) => {
+  const formatAlbumTitle = (
+    albumTitle: string,
+    item: CollectionItemDetailResponse,
+    genres: string
+  ) => {
     const updatedDate = item.market_data?.updated_at
       ? new Date(item.market_data.updated_at).toLocaleDateString('en-GB')
       : null;
@@ -271,6 +281,7 @@ export function Collection() {
     return (
       <div className="album-title-cell">
         <span className="album-title">{albumTitle}</span>
+        <span className="album-genre-mobile">{genres || '-'}</span>
         {updatedDate && (
           <span className="album-updated">Updated {updatedDate}</span>
         )}
@@ -363,16 +374,24 @@ export function Collection() {
                         return (
                           <tr key={item.id}>
                             <td className="collection-cover-cell col-cover">
-                              <div className="collection-cover">
-                                {coverUrl ? (
-                                  <img src={coverUrl} alt="Pressing cover" />
-                                ) : (
-                                  <span>?</span>
-                                )}
-                              </div>
+                              <button
+                                type="button"
+                                className="collection-cover-button"
+                                onClick={() => openAlbumDetails(album)}
+                                title="View Details"
+                                aria-label={`View ${album.albumTitle}`}
+                              >
+                                <div className="collection-cover">
+                                  {coverUrl ? (
+                                    <img src={coverUrl} alt="Pressing cover" />
+                                  ) : (
+                                    <span>?</span>
+                                  )}
+                                </div>
+                              </button>
                             </td>
                             <td className="name-cell col-album">
-                              {formatAlbumTitle(album.albumTitle, item)}
+                              {formatAlbumTitle(album.albumTitle, item, album.genres)}
                             </td>
                             {index === 0 && (
                               <>
@@ -408,11 +427,7 @@ export function Collection() {
                             <td className="actions-cell col-actions">
                               <button
                                 className="btn-action btn-action-view"
-                                onClick={() => {
-                                  setSelectedAlbumId(album.albumId);
-                                  setSelectedAlbumItems(album.items);
-                                  setShowAlbumDetailsModal(true);
-                                }}
+                                onClick={() => openAlbumDetails(album)}
                                 title="View Details"
                                 aria-label="View Details"
                               >

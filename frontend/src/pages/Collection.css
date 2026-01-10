@@ -152,6 +152,18 @@
   object-fit: cover;
 }
 
+.collection-cover-button {
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.collection-cover-button:focus-visible {
+  outline: 2px solid #ff6b35;
+  outline-offset: 2px;
+}
+
 .owned-cell {
   width: 70px;
   text-align: center;
@@ -281,6 +293,12 @@
   font-size: 0.75rem;
 }
 
+.album-genre-mobile {
+  display: none;
+  color: #bbb;
+  font-size: 0.85rem;
+}
+
 /* Estimated price styling */
 .estimated-price {
   display: flex;
@@ -326,13 +344,67 @@
   .album-table .col-purchase,
   .album-table .col-est,
   .album-table .col-condition,
-  .album-table .col-owned,
   .album-table .col-play {
     display: none;
   }
 
   .album-table .btn-action-edit,
   .album-table .btn-action-delete {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 499px) and (orientation: portrait) {
+  .album-table thead {
+    display: none;
+  }
+
+  .album-table tbody tr {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 0.35rem;
+    border-bottom: none;
+  }
+
+  .album-table tbody tr:hover {
+    background-color: transparent;
+  }
+
+  .album-table td {
+    padding: 0.5rem 0;
+  }
+
+  .album-table .collection-cover-cell {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    width: 64px;
+  }
+
+  .album-table .col-album {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .album-table .col-genre,
+  .album-table .col-actions {
+    display: none;
+  }
+
+  .album-table .col-owned {
+    display: block;
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    justify-self: end;
+  }
+
+  .album-genre-mobile {
+    display: block;
+  }
+
+  .album-updated {
     display: none;
   }
 }
