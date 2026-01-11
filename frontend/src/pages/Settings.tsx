@@ -3,7 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { lookupApi, preferencesApi, systemLogsApi } from '@/api/services';
+import { lookupApi, preferencesApi, systemLogsApi, toolsApi } from '@/api/services';
 import { Loading, ErrorAlert, Icon } from '@/components/UI';
 import { mdiPencilOutline, mdiTrashCanOutline } from '@mdi/js';
 import {
@@ -662,6 +662,8 @@ export function Settings() {
   const [logSeverityFilter, setLogSeverityFilter] = useState<'all' | 'INFO' | 'WARN' | 'ERROR'>('all');
   const [logLoading, setLogLoading] = useState(false);
   const [logError, setLogError] = useState<string | null>(null);
+  const [backupRunning, setBackupRunning] = useState(false);
+  const [backupMessage, setBackupMessage] = useState<string | null>(null);
   const pageSize = 10;
   const [currency, setCurrency] = useState('');
   const [currencySaving, setCurrencySaving] = useState(false);
@@ -673,6 +675,7 @@ export function Settings() {
   const tabs = [
     { id: 'preferences', label: 'Preferences' },
     { id: 'keywords', label: 'Keywords' },
+    { id: 'tools', label: 'Tools' },
     { id: 'logs', label: 'Logs' },
   ];
 
@@ -794,6 +797,19 @@ export function Settings() {
       setError(err.response?.data?.detail || 'Failed to update log retention');
     } finally {
       setLogRetentionSaving(false);
+    }
+  };
+
+  const handleRunBackup = async () => {
+    setBackupRunning(true);
+    setBackupMessage(null);
+    try {
+      const response = await toolsApi.runBackup();
+      setBackupMessage(response.message || 'Backup started');
+    } catch (err: any) {
+      setBackupMessage(err.response?.data?.detail || 'Failed to start backup');
+    } finally {
+      setBackupRunning(false);
     }
   };
 
@@ -1046,6 +1062,30 @@ export function Settings() {
             />
           )}
         </div>
+      )}
+
+      {activeTab === 'tools' && (
+        <section className="settings-section">
+          <div className="settings-section-header">
+            <div>
+              <h2>Tools</h2>
+              <p>Run administrative tasks on demand.</p>
+            </div>
+          </div>
+          <div className="settings-form-row settings-form-row--compact">
+            <button
+              className="btn-primary"
+              type="button"
+              onClick={handleRunBackup}
+              disabled={backupRunning}
+            >
+              {backupRunning ? 'Starting...' : 'Run Backup Now'}
+            </button>
+          </div>
+          {backupMessage && (
+            <div className="settings-status">{backupMessage}</div>
+          )}
+        </section>
       )}
 
       {activeTab === 'logs' && (

@@ -11,6 +11,7 @@ export { collectionApi } from './collection';
 export { lookupApi } from './lookup';
 export { preferencesApi } from './preferences';
 export { systemLogsApi } from './systemLogs';
+export { toolsApi } from './tools';
 export { discogsApi } from './discogs';
 export { collectionSharingApi } from './collectionSharing';
 export { albumWizardApi } from './albumWizard';

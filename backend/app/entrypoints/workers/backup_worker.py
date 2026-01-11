@@ -5,6 +5,7 @@ Creates Postgres backups on configured weekdays/times, uploads to SharePoint,
 then removes the local file. Logs success/failure details.
 """
 
+import asyncio
 import logging
 import os
 import re
@@ -21,6 +22,9 @@ import httpx
 import msal
 
 from app.logging_config import configure_logging
+from app.adapters.postgres.unit_of_work import SqlAlchemyUnitOfWork
+from app.application.services.system_log_service import SystemLogService
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 configure_logging(os.getenv("LOG_LEVEL", "INFO"))
 logger = logging.getLogger(__name__)
@@ -97,7 +101,7 @@ def _parse_schedule_time(value: str) -> Optional[dt_time]:
     return parsed
 
 
-def _build_config() -> Optional[BackupConfig]:
+def _build_config(require_schedule: bool = True) -> Optional[BackupConfig]:
     database_url = os.getenv("DATABASE_URL", "")
     if not database_url:
         logger.error("DATABASE_URL is required for backup worker")
@@ -106,7 +110,9 @@ def _build_config() -> Optional[BackupConfig]:
     schedule_days = _parse_schedule_days(os.getenv("BACKUP_SCHEDULE_DAYS", ""))
     schedule_time = _parse_schedule_time(os.getenv("BACKUP_SCHEDULE_TIME", ""))
     external_path_value = os.getenv("BACKUP_EXTERNAL_PATH", "")
-    if not schedule_days or not schedule_time or not external_path_value:
+    if require_schedule and (not schedule_days or not schedule_time):
+        return None
+    if not external_path_value:
         return None
 
     return BackupConfig(
@@ -169,7 +175,7 @@ def _pg_dump(database_url: str, output_path: Path) -> None:
         "pg_dump",
         "--dbname",
         database_url,
-        "--format=custom",
+        "--format=plain",
         "--no-owner",
         "--no-privileges",
         "--file",
@@ -282,10 +288,76 @@ def _upload_to_sharepoint(config: BackupConfig, file_path: Path, size: int) -> N
             _upload_large(client, drive_id, upload_path, file_path, size)
 
 
+async def _log_backup_result(
+    database_url: str,
+    success: bool,
+    file_name: str,
+    size: Optional[int],
+    duration: float,
+    error: Optional[str] = None,
+) -> None:
+    if database_url.startswith('postgresql://'):
+        database_url = database_url.replace('postgresql://', 'postgresql+asyncpg://', 1)
+    engine = create_async_engine(
+        database_url,
+        echo=False,
+        pool_pre_ping=True,
+    )
+    session_factory = async_sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False
+    )
+    async with session_factory() as session:
+        uow = SqlAlchemyUnitOfWork(session)
+        service = SystemLogService(uow)
+        if success:
+            message = (
+                f"Backup completed: file={file_name} "
+                f"size={size if size is not None else 'unknown'} "
+                f"duration={duration:.2f}s"
+            )
+            await service.create_log(
+                user_name="*system",
+                severity="INFO",
+                component="Backup",
+                message=message,
+            )
+        else:
+            message = (
+                f"Backup failed: file={file_name} "
+                f"size={size if size is not None else 'unknown'} "
+                f"duration={duration:.2f}s "
+                f"error={error or 'unknown'}"
+            )
+            await service.create_log(
+                user_name="*system",
+                severity="ERROR",
+                component="Backup",
+                message=message,
+            )
+
+
+def _dispatch_log_backup_result(
+    database_url: str,
+    success: bool,
+    file_name: str,
+    size: Optional[int],
+    duration: float,
+    error: Optional[str] = None,
+) -> None:
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        asyncio.run(_log_backup_result(database_url, success, file_name, size, duration, error))
+        return
+    loop.create_task(_log_backup_result(database_url, success, file_name, size, duration, error))
+
+
 def _run_backup(config: BackupConfig) -> None:
     start = time.monotonic()
     timestamp = _now(config.timezone).strftime("%Y%m%d_%H%M%S")
-    filename = f"mycousinvinyl_backup_{timestamp}.dump"
+    filename = f"mycousinvinyl_backup_{timestamp}.sql"
     backup_path = config.external_path / filename
     size = None
 
@@ -302,6 +374,13 @@ def _run_backup(config: BackupConfig) -> None:
             size,
             duration,
         )
+        _dispatch_log_backup_result(
+            config.database_url,
+            True,
+            backup_path.name,
+            size,
+            duration,
+        )
     except Exception as exc:
         duration = time.monotonic() - start
         logger.error(
@@ -312,12 +391,28 @@ def _run_backup(config: BackupConfig) -> None:
             exc,
             exc_info=True,
         )
+        _dispatch_log_backup_result(
+            config.database_url,
+            False,
+            backup_path.name,
+            size,
+            duration,
+            str(exc),
+        )
     finally:
         if backup_path.exists():
             try:
                 backup_path.unlink()
             except Exception:
                 logger.error("Failed to remove backup file: %s", backup_path, exc_info=True)
+
+
+def run_backup_now() -> bool:
+    config = _build_config(require_schedule=False)
+    if not config:
+        return False
+    _run_backup(config)
+    return True
 
 
 def backup_worker() -> None:
