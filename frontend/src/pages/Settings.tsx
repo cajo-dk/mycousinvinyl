@@ -659,6 +659,7 @@ export function Settings() {
   const [logTotal, setLogTotal] = useState(0);
   const [logPage, setLogPage] = useState(1);
   const [logPageSize, setLogPageSize] = useState(50);
+  const [logSeverityFilter, setLogSeverityFilter] = useState<'all' | 'INFO' | 'WARN' | 'ERROR'>('all');
   const [logLoading, setLogLoading] = useState(false);
   const [logError, setLogError] = useState<string | null>(null);
   const pageSize = 10;
@@ -796,27 +797,28 @@ export function Settings() {
     }
   };
 
+  const loadLogs = async () => {
+    try {
+      setLogLoading(true);
+      setLogError(null);
+      const response = await systemLogsApi.getLogs({
+        limit: logPageSize,
+        offset: (logPage - 1) * logPageSize,
+      });
+      setLogEntries(response.items || []);
+      setLogTotal(response.total || 0);
+    } catch (err: any) {
+      setLogError(err.response?.data?.detail || 'Failed to load logs');
+    } finally {
+      setLogLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab !== 'logs' || !isAdmin) {
       return;
     }
-    const fetchLogs = async () => {
-      try {
-        setLogLoading(true);
-        setLogError(null);
-        const response = await systemLogsApi.getLogs({
-          limit: logPageSize,
-          offset: (logPage - 1) * logPageSize,
-        });
-        setLogEntries(response.items || []);
-        setLogTotal(response.total || 0);
-      } catch (err: any) {
-        setLogError(err.response?.data?.detail || 'Failed to load logs');
-      } finally {
-        setLogLoading(false);
-      }
-    };
-    fetchLogs();
+    loadLogs();
   }, [activeTab, isAdmin, logPage, logPageSize]);
 
   useEffect(() => {
@@ -826,6 +828,9 @@ export function Settings() {
   }, [activeTab]);
 
   const logTotalPages = Math.max(1, Math.ceil(logTotal / logPageSize));
+  const filteredLogEntries = logSeverityFilter === 'all'
+    ? logEntries
+    : logEntries.filter((entry) => entry.severity === logSeverityFilter);
 
   if (loading) {
     return <Loading message="Loading settings..." />;
@@ -1052,16 +1057,71 @@ export function Settings() {
             </div>
           </div>
 
+          <div className="pagination settings-pagination settings-log-controls">
+            <div className="pagination-controls">
+              <button
+                onClick={() => setLogPage((prev) => Math.max(1, prev - 1))}
+                disabled={logPage === 1}
+                className="pagination-button"
+              >
+                Previous
+              </button>
+              <div className="pagination-info">
+                <label htmlFor="log-page-select">Page</label>
+                <select
+                  id="log-page-select"
+                  value={logPage}
+                  onChange={(e) => setLogPage(Number(e.target.value))}
+                >
+                  {Array.from({ length: logTotalPages }, (_, index) => index + 1).map((page) => (
+                    <option key={page} value={page}>
+                      {page}
+                    </option>
+                  ))}
+                </select>
+                <span>of {logTotalPages}</span>
+              </div>
+              <button
+                onClick={() => setLogPage((prev) => Math.min(logTotalPages, prev + 1))}
+                disabled={logPage === logTotalPages}
+                className="pagination-button"
+              >
+                Next
+              </button>
+            </div>
+            <div className="items-per-page">
+              <label htmlFor="log-severity-filter">Severity</label>
+              <select
+                id="log-severity-filter"
+                value={logSeverityFilter}
+                onChange={(e) => setLogSeverityFilter(e.target.value as 'all' | 'INFO' | 'WARN' | 'ERROR')}
+              >
+                <option value="all">All</option>
+                <option value="INFO">INFO</option>
+                <option value="WARN">WARN</option>
+                <option value="ERROR">ERROR</option>
+              </select>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={loadLogs}
+                disabled={logLoading}
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+
           {logLoading && (
             <div className="settings-status">Loading logs...</div>
           )}
           {logError && !logLoading && (
             <div className="settings-status settings-status--error">{logError}</div>
           )}
-          {!logLoading && !logError && logEntries.length === 0 && (
+          {!logLoading && !logError && filteredLogEntries.length === 0 && (
             <div className="settings-status">No log entries found.</div>
           )}
-          {!logLoading && !logError && logEntries.length > 0 && (
+          {!logLoading && !logError && filteredLogEntries.length > 0 && (
             <div className="table-container">
               <table className="data-table">
                 <thead>
@@ -1074,7 +1134,7 @@ export function Settings() {
                   </tr>
                 </thead>
                 <tbody>
-                  {logEntries.map((entry) => (
+                  {filteredLogEntries.map((entry) => (
                     <tr key={entry.id}>
                       <td>{formatDateTime(entry.created_at)}</td>
                       <td>{entry.user_name}</td>

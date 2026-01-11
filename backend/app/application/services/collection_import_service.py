@@ -624,9 +624,6 @@ class CollectionImportService:
         release: Dict[str, Any],
     ) -> Tuple[VinylFormat, VinylSpeed, VinylSize]:
         tokens = self._collect_format_tokens(raw, release)
-        if any("cassette" in token or "dvd" in token for token in tokens):
-            raise ImportSkip("Unsupported format: non-vinyl")
-
         format_value = None
         if any("non-vinyl" in token for token in tokens):
             format_value = VinylFormat.CD
@@ -644,7 +641,7 @@ class CollectionImportService:
             format_value = VinylFormat.LP
 
         if not format_value:
-            raise ImportSkip("Unsupported format: missing vinyl format")
+            format_value = VinylFormat.CD
 
         size = self._resolve_size(tokens, format_value)
         speed = self._resolve_speed(tokens, format_value)
