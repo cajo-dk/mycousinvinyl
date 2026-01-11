@@ -28,6 +28,26 @@ app = FastAPI(
 )
 
 
+async def _emit_system_log(severity: str, message: str) -> None:
+    if not settings.system_log_token or not settings.system_log_url:
+        return
+    payload = {
+        "user_name": "*system",
+        "severity": severity,
+        "component": "Discogs",
+        "message": message,
+    }
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            await client.post(
+                f"{settings.system_log_url}/internal/logs",
+                json=payload,
+                headers={"X-System-Log-Token": settings.system_log_token},
+            )
+    except Exception:
+        logger.warning("Failed to emit system log", exc_info=True)
+
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy", "service": "discogs-service"}
@@ -44,6 +64,7 @@ async def search_artists(
         items = await discogs_client.search_artists(query=query, limit=limit)
         return DiscogsArtistSearchResponse(items=items)
     except Exception as exc:
+        await _emit_system_log("ERROR", f"Artist search failed: {exc}")
         logger.exception("Discogs search failed")
         raise HTTPException(status_code=502, detail="Failed to reach Discogs") from exc
 
@@ -55,6 +76,7 @@ async def get_artist(artist_id: int):
     try:
         return await discogs_client.get_artist(artist_id)
     except Exception as exc:
+        await _emit_system_log("ERROR", f"Artist lookup failed: {exc}")
         logger.exception("Discogs artist lookup failed")
         raise HTTPException(status_code=502, detail="Failed to reach Discogs") from exc
 
@@ -72,6 +94,7 @@ async def search_albums(
         response = await discogs_client.search_albums(artist_id=artist_id, query=query, limit=limit, page=page)
         return response
     except Exception as exc:
+        await _emit_system_log("ERROR", f"Album search failed: {exc}")
         logger.exception("Discogs album search failed")
         raise HTTPException(status_code=502, detail="Failed to reach Discogs") from exc
 
@@ -86,6 +109,7 @@ async def get_album(
     try:
         return await discogs_client.get_album(album_id, album_type)
     except Exception as exc:
+        await _emit_system_log("ERROR", f"Album lookup failed: {exc}")
         logger.exception("Discogs album lookup failed")
         raise HTTPException(status_code=502, detail="Failed to reach Discogs") from exc
 
@@ -112,6 +136,7 @@ async def get_master_releases(
             "pages": response.get("pages"),
         })
     except Exception as exc:
+        await _emit_system_log("ERROR", f"Master releases lookup failed: {exc}")
         logger.exception("Discogs master releases lookup failed")
         raise HTTPException(status_code=502, detail="Failed to reach Discogs") from exc
 
@@ -135,6 +160,7 @@ async def search_master_releases(
         )
         return JSONResponse(content=response)
     except Exception as exc:
+        await _emit_system_log("ERROR", f"Master releases search failed: {exc}")
         logger.exception("Discogs master releases search failed")
         raise HTTPException(status_code=502, detail="Failed to reach Discogs") from exc
 
@@ -147,10 +173,13 @@ async def get_release(release_id: int):
         return await discogs_client.get_release(release_id)
     except httpx.HTTPStatusError as exc:
         if exc.response is not None and exc.response.status_code == 429:
+            await _emit_system_log("WARN", f"Discogs rate limit reached for release {release_id}")
             raise HTTPException(status_code=429, detail="Discogs rate limit reached") from exc
+        await _emit_system_log("ERROR", f"Release lookup failed: {exc}")
         logger.exception("Discogs release lookup failed")
         raise HTTPException(status_code=502, detail="Failed to reach Discogs") from exc
     except Exception as exc:
+        await _emit_system_log("ERROR", f"Release lookup failed: {exc}")
         logger.exception("Discogs release lookup failed")
         raise HTTPException(status_code=502, detail="Failed to reach Discogs") from exc
 
@@ -177,15 +206,18 @@ async def get_price_suggestions(release_id: int):
         pricing = await discogs_client.get_price_suggestions(release_id)
     except httpx.HTTPStatusError as exc:
         if exc.response is not None and exc.response.status_code == 429:
+            await _emit_system_log("WARN", f"Discogs rate limit reached for release {release_id}")
             raise HTTPException(status_code=429, detail="Discogs rate limit reached") from exc
         if exc.response is not None and exc.response.status_code == 404:
             raise HTTPException(
                 status_code=404,
                 detail=f"No marketplace pricing available for release {release_id}"
             ) from exc
+        await _emit_system_log("ERROR", f"Price lookup failed: {exc}")
         logger.exception("Discogs price lookup failed")
         raise HTTPException(status_code=502, detail="Failed to reach Discogs") from exc
     except Exception as exc:
+        await _emit_system_log("ERROR", f"Price lookup failed: {exc}")
         logger.exception("Discogs price lookup failed")
         raise HTTPException(status_code=502, detail="Failed to reach Discogs") from exc
 

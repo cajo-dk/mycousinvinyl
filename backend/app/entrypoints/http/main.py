@@ -14,6 +14,7 @@ import logging
 from app.config import get_settings, Settings
 from app.logging_config import configure_logging
 from app.entrypoints.http.auth import get_current_user, User
+from app.entrypoints.http.migrations import run_migrations
 from app.entrypoints.http.routers import (
     artists_router,
     albums_router,
@@ -23,6 +24,7 @@ from app.entrypoints.http.routers import (
     lookup_router,
     preferences_router,
     system_logs_router,
+    internal_system_logs_router,
     tools_router,
     discogs_router,
     collection_sharing_router,
@@ -40,6 +42,11 @@ app = FastAPI(
     description="Hexagonal microservice with Azure Entra ID authentication",
     version="1.0.0",
 )
+
+
+@app.on_event("startup")
+async def apply_migrations() -> None:
+    await run_migrations()
 
 # CORS configuration
 settings = get_settings()
@@ -90,6 +97,7 @@ app.include_router(collection_router, prefix=settings.api_v1_prefix)
 app.include_router(lookup_router, prefix=settings.api_v1_prefix)
 app.include_router(preferences_router, prefix=settings.api_v1_prefix)
 app.include_router(system_logs_router, prefix=settings.api_v1_prefix)
+app.include_router(internal_system_logs_router)
 app.include_router(tools_router, prefix=settings.api_v1_prefix)
 app.include_router(discogs_router, prefix=settings.api_v1_prefix)
 app.include_router(collection_sharing_router, prefix=settings.api_v1_prefix)

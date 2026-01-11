@@ -15,7 +15,6 @@ from datetime import datetime, timedelta, timezone
 
 from app.config import get_settings
 from app.logging_config import configure_logging
-from app.adapters.postgres.system_log_repository_adapter import SystemLogRepositoryAdapter
 from app.domain.entities import SystemLogEntry
 from app.adapters.postgres.database import AsyncSessionLocal
 from app.adapters.postgres.market_data_repository_adapter import MarketDataRepositoryAdapter
@@ -38,6 +37,21 @@ class PricingWorker:
         self.batch_size = 300  # Max pressings to process per run
         self.rate_limit_seconds = 1  # 1 request per second (well under 60/min OAuth limit)
         self.run_interval_seconds = 300  # Run every 5 minutes
+
+    async def _write_system_log(self, severity: str, message: str) -> None:
+        try:
+            async with AsyncSessionLocal() as session:
+                log_repo = SystemLogRepositoryAdapter(session)
+                await log_repo.create(SystemLogEntry(
+                    user_id=None,
+                    user_name="*system",
+                    severity=severity,
+                    component="Pricing",
+                    message=message,
+                ))
+                await session.commit()
+        except Exception:
+            logger.warning("Failed to write pricing system log", exc_info=True)
 
     async def process_batch(self):
         """Process a batch of stale pricing data."""
@@ -161,6 +175,10 @@ class PricingWorker:
             f"batch size: {self.batch_size}, "
             f"rate limit: {self.rate_limit_seconds}s per request)"
         )
+        await self._write_system_log(
+            "INFO",
+            "Pricing worker started"
+        )
 
         try:
             while self.running:
@@ -173,9 +191,17 @@ class PricingWorker:
 
         except Exception as e:
             logger.error(f"Fatal error in pricing worker: {e}", exc_info=True)
+            await self._write_system_log(
+                "ERROR",
+                f"Pricing worker fatal error: {e}"
+            )
             raise
         finally:
             logger.info("Pricing worker stopped")
+            await self._write_system_log(
+                "INFO",
+                "Pricing worker stopped"
+            )
 
     def stop(self):
         """Stop the worker."""

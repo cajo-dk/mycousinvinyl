@@ -39,6 +39,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     rbac_strict: bool = False
     health_check_token: str = ""
+    system_log_token: str = ""
 
     # API
     api_v1_prefix: str = "/api/v1"

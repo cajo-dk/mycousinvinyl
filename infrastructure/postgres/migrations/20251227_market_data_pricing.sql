@@ -1,6 +1,6 @@
--- Migration: Add indexes and trigger for market_data pricing
+-- Migration: Add indexes and updated_at trigger for market_data pricing
 -- Date: 2025-12-27
--- Description: Add performance indexes and auto-update trigger for the existing market_data table
+-- Description: Add performance indexes and ensure updated_at auto-update trigger exists
 
 -- Add index for efficient lookups when joining collection items with market data
 CREATE INDEX IF NOT EXISTS idx_market_data_pressing_id ON market_data(pressing_id);
@@ -8,20 +8,20 @@ CREATE INDEX IF NOT EXISTS idx_market_data_pressing_id ON market_data(pressing_i
 -- Add index for worker queries to find stale pricing data
 CREATE INDEX IF NOT EXISTS idx_market_data_updated_at ON market_data(updated_at);
 
--- Add trigger function to automatically update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_market_data_timestamp()
-RETURNS TRIGGER AS $$
+-- Ensure updated_at trigger exists (shared update_updated_at_column function is defined in init.sql)
+DO $$
 BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Create trigger that fires before any UPDATE on market_data
-CREATE TRIGGER market_data_update_timestamp
-    BEFORE UPDATE ON market_data
-    FOR EACH ROW
-    EXECUTE FUNCTION update_market_data_timestamp();
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_trigger
+    WHERE tgname = 'update_market_data_updated_at'
+  ) THEN
+    CREATE TRIGGER update_market_data_updated_at
+        BEFORE UPDATE ON market_data
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END $$;
 
 -- Add documentation comments to clarify table usage
 COMMENT ON TABLE market_data IS 'Marketplace pricing data from Discogs for pressings. Updated periodically by pricing worker.';

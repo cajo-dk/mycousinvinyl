@@ -540,6 +540,8 @@ CREATE INDEX idx_user_follows_follower ON user_follows(follower_user_id);
 CREATE INDEX idx_user_follows_followed ON user_follows(followed_user_id);
 CREATE INDEX idx_system_logs_created_at ON system_logs(created_at DESC);
 CREATE INDEX idx_system_logs_severity ON system_logs(severity);
+CREATE INDEX idx_market_data_pressing_id ON market_data(pressing_id);
+CREATE INDEX idx_market_data_updated_at ON market_data(updated_at);
 
 -- Filtering and sorting indexes
 CREATE INDEX idx_albums_year ON albums(original_release_year);

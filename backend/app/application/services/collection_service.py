@@ -35,6 +35,40 @@ class CollectionService:
         prefs = await self.uow.preferences_repository.get(user_id)
         return prefs.currency if prefs else "DKK"
 
+    async def _build_pressing_context(self, pressing_id: UUID) -> Dict[str, Optional[str]]:
+        pressing = await self.uow.pressing_repository.get(pressing_id)
+        if not pressing:
+            return {"artist_name": None, "album_title": None}
+
+        album = await self.uow.album_repository.get(pressing.album_id)
+        album_title = album.title if album else None
+        artist_name = None
+        if album and album.primary_artist_id:
+            artist = await self.uow.artist_repository.get(album.primary_artist_id)
+            artist_name = artist.name if artist else None
+
+        return {
+            "artist_name": artist_name,
+            "album_title": album_title,
+        }
+
+    async def get_pressing_context(self, pressing_id: UUID) -> Dict[str, Optional[str]]:
+        """Get artist and album context for a pressing."""
+        async with self.uow:
+            return await self._build_pressing_context(pressing_id)
+
+    async def get_collection_item_context(
+        self,
+        item_id: UUID,
+        user_id: UUID
+    ) -> Optional[Dict[str, Optional[str]]]:
+        """Get artist and album context for a collection item scoped to user."""
+        async with self.uow:
+            item = await self.uow.collection_repository.get(item_id, user_id)
+            if not item:
+                return None
+            return await self._build_pressing_context(item.pressing_id)
+
     async def add_to_collection(
         self,
         user_id: UUID,

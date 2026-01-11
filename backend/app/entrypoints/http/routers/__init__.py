@@ -10,6 +10,7 @@ from .collection import router as collection_router
 from .lookup import router as lookup_router
 from .preferences import router as preferences_router
 from .system_logs import router as system_logs_router
+from .system_logs import internal_router as internal_system_logs_router
 from .tools import router as tools_router
 from .discogs import router as discogs_router
 from .collection_sharing import router as collection_sharing_router
@@ -24,6 +25,7 @@ __all__ = [
     "lookup_router",
     "preferences_router",
     "system_logs_router",
+    "internal_system_logs_router",
     "tools_router",
     "discogs_router",
     "collection_sharing_router",

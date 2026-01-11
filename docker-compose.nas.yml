@@ -75,6 +75,7 @@ services:
       CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-}
       CORS_ALLOW_ORIGIN_REGEX: ${CORS_ALLOW_ORIGIN_REGEX:-}
       DISCOGS_SERVICE_URL: ${DISCOGS_SERVICE_URL:-http://discogs-service:8001}
+      SYSTEM_LOG_TOKEN: ${SYSTEM_LOG_TOKEN:-}
       DISCOGS_CONSUMER_KEY: ${DISCOGS_CONSUMER_KEY:-}
       DISCOGS_CONSUMER_SECRET: ${DISCOGS_CONSUMER_SECRET:-}
       DISCOGS_OAUTH_CALLBACK_URL: ${DISCOGS_OAUTH_CALLBACK_URL:-}
@@ -88,6 +89,7 @@ services:
       ALBUM_WIZARD_MODEL_ID: ${ALBUM_WIZARD_MODEL_ID:-}
       ALBUM_WIZARD_TIMEOUT_SECONDS: ${ALBUM_WIZARD_TIMEOUT_SECONDS:-30}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     depends_on:
       postgres:
         condition: service_healthy
@@ -111,9 +113,12 @@ services:
       DISCOGS_SECRET: ${DISCOGS_SECRET}
       DISCOGS_OAUTH_TOKEN: ${DISCOGS_OAUTH_TOKEN:-}
       DISCOGS_OAUTH_TOKEN_SECRET: ${DISCOGS_OAUTH_TOKEN_SECRET:-}
+      SYSTEM_LOG_URL: ${SYSTEM_LOG_URL:-http://api:8000}
+      SYSTEM_LOG_TOKEN: ${SYSTEM_LOG_TOKEN:-}
       DISCOGS_RATE_LIMIT_PER_MINUTE: ${DISCOGS_RATE_LIMIT_PER_MINUTE:-55}
       DISCOGS_IMPORT_LOG_LEVEL: ${DISCOGS_IMPORT_LOG_LEVEL:-INFO}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     expose:
       - "8001"
     networks:
@@ -175,6 +180,7 @@ services:
       AZURE_GROUP_EDITOR: ${AZURE_GROUP_EDITOR:-}
       AZURE_GROUP_VIEWER: ${AZURE_GROUP_VIEWER:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     depends_on:
       postgres:
         condition: service_healthy
@@ -194,6 +200,11 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/mycousinvinyl
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     depends_on:
       postgres:
         condition: service_healthy
@@ -214,6 +225,9 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/mycousinvinyl
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
     depends_on:
       postgres:
         condition: service_healthy
@@ -244,6 +258,9 @@ services:
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
       AZURE_AUDIENCE: ${AZURE_AUDIENCE}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     depends_on:
       postgres:
         condition: service_healthy

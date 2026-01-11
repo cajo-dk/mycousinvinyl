@@ -19,6 +19,7 @@ from app.entrypoints.http.dependencies import (
     get_collection_service,
     get_collection_import_service,
     get_discogs_collection_sync_service,
+    get_system_log_service,
 )
 from app.entrypoints.http.schemas.collection import (
     CollectionItemCreate, CollectionItemUpdate, CollectionItemResponse,
@@ -35,10 +36,19 @@ from app.entrypoints.http.schemas.common import PaginatedResponse, MessageRespon
 from app.application.services.collection_service import CollectionService
 from app.application.services.collection_import_service import CollectionImportService
 from app.application.services.discogs_collection_sync_service import DiscogsCollectionSyncService
+from app.application.services.system_log_service import SystemLogService
 from app.domain.value_objects import Condition
 
 
 router = APIRouter(prefix="/collection", tags=["Collection"])
+
+
+def _format_collection_log(action: str, context: dict | None) -> str:
+    if not context:
+        return action
+    artist = context.get("artist_name") or "Unknown artist"
+    album = context.get("album_title") or "Unknown album"
+    return f"{action}: {artist} - {album}"
 
 
 def _build_import_response(
@@ -215,6 +225,7 @@ async def get_collection_import(
 async def add_to_collection(
     item_data: CollectionItemCreate,
     service: Annotated[CollectionService, Depends(get_collection_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -237,6 +248,14 @@ async def add_to_collection(
             storage_location=item_data.location,
             defect_notes=item_data.defect_notes,
             notes=item_data.notes
+        )
+        context = await service.get_pressing_context(item.pressing_id)
+        await log_service.create_log(
+            user_name=user.name or user.email or "*system",
+            user_id=user.sub,
+            severity="INFO",
+            component="Collection",
+            message=_format_collection_log("Added to collection", context),
         )
         return item
     except ValueError as e:
@@ -454,6 +473,7 @@ async def update_collection_item(
     item_id: UUID,
     item_data: CollectionItemUpdate,
     service: Annotated[CollectionService, Depends(get_collection_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -484,6 +504,14 @@ async def update_collection_item(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Collection item {item_id} not found or access denied"
         )
+    context = await service.get_pressing_context(item.pressing_id)
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Collection",
+        message=_format_collection_log("Updated collection item", context),
+    )
     return item
 
 
@@ -497,6 +525,7 @@ async def update_condition(
     item_id: UUID,
     condition_data: ConditionUpdateRequest,
     service: Annotated[CollectionService, Depends(get_collection_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -516,6 +545,14 @@ async def update_condition(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Collection item {item_id} not found or access denied"
         )
+    context = await service.get_pressing_context(item.pressing_id)
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Collection",
+        message=_format_collection_log("Updated condition", context),
+    )
     return item
 
 
@@ -529,6 +566,7 @@ async def update_purchase_info(
     item_id: UUID,
     purchase_data: PurchaseInfoUpdateRequest,
     service: Annotated[CollectionService, Depends(get_collection_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -550,6 +588,14 @@ async def update_purchase_info(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Collection item {item_id} not found or access denied"
             )
+        context = await service.get_pressing_context(item.pressing_id)
+        await log_service.create_log(
+            user_name=user.name or user.email or "*system",
+            user_id=user.sub,
+            severity="INFO",
+            component="Collection",
+            message=_format_collection_log("Updated purchase info", context),
+        )
         return item
     except ValueError as e:
         raise HTTPException(
@@ -568,6 +614,7 @@ async def update_rating(
     item_id: UUID,
     rating_data: RatingUpdateRequest,
     service: Annotated[CollectionService, Depends(get_collection_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -587,6 +634,14 @@ async def update_rating(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Collection item {item_id} not found or access denied"
             )
+        context = await service.get_pressing_context(item.pressing_id)
+        await log_service.create_log(
+            user_name=user.name or user.email or "*system",
+            user_id=user.sub,
+            severity="INFO",
+            component="Collection",
+            message=_format_collection_log("Updated rating", context),
+        )
         return item
     except ValueError as e:
         raise HTTPException(
@@ -685,6 +740,7 @@ async def get_played_albums_ytd(
 async def remove_from_collection(
     item_id: UUID,
     service: Annotated[CollectionService, Depends(get_collection_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -692,6 +748,7 @@ async def remove_from_collection(
 
     SECURITY: Verifies user owns the item.
     """
+    context = await service.get_collection_item_context(item_id, user.sub)
     success = await service.remove_from_collection(
         item_id,
         user.sub,
@@ -703,4 +760,11 @@ async def remove_from_collection(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Collection item {item_id} not found or access denied"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Collection",
+        message=_format_collection_log("Removed from collection", context),
+    )
     return MessageResponse(message="Item removed from collection successfully")

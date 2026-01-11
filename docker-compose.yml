@@ -78,10 +78,12 @@ services:
       CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:-}
       CORS_ALLOW_ORIGIN_REGEX: ${CORS_ALLOW_ORIGIN_REGEX:-}
       DISCOGS_SERVICE_URL: ${DISCOGS_SERVICE_URL:-http://discogs-service:8001}
+      SYSTEM_LOG_TOKEN: ${SYSTEM_LOG_TOKEN:-}
       ALBUM_WIZARD_API_URL: ${ALBUM_WIZARD_API_URL:-}
       ALBUM_WIZARD_API_KEY: ${ALBUM_WIZARD_API_KEY:-}
       ALBUM_WIZARD_MODEL_ID: ${ALBUM_WIZARD_MODEL_ID:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     depends_on:
       postgres:
         condition: service_healthy
@@ -110,7 +112,10 @@ services:
       DISCOGS_SECRET: ${DISCOGS_SECRET}
       DISCOGS_OAUTH_TOKEN: ${DISCOGS_OAUTH_TOKEN:-}
       DISCOGS_OAUTH_TOKEN_SECRET: ${DISCOGS_OAUTH_TOKEN_SECRET:-}
+      SYSTEM_LOG_URL: ${SYSTEM_LOG_URL:-http://api:8000}
+      SYSTEM_LOG_TOKEN: ${SYSTEM_LOG_TOKEN:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     expose:
       - "8001"
     networks:
@@ -139,6 +144,7 @@ services:
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
       AZURE_AUDIENCE: ${AZURE_AUDIENCE}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     depends_on:
       postgres:
         condition: service_healthy
@@ -172,6 +178,7 @@ services:
       AZURE_GROUP_EDITOR: ${AZURE_GROUP_EDITOR:-}
       AZURE_GROUP_VIEWER: ${AZURE_GROUP_VIEWER:-}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     depends_on:
       postgres:
         condition: service_healthy
@@ -191,6 +198,10 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     depends_on:
       postgres:
         condition: service_healthy
@@ -211,6 +222,10 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      AZURE_AUDIENCE: ${AZURE_AUDIENCE}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     depends_on:
       postgres:
         condition: service_healthy
@@ -241,6 +256,7 @@ services:
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
       AZURE_AUDIENCE: ${AZURE_AUDIENCE}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     depends_on:
       postgres:
         condition: service_healthy
@@ -276,6 +292,7 @@ services:
       AZURE_AUDIENCE: ${AZURE_AUDIENCE}
 
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      SQLALCHEMY_LOG_LEVEL: ${SQLALCHEMY_LOG_LEVEL:-WARNING}
     depends_on:
       api:
         condition: service_started

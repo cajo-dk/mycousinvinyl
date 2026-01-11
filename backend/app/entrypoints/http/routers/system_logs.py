@@ -4,21 +4,24 @@ System logs API endpoints (admin only).
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, Query, HTTPException, status, Header
 
 from app.entrypoints.http.auth import get_current_user, User
 from app.entrypoints.http.authorization import require_admin
+from app.config import get_settings, Settings
 from app.entrypoints.http.dependencies import get_system_log_service
 from app.entrypoints.http.schemas.common import PaginatedResponse
 from app.entrypoints.http.schemas.system_logs import (
     SystemLogEntryResponse,
     LogRetentionResponse,
     LogRetentionUpdate,
+    InternalSystemLogCreate,
 )
 from app.application.services.system_log_service import SystemLogService
 
 
 router = APIRouter(prefix="/admin", tags=["System Logs"])
+internal_router = APIRouter(tags=["System Logs"])
 
 
 @router.get(
@@ -91,3 +94,23 @@ async def update_log_retention(
         message=f"Updated log retention to {updated} days",
     )
     return LogRetentionResponse(retention_days=updated)
+
+
+@internal_router.post("/internal/logs", status_code=204)
+async def create_internal_log(
+    entry: InternalSystemLogCreate,
+    service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    settings: Settings = Depends(get_settings),
+    x_system_log_token: str | None = Header(default=None, alias="X-System-Log-Token"),
+):
+    """Internal endpoint for trusted services to emit system logs."""
+    if not settings.system_log_token or x_system_log_token != settings.system_log_token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid system log token")
+
+    await service.create_log(
+        user_name=entry.user_name or "*system",
+        user_id=entry.user_id,
+        severity=entry.severity,
+        component=entry.component,
+        message=entry.message,
+    )

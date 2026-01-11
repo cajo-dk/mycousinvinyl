@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     discogs_rate_limit_per_minute: int = 55
     discogs_import_log_level: str = "INFO"
+    system_log_url: str = "http://api:8000"
+    system_log_token: str = ""
 
     class Config:
         env_file = ".env"
