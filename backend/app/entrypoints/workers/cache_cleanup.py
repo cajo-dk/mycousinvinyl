@@ -11,6 +11,8 @@ import os
 from datetime import datetime
 
 from app.adapters.postgres.discogs_cache_repository_adapter import PostgresDiscogsCacheRepository
+from app.adapters.postgres.system_log_repository_adapter import SystemLogRepositoryAdapter
+from app.domain.entities import SystemLogEntry
 from app.logging_config import configure_logging
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
@@ -50,8 +52,30 @@ async def cleanup_cache_worker():
                 cache_repo = PostgresDiscogsCacheRepository(session)
                 count = await cache_repo.cleanup_expired()
                 logger.info(f"Cleaned up {count} expired cache entries at {datetime.now()}")
+                log_repo = SystemLogRepositoryAdapter(session)
+                await log_repo.create(SystemLogEntry(
+                    user_id=None,
+                    user_name="*system",
+                    severity="INFO",
+                    component="Cache Cleanup",
+                    message=f"Cache cleanup removed {count} expired entries",
+                ))
+                await session.commit()
         except Exception as e:
             logger.error(f"Cache cleanup failed: {e}", exc_info=True)
+            try:
+                async with async_session_factory() as session:
+                    log_repo = SystemLogRepositoryAdapter(session)
+                    await log_repo.create(SystemLogEntry(
+                        user_id=None,
+                        user_name="*system",
+                        severity="ERROR",
+                        component="Cache Cleanup",
+                        message=f"Cache cleanup failed: {e}",
+                    ))
+                    await session.commit()
+            except Exception:
+                logger.error("Failed to log cache cleanup error", exc_info=True)
 
         # Sleep for 1 hour
         await asyncio.sleep(3600)

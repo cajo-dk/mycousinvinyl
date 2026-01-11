@@ -15,10 +15,12 @@ from datetime import datetime, timedelta, timezone
 
 from app.config import get_settings
 from app.logging_config import configure_logging
+from app.adapters.postgres.system_log_repository_adapter import SystemLogRepositoryAdapter
+from app.domain.entities import SystemLogEntry
 from app.adapters.postgres.database import AsyncSessionLocal
-from app.adapters.postgres.unit_of_work import SqlAlchemyUnitOfWork
 from app.adapters.postgres.market_data_repository_adapter import MarketDataRepositoryAdapter
 from app.adapters.postgres.pressing_repository_adapter import PressingRepositoryAdapter
+from app.adapters.postgres.system_log_repository_adapter import SystemLogRepositoryAdapter
 from app.adapters.http.discogs_client import DiscogsClientAdapter
 from app.application.services.pricing_service import PricingService
 
@@ -40,11 +42,10 @@ class PricingWorker:
     async def process_batch(self):
         """Process a batch of stale pricing data."""
         async with AsyncSessionLocal() as session:
-            uow = SqlAlchemyUnitOfWork(session)
-
             # Create repositories and services
             market_data_repo = MarketDataRepositoryAdapter(session)
             pressing_repo = PressingRepositoryAdapter(session)
+            log_repo = SystemLogRepositoryAdapter(session)
             discogs_client = DiscogsClientAdapter(
                 base_url=self.settings.discogs_service_url,
                 timeout_seconds=10.0
@@ -123,11 +124,32 @@ class PricingWorker:
                     f"Pricing batch complete: {updated_count} updated, "
                     f"{unavailable_count} unavailable, {error_count} errors"
                 )
+                await log_repo.create(SystemLogEntry(
+                    user_id=None,
+                    user_name="*system",
+                    severity="INFO",
+                    component="Pricing",
+                    message=(
+                        "Pricing batch complete: "
+                        f"updated={updated_count}, "
+                        f"unavailable={unavailable_count}, "
+                        f"errors={error_count}"
+                    ),
+                ))
+                await session.commit()
 
                 return updated_count
 
             except Exception as e:
                 logger.error(f"Error in pricing worker batch: {e}", exc_info=True)
+                await log_repo.create(SystemLogEntry(
+                    user_id=None,
+                    user_name="*system",
+                    severity="ERROR",
+                    component="Pricing",
+                    message=f"Pricing worker batch failed: {e}",
+                ))
+                await session.commit()
                 return 0
 
     async def run(self):

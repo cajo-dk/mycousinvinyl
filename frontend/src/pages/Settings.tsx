@@ -660,6 +660,7 @@ export function Settings() {
   const [logPage, setLogPage] = useState(1);
   const [logPageSize, setLogPageSize] = useState(50);
   const [logSeverityFilter, setLogSeverityFilter] = useState<'all' | 'INFO' | 'WARN' | 'ERROR'>('all');
+  const [logComponentFilter, setLogComponentFilter] = useState<'all' | string>('all');
   const [logLoading, setLogLoading] = useState(false);
   const [logError, setLogError] = useState<string | null>(null);
   const [backupRunning, setBackupRunning] = useState(false);
@@ -844,9 +845,19 @@ export function Settings() {
   }, [activeTab]);
 
   const logTotalPages = Math.max(1, Math.ceil(logTotal / logPageSize));
-  const filteredLogEntries = logSeverityFilter === 'all'
-    ? logEntries
-    : logEntries.filter((entry) => entry.severity === logSeverityFilter);
+  const filteredLogEntries = logEntries.filter((entry) => {
+    if (logSeverityFilter !== 'all' && entry.severity !== logSeverityFilter) {
+      return false;
+    }
+    if (logComponentFilter !== 'all' && entry.component !== logComponentFilter) {
+      return false;
+    }
+    return true;
+  });
+
+  const componentOptions = Array.from(
+    new Set(logEntries.map((entry) => entry.component).filter(Boolean))
+  ).sort((a, b) => a.localeCompare(b));
 
   if (loading) {
     return <Loading message="Loading settings..." />;
@@ -1140,6 +1151,19 @@ export function Settings() {
                 <option value="INFO">INFO</option>
                 <option value="WARN">WARN</option>
                 <option value="ERROR">ERROR</option>
+              </select>
+              <label htmlFor="log-component-filter">Component</label>
+              <select
+                id="log-component-filter"
+                value={logComponentFilter}
+                onChange={(e) => setLogComponentFilter(e.target.value)}
+              >
+                <option value="all">All</option>
+                {componentOptions.map((component) => (
+                  <option key={component} value={component}>
+                    {component}
+                  </option>
+                ))}
               </select>
               <button
                 type="button"
