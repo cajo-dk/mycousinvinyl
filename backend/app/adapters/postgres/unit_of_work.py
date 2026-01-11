@@ -23,6 +23,8 @@ from app.adapters.postgres.additional_repository_adapters import (
 from app.adapters.postgres.outbox_repository_adapter import OutboxRepositoryAdapter
 from app.adapters.postgres.user_follows_repository_adapter import UserFollowsRepositoryAdapter
 from app.adapters.postgres.collection_import_repository_adapter import CollectionImportRepositoryAdapter
+from app.adapters.postgres.system_log_repository_adapter import SystemLogRepositoryAdapter
+from app.adapters.postgres.system_settings_repository_adapter import SystemSettingsRepositoryAdapter
 
 
 class SqlAlchemyUnitOfWork(UnitOfWork):
@@ -52,6 +54,8 @@ class SqlAlchemyUnitOfWork(UnitOfWork):
         self.outbox_repository = OutboxRepositoryAdapter(session)
         self.user_follows_repository = UserFollowsRepositoryAdapter(session)
         self.collection_import_repository = CollectionImportRepositoryAdapter(session)
+        self.system_log_repository = SystemLogRepositoryAdapter(session)
+        self.system_settings_repository = SystemSettingsRepositoryAdapter(session)
 
     async def __aenter__(self):
         """Enter the unit of work context."""

@@ -9,12 +9,13 @@ from fastapi import APIRouter, Depends
 
 from app.entrypoints.http.auth import get_current_user, User
 from app.entrypoints.http.authorization import require_viewer
-from app.entrypoints.http.dependencies import get_preferences_service
+from app.entrypoints.http.dependencies import get_preferences_service, get_system_log_service
 from app.entrypoints.http.schemas.preferences import (
     PreferencesUpdateCurrency, PreferencesUpdateDisplay,
     PreferencesUpdate, PreferencesResponse
 )
 from app.application.services.preferences_service import PreferencesService
+from app.application.services.system_log_service import SystemLogService
 
 
 router = APIRouter(prefix="/preferences", tags=["User Preferences"])
@@ -61,6 +62,7 @@ async def get_preferences(
 async def update_currency(
     currency_data: PreferencesUpdateCurrency,
     service: Annotated[PreferencesService, Depends(get_preferences_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -72,6 +74,13 @@ async def update_currency(
         preferences = await service.update_currency(
             user_id=user.sub,
             currency=currency_data.currency
+        )
+        await log_service.create_log(
+            user_name=user.name or user.email or "*system",
+            user_id=user.sub,
+            severity="INFO",
+            component="Settings",
+            message=f"Updated currency to {preferences.currency}",
         )
         return preferences
     except ValueError as e:

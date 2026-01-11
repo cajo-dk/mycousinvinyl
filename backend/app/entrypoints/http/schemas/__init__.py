@@ -13,5 +13,6 @@ from .collection import *
 from .collection_import import *
 from .lookup import *
 from .preferences import *
+from .system_logs import *
 from .discogs_oauth import *
 from .discogs_pat import *

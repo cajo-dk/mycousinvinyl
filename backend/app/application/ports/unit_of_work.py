@@ -24,6 +24,8 @@ from app.application.ports.discogs_oauth_repository import (
 from app.application.ports.outbox_repository import OutboxRepository
 from app.application.ports.user_follows_repository import UserFollowsRepository
 from app.application.ports.collection_import_repository import CollectionImportRepository
+from app.application.ports.system_log_repository import SystemLogRepository
+from app.application.ports.system_settings_repository import SystemSettingsRepository
 
 
 class UnitOfWork(ABC):
@@ -50,6 +52,8 @@ class UnitOfWork(ABC):
     outbox_repository: OutboxRepository
     user_follows_repository: UserFollowsRepository
     collection_import_repository: CollectionImportRepository
+    system_log_repository: SystemLogRepository
+    system_settings_repository: SystemSettingsRepository
 
     @abstractmethod
     async def __aenter__(self):

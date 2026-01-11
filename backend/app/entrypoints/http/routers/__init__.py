@@ -9,6 +9,7 @@ from .pressings import router as pressings_router
 from .collection import router as collection_router
 from .lookup import router as lookup_router
 from .preferences import router as preferences_router
+from .system_logs import router as system_logs_router
 from .discogs import router as discogs_router
 from .collection_sharing import router as collection_sharing_router
 from .album_wizard import router as album_wizard_router
@@ -21,6 +22,7 @@ __all__ = [
     "collection_router",
     "lookup_router",
     "preferences_router",
+    "system_logs_router",
     "discogs_router",
     "collection_sharing_router",
     "album_wizard_router",

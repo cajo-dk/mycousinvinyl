@@ -22,6 +22,7 @@ from app.domain.entities import (
     CollectionItem,
     CollectionImport,
     CollectionImportRow,
+    SystemLogEntry,
 )
 from app.domain.value_objects import (
     ArtistType,
@@ -95,12 +96,29 @@ class CollectionImportService:
         for row in row_entities:
             await self._process_row(import_job.id, user_id, row, on_row_processed)
 
+        ok_count = sum(1 for row in row_entities if row.status == "success")
+        skipped_count = sum(1 for row in row_entities if row.status == "skipped")
+        failed_count = sum(1 for row in row_entities if row.status == "error")
+
         async with self.uow:
             import_job = await self.uow.collection_import_repository.get_import(import_job.id, user_id)
             if import_job:
                 import_job.status = "completed"
                 import_job.completed_at = datetime.utcnow()
                 await self.uow.collection_import_repository.update_import(import_job)
+                await self.uow.system_log_repository.create(SystemLogEntry(
+                    user_id=None,
+                    user_name="*system",
+                    severity="INFO",
+                    component="Import",
+                    message=(
+                        "Discogs import completed for "
+                        f"{await self._resolve_user_label(user_id)}: "
+                        f"OK {ok_count}, "
+                        f"Skipped {skipped_count}, "
+                        f"Failed {failed_count}"
+                    ),
+                ))
                 await self.uow.commit()
             return import_job
 
@@ -145,12 +163,29 @@ class CollectionImportService:
         for row in row_entities:
             await self._process_row(import_job.id, user_id, row, on_row_processed)
 
+        ok_count = sum(1 for row in row_entities if row.status == "success")
+        skipped_count = sum(1 for row in row_entities if row.status == "skipped")
+        failed_count = sum(1 for row in row_entities if row.status == "error")
+
         async with self.uow:
             import_job = await self.uow.collection_import_repository.get_import(import_job.id, user_id)
             if import_job:
                 import_job.status = "completed"
                 import_job.completed_at = datetime.utcnow()
                 await self.uow.collection_import_repository.update_import(import_job)
+                await self.uow.system_log_repository.create(SystemLogEntry(
+                    user_id=None,
+                    user_name="*system",
+                    severity="INFO",
+                    component="Import",
+                    message=(
+                        "Discogs import completed for "
+                        f"{await self._resolve_user_label(user_id)}: "
+                        f"OK {ok_count}, "
+                        f"Skipped {skipped_count}, "
+                        f"Failed {failed_count}"
+                    ),
+                ))
                 await self.uow.commit()
             return import_job
 
@@ -194,6 +229,7 @@ class CollectionImportService:
                 row.error_message = str(exc)
                 import_job.error_count += 1
             finally:
+                await self._log_row_result(user_id, row)
                 import_job.processed_rows += 1
                 await self.uow.collection_import_repository.update_row(row)
                 await self.uow.collection_import_repository.update_import(import_job)
@@ -250,6 +286,14 @@ class CollectionImportService:
             )
             artist = await self.uow.artist_repository.add(artist)
             artist_created = True
+            entry = SystemLogEntry(
+                user_id=None,
+                user_name="*system",
+                severity="INFO",
+                component="Import",
+                message=f"Discogs import created artist for {await self._resolve_user_label(user_id)}: {artist.name}",
+            )
+            await self.uow.system_log_repository.create(entry)
 
         album = await self.uow.album_repository.get_by_discogs_id(album_discogs_id)
         album_created = False
@@ -372,6 +416,40 @@ class CollectionImportService:
         if str(self._import_log_level).upper() != "VERBOSE":
             return
         logger.info("%s | %s", message, data)
+
+    async def _log_row_result(self, user_id: UUID, row: CollectionImportRow) -> None:
+        raw = row.raw_data or {}
+        artist = (raw.get("Artist") or "").strip() or "Unknown Artist"
+        title = (raw.get("Title") or "").strip() or "Unknown Album"
+        user_label = await self._resolve_user_label(user_id)
+        if row.status == "success":
+            severity = "INFO"
+            message = f"Discogs import for {user_label}: {artist} - {title}"
+        elif row.status == "skipped":
+            severity = "WARN"
+            reason = row.error_message or "skipped"
+            message = f"Discogs import skipped for {user_label}: {artist} - {title} ({reason})"
+        else:
+            severity = "ERROR"
+            error_text = row.error_message or row.status
+            message = f"Discogs import failed for {user_label}: {artist} - {title} ({error_text})"
+
+        entry = SystemLogEntry(
+            user_id=None,
+            user_name="*system",
+            severity=severity,
+            component="Import",
+            message=message,
+        )
+        await self.uow.system_log_repository.create(entry)
+
+    async def _resolve_user_label(self, user_id: UUID) -> str:
+        prefs = await self.uow.preferences_repository.get_or_create_default(user_id)
+        profile = prefs.get_user_profile()
+        display_name = profile.get("display_name")
+        if display_name:
+            return display_name
+        return str(user_id)
 
     async def _lookup_artist_details(self, artist_name: str) -> Dict[str, Any]:
         try:

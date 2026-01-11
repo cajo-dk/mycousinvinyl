@@ -8,7 +8,11 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 from app.entrypoints.http.auth import get_current_user, User
 from app.entrypoints.http.authorization import require_viewer, require_editor
-from app.entrypoints.http.dependencies import get_pressing_service, get_collection_sharing_service
+from app.entrypoints.http.dependencies import (
+    get_pressing_service,
+    get_collection_sharing_service,
+    get_system_log_service,
+)
 from app.entrypoints.http.schemas.pressing import (
     PressingCreate, PressingUpdate, PressingResponse, PressingSearchParams,
     PressingDetailResponse, ArtistSummaryForPressing, AlbumSummaryForPressing,
@@ -19,6 +23,7 @@ from app.entrypoints.http.schemas.common import PaginatedResponse, MessageRespon
 from app.entrypoints.http.schemas.collection_sharing import UserOwnerInfoResponse
 from app.application.services.pressing_service import PressingService
 from app.application.services.collection_sharing_service import CollectionSharingService
+from app.application.services.system_log_service import SystemLogService
 
 
 router = APIRouter(prefix="/pressings", tags=["Pressings"])
@@ -38,6 +43,7 @@ router = APIRouter(prefix="/pressings", tags=["Pressings"])
 async def create_pressing(
     pressing_data: PressingCreate,
     service: Annotated[PressingService, Depends(get_pressing_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -70,6 +76,13 @@ async def create_pressing(
             discogs_release_id=pressing_data.discogs_release_id,
             discogs_master_id=pressing_data.discogs_master_id,
             master_title=pressing_data.master_title
+        )
+        await log_service.create_log(
+            user_name=user.name or user.email or "*system",
+            user_id=user.sub,
+            severity="INFO",
+            component="Pressings",
+            message=f"Created pressing {pressing.id}",
         )
         return pressing
     except ValueError as e:
@@ -336,6 +349,7 @@ async def update_pressing(
     pressing_id: UUID,
     pressing_data: PressingUpdate,
     service: Annotated[PressingService, Depends(get_pressing_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -366,6 +380,13 @@ async def update_pressing(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Pressing {pressing_id} not found"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Pressings",
+        message=f"Updated pressing {pressing.id}",
+    )
     return pressing
 
 
@@ -378,6 +399,7 @@ async def update_pressing(
 async def delete_pressing(
     pressing_id: UUID,
     service: Annotated[PressingService, Depends(get_pressing_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -397,6 +419,13 @@ async def delete_pressing(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Pressing {pressing_id} not found or is in user collections"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Pressings",
+        message=f"Deleted pressing {pressing_id}",
+    )
     return MessageResponse(message="Pressing deleted successfully")
 
 

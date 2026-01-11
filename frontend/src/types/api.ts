@@ -878,3 +878,22 @@ export interface PreferencesUpdate {
   currency?: string;
   display_settings?: Record<string, any>;
 }
+
+// ============================================================================
+// SYSTEM LOGS
+// ============================================================================
+
+export type LogSeverity = 'INFO' | 'WARN' | 'ERROR';
+
+export interface SystemLogEntry {
+  id: string;
+  created_at: string;
+  user_name: string;
+  severity: LogSeverity;
+  component: string;
+  message: string;
+}
+
+export interface LogRetentionResponse {
+  retention_days: number;
+}

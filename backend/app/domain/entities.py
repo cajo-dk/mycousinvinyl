@@ -858,6 +858,54 @@ class UserPreferences:
         }
         self.updated_at = datetime.utcnow()
 
+
+@dataclass
+class SystemSetting:
+    """
+    Global system setting (key/value).
+    """
+
+    key: str = ""
+    value: str = ""
+
+    created_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=datetime.utcnow)
+
+    events: List[DomainEvent] = field(default_factory=list)
+
+    def __post_init__(self):
+        if not self.key or not self.key.strip():
+            raise ValueError("Setting key is required")
+        self.key = self.key.strip()
+
+
+@dataclass
+class SystemLogEntry:
+    """
+    System audit log entry.
+    """
+
+    id: UUID = field(default_factory=uuid4)
+    user_id: Optional[UUID] = None
+    user_name: str = ""
+    severity: str = "INFO"
+    component: str = ""
+    message: str = ""
+    created_at: datetime = field(default_factory=datetime.utcnow)
+
+    events: List[DomainEvent] = field(default_factory=list)
+
+    def __post_init__(self):
+        if not self.user_name or not self.user_name.strip():
+            raise ValueError("User name is required")
+        if not self.component or not self.component.strip():
+            raise ValueError("Component is required")
+        if not self.message or not self.message.strip():
+            raise ValueError("Log message is required")
+        self.user_name = self.user_name.strip()
+        self.component = self.component.strip()
+        self.message = self.message.strip()
+
     def clear_events(self) -> List[DomainEvent]:
         """Clear and return pending domain events."""
         events = self.events.copy()

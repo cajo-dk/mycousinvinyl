@@ -24,6 +24,7 @@ from app.application.services.album_wizard_service import AlbumWizardService
 from app.application.services.discogs_oauth_service import DiscogsOAuthService
 from app.application.services.discogs_pat_service import DiscogsPatService
 from app.application.services.discogs_collection_sync_service import DiscogsCollectionSyncService
+from app.application.services.system_log_service import SystemLogService
 from app.adapters.http.discogs_client import DiscogsClientAdapter
 from app.adapters.http.discogs_oauth_client import DiscogsOAuthClientAdapter
 from app.adapters.http.album_wizard_client import AlbumWizardClientAdapter
@@ -120,6 +121,13 @@ async def get_preferences_service() -> PreferencesService:
     async with async_session_factory() as session:
         uow = SqlAlchemyUnitOfWork(session)
         yield PreferencesService(uow)
+
+
+async def get_system_log_service() -> SystemLogService:
+    """Provides SystemLogService with UnitOfWork."""
+    async with async_session_factory() as session:
+        uow = SqlAlchemyUnitOfWork(session)
+        yield SystemLogService(uow)
 
 
 async def get_discogs_service() -> DiscogsService:

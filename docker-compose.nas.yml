@@ -204,6 +204,26 @@ services:
     command: python -m app.entrypoints.workers.cache_cleanup
     restart: unless-stopped
 
+  # Log Pruning Worker
+  log-prune:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: worker
+    container_name: mycousinvinyl-log-prune
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/mycousinvinyl
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    networks:
+      - backend
+    command: python -m app.entrypoints.workers.log_prune_worker
+    restart: unless-stopped
+
   # Pricing Worker (Marketplace Price Updates)
   pricing-worker:
     build:

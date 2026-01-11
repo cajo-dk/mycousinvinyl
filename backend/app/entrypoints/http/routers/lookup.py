@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 from app.entrypoints.http.auth import get_current_user, User
 from app.entrypoints.http.authorization import require_viewer, require_editor, require_admin
-from app.entrypoints.http.dependencies import get_lookup_service
+from app.entrypoints.http.dependencies import get_lookup_service, get_system_log_service
 from app.entrypoints.http.schemas.lookup import (
     GenreCreate, GenreUpdate, GenreResponse,
     StyleCreate, StyleUpdate, StyleResponse,
@@ -22,6 +22,7 @@ from app.entrypoints.http.schemas.lookup import (
 )
 from app.entrypoints.http.schemas.common import MessageResponse
 from app.application.services.lookup_service import LookupService
+from app.application.services.system_log_service import SystemLogService
 
 
 router = APIRouter(prefix="/lookup", tags=["Lookup Data"])
@@ -82,7 +83,9 @@ async def get_genre(
 )
 async def create_genre(
     genre_data: GenreCreate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """
     Create a new genre.
@@ -92,6 +95,13 @@ async def create_genre(
     genre = await service.create_genre(
         name=genre_data.name,
         display_order=genre_data.display_order
+    )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Created genre '{genre.name}'",
     )
     return genre
 
@@ -105,7 +115,9 @@ async def create_genre(
 async def update_genre(
     genre_id: UUID,
     genre_data: GenreUpdate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """
     Update a genre.
@@ -116,6 +128,13 @@ async def update_genre(
         genre_id=genre_id,
         name=genre_data.name,
         display_order=genre_data.display_order
+    )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Updated genre '{genre.name}'",
     )
     return genre
 
@@ -128,7 +147,9 @@ async def update_genre(
 )
 async def delete_genre(
     genre_id: UUID,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """
     Delete a genre.
@@ -142,6 +163,13 @@ async def delete_genre(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot delete genre {genre_id} - it is in use by albums"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Deleted genre {genre_id}",
+    )
     return MessageResponse(message="Genre deleted successfully")
 
 
@@ -201,7 +229,9 @@ async def get_style(
 )
 async def create_style(
     style_data: StyleCreate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """
     Create a new style.
@@ -212,6 +242,13 @@ async def create_style(
         name=style_data.name,
         genre_id=style_data.genre_id,
         display_order=style_data.display_order
+    )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Created style '{style.name}'",
     )
     return style
 
@@ -225,7 +262,9 @@ async def create_style(
 async def update_style(
     style_id: UUID,
     style_data: StyleUpdate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """
     Update a style.
@@ -238,6 +277,13 @@ async def update_style(
         genre_id=style_data.genre_id,
         display_order=style_data.display_order
     )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Updated style '{style.name}'",
+    )
     return style
 
 
@@ -249,7 +295,9 @@ async def update_style(
 )
 async def delete_style(
     style_id: UUID,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """
     Delete a style.
@@ -263,6 +311,13 @@ async def delete_style(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot delete style {style_id} - it is in use by albums"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Deleted style {style_id}",
+    )
     return MessageResponse(message="Style deleted successfully")
 
 
@@ -321,7 +376,9 @@ async def get_country(
 )
 async def create_country(
     country_data: CountryCreate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """
     Create a new country.
@@ -332,6 +389,13 @@ async def create_country(
         code=country_data.code,
         name=country_data.name,
         display_order=country_data.display_order
+    )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Created country '{country.code}'",
     )
     return country
 
@@ -345,7 +409,9 @@ async def create_country(
 async def update_country(
     code: str,
     country_data: CountryUpdate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """
     Update a country.
@@ -356,6 +422,13 @@ async def update_country(
         code=code,
         name=country_data.name,
         display_order=country_data.display_order
+    )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Updated country '{country.code}'",
     )
     return country
 
@@ -368,7 +441,9 @@ async def update_country(
 )
 async def delete_country(
     code: str,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """
     Delete a country.
@@ -382,6 +457,13 @@ async def delete_country(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot delete country {code} - it is in use"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Deleted country {code}",
+    )
     return MessageResponse(message="Country deleted successfully")
 
 
@@ -431,14 +513,24 @@ async def get_artist_type(
 )
 async def create_artist_type(
     artist_type_data: ArtistTypeCreate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Create a new artist type."""
-    return await service.create_artist_type(
+    result = await service.create_artist_type(
         code=artist_type_data.code,
         name=artist_type_data.name,
         display_order=artist_type_data.display_order
     )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Created artist type '{result.code}'",
+    )
+    return result
 
 
 @router.put(
@@ -450,14 +542,24 @@ async def create_artist_type(
 async def update_artist_type(
     code: str,
     artist_type_data: ArtistTypeUpdate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Update an artist type."""
-    return await service.update_artist_type(
+    result = await service.update_artist_type(
         code=code,
         name=artist_type_data.name,
         display_order=artist_type_data.display_order
     )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Updated artist type '{result.code}'",
+    )
+    return result
 
 
 @router.delete(
@@ -468,7 +570,9 @@ async def update_artist_type(
 )
 async def delete_artist_type(
     code: str,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Delete an artist type (fails if in use)."""
     success = await service.delete_artist_type(code)
@@ -477,6 +581,13 @@ async def delete_artist_type(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot delete artist type {code} - it is in use"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Deleted artist type {code}",
+    )
     return MessageResponse(message="Artist type deleted successfully")
 
 
@@ -526,14 +637,24 @@ async def get_release_type(
 )
 async def create_release_type(
     release_type_data: ReleaseTypeCreate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Create a new release type."""
-    return await service.create_release_type(
+    result = await service.create_release_type(
         code=release_type_data.code,
         name=release_type_data.name,
         display_order=release_type_data.display_order
     )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Created release type '{result.code}'",
+    )
+    return result
 
 
 @router.put(
@@ -545,14 +666,24 @@ async def create_release_type(
 async def update_release_type(
     code: str,
     release_type_data: ReleaseTypeUpdate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Update a release type."""
-    return await service.update_release_type(
+    result = await service.update_release_type(
         code=code,
         name=release_type_data.name,
         display_order=release_type_data.display_order
     )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Updated release type '{result.code}'",
+    )
+    return result
 
 
 @router.delete(
@@ -563,7 +694,9 @@ async def update_release_type(
 )
 async def delete_release_type(
     code: str,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Delete a release type (fails if in use)."""
     success = await service.delete_release_type(code)
@@ -572,6 +705,13 @@ async def delete_release_type(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot delete release type {code} - it is in use"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Deleted release type {code}",
+    )
     return MessageResponse(message="Release type deleted successfully")
 
 
@@ -621,14 +761,24 @@ async def get_edition_type(
 )
 async def create_edition_type(
     edition_type_data: EditionTypeCreate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Create a new edition type."""
-    return await service.create_edition_type(
+    result = await service.create_edition_type(
         code=edition_type_data.code,
         name=edition_type_data.name,
         display_order=edition_type_data.display_order
     )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Created edition type '{result.code}'",
+    )
+    return result
 
 
 @router.put(
@@ -640,14 +790,24 @@ async def create_edition_type(
 async def update_edition_type(
     code: str,
     edition_type_data: EditionTypeUpdate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Update an edition type."""
-    return await service.update_edition_type(
+    result = await service.update_edition_type(
         code=code,
         name=edition_type_data.name,
         display_order=edition_type_data.display_order
     )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Updated edition type '{result.code}'",
+    )
+    return result
 
 
 @router.delete(
@@ -658,7 +818,9 @@ async def update_edition_type(
 )
 async def delete_edition_type(
     code: str,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Delete an edition type (fails if in use)."""
     success = await service.delete_edition_type(code)
@@ -667,6 +829,13 @@ async def delete_edition_type(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot delete edition type {code} - it is in use"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Deleted edition type {code}",
+    )
     return MessageResponse(message="Edition type deleted successfully")
 
 
@@ -716,14 +885,24 @@ async def get_sleeve_type(
 )
 async def create_sleeve_type(
     sleeve_type_data: SleeveTypeCreate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Create a new sleeve type."""
-    return await service.create_sleeve_type(
+    result = await service.create_sleeve_type(
         code=sleeve_type_data.code,
         name=sleeve_type_data.name,
         display_order=sleeve_type_data.display_order
     )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Created sleeve type '{result.code}'",
+    )
+    return result
 
 
 @router.put(
@@ -735,14 +914,24 @@ async def create_sleeve_type(
 async def update_sleeve_type(
     code: str,
     sleeve_type_data: SleeveTypeUpdate,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Update a sleeve type."""
-    return await service.update_sleeve_type(
+    result = await service.update_sleeve_type(
         code=code,
         name=sleeve_type_data.name,
         display_order=sleeve_type_data.display_order
     )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Updated sleeve type '{result.code}'",
+    )
+    return result
 
 
 @router.delete(
@@ -753,7 +942,9 @@ async def update_sleeve_type(
 )
 async def delete_sleeve_type(
     code: str,
-    service: Annotated[LookupService, Depends(get_lookup_service)]
+    service: Annotated[LookupService, Depends(get_lookup_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
+    user: Annotated[User, Depends(get_current_user)]
 ):
     """Delete a sleeve type (fails if in use)."""
     success = await service.delete_sleeve_type(code)
@@ -762,4 +953,11 @@ async def delete_sleeve_type(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Cannot delete sleeve type {code} - it is in use"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Settings",
+        message=f"Deleted sleeve type {code}",
+    )
     return MessageResponse(message="Sleeve type deleted successfully")

@@ -22,6 +22,7 @@ from app.entrypoints.http.routers import (
     collection_router,
     lookup_router,
     preferences_router,
+    system_logs_router,
     discogs_router,
     collection_sharing_router,
     album_wizard_router,
@@ -87,6 +88,7 @@ app.include_router(pressings_router, prefix=settings.api_v1_prefix)
 app.include_router(collection_router, prefix=settings.api_v1_prefix)
 app.include_router(lookup_router, prefix=settings.api_v1_prefix)
 app.include_router(preferences_router, prefix=settings.api_v1_prefix)
+app.include_router(system_logs_router, prefix=settings.api_v1_prefix)
 app.include_router(discogs_router, prefix=settings.api_v1_prefix)
 app.include_router(collection_sharing_router, prefix=settings.api_v1_prefix)
 app.include_router(album_wizard_router, prefix=settings.api_v1_prefix)

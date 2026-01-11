@@ -8,12 +8,13 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 
 from app.entrypoints.http.auth import get_current_user, User
 from app.entrypoints.http.authorization import require_viewer, require_editor
-from app.entrypoints.http.dependencies import get_artist_service
+from app.entrypoints.http.dependencies import get_artist_service, get_system_log_service
 from app.entrypoints.http.schemas.artist import (
     ArtistCreate, ArtistUpdate, ArtistResponse, ArtistSearchParams
 )
 from app.entrypoints.http.schemas.common import PaginatedResponse, MessageResponse
 from app.application.services.artist_service import ArtistService
+from app.application.services.system_log_service import SystemLogService
 
 
 router = APIRouter(prefix="/artists", tags=["Artists"])
@@ -29,6 +30,7 @@ router = APIRouter(prefix="/artists", tags=["Artists"])
 async def create_artist(
     artist_data: ArtistCreate,
     service: Annotated[ArtistService, Depends(get_artist_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -51,6 +53,13 @@ async def create_artist(
         created_by=user.sub,
         user_name=user.name,
         user_email=user.email
+    )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Artists",
+        message=f"Created artist '{artist.name}'",
     )
     return artist
 
@@ -132,6 +141,7 @@ async def update_artist(
     artist_id: UUID,
     artist_data: ArtistUpdate,
     service: Annotated[ArtistService, Depends(get_artist_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -158,6 +168,13 @@ async def update_artist(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Artist {artist_id} not found"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Artists",
+        message=f"Updated artist '{artist.name}'",
+    )
     return artist
 
 
@@ -170,6 +187,7 @@ async def update_artist(
 async def delete_artist(
     artist_id: UUID,
     service: Annotated[ArtistService, Depends(get_artist_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -189,4 +207,11 @@ async def delete_artist(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Artist {artist_id} not found or has associated albums"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Artists",
+        message=f"Deleted artist {artist_id}",
+    )
     return MessageResponse(message="Artist deleted successfully")

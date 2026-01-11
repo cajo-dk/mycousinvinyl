@@ -223,6 +223,11 @@ export function Albums() {
     }
   };
 
+  const openAlbumDetails = (albumId: string) => {
+    setSelectedAlbumForDetails(albumId);
+    setShowAlbumDetailsModal(true);
+  };
+
   const toggleArtist = (artistId: string) => {
     const newExpanded = new Set(expandedArtists);
     if (newExpanded.has(artistId)) {
@@ -237,6 +242,13 @@ export function Albums() {
     const initial = title.trim().charAt(0);
     return initial ? initial.toUpperCase() : '?';
   };
+
+  const formatAlbumTitle = (album: AlbumDetailResponse) => (
+    <div className="album-title-cell">
+      <span className="album-title">{album.title}</span>
+      <span className="album-genre-mobile">{album.genres.join(', ') || '-'}</span>
+    </div>
+  );
 
   useEffect(() => {
     const filtersContent = (
@@ -331,53 +343,58 @@ export function Albums() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Cover</th>
-                      <th>Album</th>
-                      <th>Year</th>
-                      <th>Type</th>
-                      <th>Genre</th>
-                      <th>Styles</th>
-                      <th>Label</th>
-                      <th>Pressings</th>
-                      <th>Owned</th>
-                      <th>Actions</th>
+                      <th className="col-cover">Cover</th>
+                      <th className="col-album">Album</th>
+                      <th className="col-year">Year</th>
+                      <th className="col-type">Type</th>
+                      <th className="col-genre">Genre</th>
+                      <th className="col-styles">Styles</th>
+                      <th className="col-label">Label</th>
+                      <th className="col-pressings">Pressings</th>
+                      <th className="col-owned">Owned</th>
+                      <th className="col-actions">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {artistGroup.albums.map((album) => (
                       <tr key={album.id}>
-                        <td className="album-cover-cell">
-                          <div className="album-cover">
-                            {album.image_url ? (
-                              <img src={album.image_url} alt={`${album.title} cover`} />
-                            ) : (
-                              <span>{getAlbumInitial(album.title)}</span>
-                            )}
-                          </div>
+                        <td className="album-cover-cell col-cover">
+                          <button
+                            type="button"
+                            className="album-cover-button"
+                            onClick={() => openAlbumDetails(album.id)}
+                            title="View Details"
+                            aria-label={`View ${album.title}`}
+                          >
+                            <div className="album-cover">
+                              {album.image_url ? (
+                                <img src={album.image_url} alt={`${album.title} cover`} />
+                              ) : (
+                                <span>{getAlbumInitial(album.title)}</span>
+                              )}
+                            </div>
+                          </button>
                         </td>
-                        <td className="name-cell">
-                          {album.title}
+                        <td className="name-cell col-album">
+                          {formatAlbumTitle(album)}
                         </td>
-                        <td>{album.release_year || '-'}</td>
-                        <td>{album.release_type}</td>
-                        <td>{album.genres.join(', ') || '-'}</td>
-                        <td>{album.styles.join(', ') || '-'}</td>
-                        <td>{album.label || '-'}</td>
-                        <td>{album.pressing_count}</td>
-                        <td className="owned-cell">
+                        <td className="col-year">{album.release_year || '-'}</td>
+                        <td className="col-type">{album.release_type}</td>
+                        <td className="col-genre">{album.genres.join(', ') || '-'}</td>
+                        <td className="col-styles">{album.styles.join(', ') || '-'}</td>
+                        <td className="col-label">{album.label || '-'}</td>
+                        <td className="col-pressings">{album.pressing_count}</td>
+                        <td className="owned-cell col-owned">
                           <OwnersGrid
                             owners={albumOwners[album.id] || album.owners || []}
                             currentUserId={currentUserId}
                             showEmpty
                           />
                         </td>
-                        <td className="actions-cell">
+                        <td className="actions-cell col-actions">
                           <button
-                            className="btn-action"
-                            onClick={() => {
-                              setSelectedAlbumForDetails(album.id);
-                              setShowAlbumDetailsModal(true);
-                            }}
+                            className="btn-action btn-action-view"
+                            onClick={() => openAlbumDetails(album.id)}
                             title="View Details"
                             aria-label="View Details"
                           >

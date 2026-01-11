@@ -12,6 +12,7 @@ from app.entrypoints.http.dependencies import (
     get_album_service,
     get_collection_sharing_service,
     get_preferences_service,
+    get_system_log_service,
 )
 from app.entrypoints.http.schemas.album import (
     AlbumCreate, AlbumUpdate, AlbumResponse, AlbumSearchParams,
@@ -22,6 +23,7 @@ from app.entrypoints.http.schemas.collection_sharing import UserOwnerInfoRespons
 from app.application.services.album_service import AlbumService
 from app.application.services.collection_sharing_service import CollectionSharingService
 from app.application.services.preferences_service import PreferencesService
+from app.application.services.system_log_service import SystemLogService
 
 
 router = APIRouter(prefix="/albums", tags=["Albums"])
@@ -37,6 +39,7 @@ router = APIRouter(prefix="/albums", tags=["Albums"])
 async def create_album(
     album_data: AlbumCreate,
     service: Annotated[AlbumService, Depends(get_album_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -62,6 +65,13 @@ async def create_album(
             created_by=user.sub,
             user_name=user.name,
             user_email=user.email
+        )
+        await log_service.create_log(
+            user_name=user.name or user.email or "*system",
+            user_id=user.sub,
+            severity="INFO",
+            component="Albums",
+            message=f"Created album '{album.title}'",
         )
         return album
     except ValueError as e:
@@ -327,6 +337,7 @@ async def update_album(
     album_id: UUID,
     album_data: AlbumUpdate,
     service: Annotated[AlbumService, Depends(get_album_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -354,6 +365,13 @@ async def update_album(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Album {album_id} not found"
             )
+        await log_service.create_log(
+            user_name=user.name or user.email or "*system",
+            user_id=user.sub,
+            severity="INFO",
+            component="Albums",
+            message=f"Updated album '{album.title}'",
+        )
         return album
     except ValueError as e:
         raise HTTPException(
@@ -371,6 +389,7 @@ async def update_album(
 async def delete_album(
     album_id: UUID,
     service: Annotated[AlbumService, Depends(get_album_service)],
+    log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
     """
@@ -390,4 +409,11 @@ async def delete_album(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Album {album_id} not found or has associated data"
         )
+    await log_service.create_log(
+        user_name=user.name or user.email or "*system",
+        user_id=user.sub,
+        severity="INFO",
+        component="Albums",
+        message=f"Deleted album {album_id}",
+    )
     return MessageResponse(message="Album deleted successfully")

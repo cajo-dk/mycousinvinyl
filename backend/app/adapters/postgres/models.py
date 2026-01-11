@@ -795,6 +795,72 @@ class UserPreferencesModel(Base):
         )
 
 
+class SystemSettingModel(Base):
+    """System settings SQLAlchemy model."""
+    __tablename__ = 'system_settings'
+
+    key = Column(String(100), primary_key=True)
+    value = Column(Text, nullable=False)
+
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    updated_at = Column(DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def to_domain(self) -> entities.SystemSetting:
+        return entities.SystemSetting(
+            key=self.key,
+            value=self.value,
+            created_at=self.created_at,
+            updated_at=self.updated_at,
+            events=[]
+        )
+
+    @staticmethod
+    def from_domain(entity: entities.SystemSetting) -> 'SystemSettingModel':
+        return SystemSettingModel(
+            key=entity.key,
+            value=entity.value,
+            created_at=entity.created_at,
+            updated_at=entity.updated_at
+        )
+
+
+class SystemLogModel(Base):
+    """System audit log SQLAlchemy model."""
+    __tablename__ = 'system_logs'
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), nullable=True)
+    user_name = Column(String(255), nullable=False)
+    severity = Column(String(10), nullable=False)
+    component = Column(String(100), nullable=False)
+    message = Column(Text, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    def to_domain(self) -> entities.SystemLogEntry:
+        return entities.SystemLogEntry(
+            id=self.id,
+            user_id=self.user_id,
+            user_name=self.user_name,
+            severity=self.severity,
+            component=self.component,
+            message=self.message,
+            created_at=self.created_at,
+            events=[]
+        )
+
+    @staticmethod
+    def from_domain(entity: entities.SystemLogEntry) -> 'SystemLogModel':
+        return SystemLogModel(
+            id=entity.id,
+            user_id=entity.user_id,
+            user_name=entity.user_name,
+            severity=entity.severity,
+            component=entity.component,
+            message=entity.message,
+            created_at=entity.created_at
+        )
+
+
 class UserAlbumPlayModel(Base):
     """Per-user album play counts (overall)."""
     __tablename__ = 'user_album_plays'

@@ -377,6 +377,26 @@ CREATE TABLE user_preferences (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- System settings table (global configuration)
+CREATE TABLE system_settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- System logs table (admin-visible audit log)
+CREATE TABLE system_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID,
+    user_name VARCHAR(255) NOT NULL,
+    severity VARCHAR(10) NOT NULL,
+    component VARCHAR(100) NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT system_logs_severity_check CHECK (severity IN ('INFO', 'WARN', 'ERROR'))
+);
+
 -- Discogs OAuth request tokens (short-lived)
 CREATE TABLE discogs_oauth_requests (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -518,6 +538,8 @@ CREATE INDEX idx_discogs_cache_releases_id ON discogs_cache_releases(release_id)
 CREATE INDEX idx_discogs_cache_releases_expires ON discogs_cache_releases(expires_at);
 CREATE INDEX idx_user_follows_follower ON user_follows(follower_user_id);
 CREATE INDEX idx_user_follows_followed ON user_follows(followed_user_id);
+CREATE INDEX idx_system_logs_created_at ON system_logs(created_at DESC);
+CREATE INDEX idx_system_logs_severity ON system_logs(severity);
 
 -- Filtering and sorting indexes
 CREATE INDEX idx_albums_year ON albums(original_release_year);
@@ -613,6 +635,10 @@ CREATE TRIGGER update_external_references_updated_at
 
 CREATE TRIGGER update_user_preferences_updated_at
     BEFORE UPDATE ON user_preferences
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_system_settings_updated_at
+    BEFORE UPDATE ON system_settings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 CREATE TRIGGER update_discogs_user_tokens_updated_at
@@ -718,6 +744,11 @@ INSERT INTO sleeve_types (code, name, display_order) VALUES
     ('Box', 'Box', 3)
 ON CONFLICT (code) DO NOTHING;
 
+-- Insert default system settings
+INSERT INTO system_settings (key, value) VALUES
+    ('log_retention_days', '60')
+ON CONFLICT (key) DO NOTHING;
+
 -- Insert common music genres
 INSERT INTO genres (name, display_order) VALUES
     ('Rock', 1),
@@ -802,6 +833,8 @@ COMMENT ON TABLE collection_import_rows IS 'Row-level status for collection impo
 COMMENT ON TABLE media_assets IS 'Images and videos associated with entities';
 COMMENT ON TABLE external_references IS 'Links to external databases (Discogs, MusicBrainz, etc.)';
 COMMENT ON TABLE user_preferences IS 'User settings and preferences';
+COMMENT ON TABLE system_settings IS 'Global application settings';
+COMMENT ON TABLE system_logs IS 'System audit log entries';
 COMMENT ON TABLE discogs_oauth_requests IS 'Short-lived OAuth request tokens for Discogs user auth';
 COMMENT ON TABLE discogs_user_tokens IS 'Discogs OAuth or PAT tokens per user';
 COMMENT ON TABLE market_data IS 'Market pricing data for pressings';

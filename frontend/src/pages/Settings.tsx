@@ -3,7 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { lookupApi, preferencesApi } from '@/api/services';
+import { lookupApi, preferencesApi, systemLogsApi } from '@/api/services';
 import { Loading, ErrorAlert, Icon } from '@/components/UI';
 import { mdiPencilOutline, mdiTrashCanOutline } from '@mdi/js';
 import {
@@ -13,8 +13,11 @@ import {
   ReleaseTypeResponse,
   EditionTypeResponse,
   SleeveTypeResponse,
+  SystemLogEntry,
 } from '@/types/api';
 import { useViewControls } from '@/components/Layout/ViewControlsContext';
+import { useIsAdmin } from '@/auth/useAdmin';
+import { formatDateTime } from '@/utils/format';
 import './Settings.css';
 import '../styles/Table.css';
 
@@ -646,15 +649,33 @@ export function Settings() {
   const [releaseTypes, setReleaseTypes] = useState<ReleaseTypeResponse[]>([]);
   const [editionTypes, setEditionTypes] = useState<EditionTypeResponse[]>([]);
   const [sleeveTypes, setSleeveTypes] = useState<SleeveTypeResponse[]>([]);
-  const [activeTab, setActiveTab] = useState('genres');
+  const [activeTab, setActiveTab] = useState('preferences');
+  const [activeKeywordTab, setActiveKeywordTab] = useState('genres');
+  const [genrePage, setGenrePage] = useState(1);
+  const [stylePage, setStylePage] = useState(1);
+  const [logRetentionDays, setLogRetentionDays] = useState(60);
+  const [logRetentionSaving, setLogRetentionSaving] = useState(false);
+  const [logEntries, setLogEntries] = useState<SystemLogEntry[]>([]);
+  const [logTotal, setLogTotal] = useState(0);
+  const [logPage, setLogPage] = useState(1);
+  const [logPageSize, setLogPageSize] = useState(50);
+  const [logLoading, setLogLoading] = useState(false);
+  const [logError, setLogError] = useState<string | null>(null);
+  const pageSize = 10;
   const [currency, setCurrency] = useState('');
   const [currencySaving, setCurrencySaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { setControls } = useViewControls();
+  const { isAdmin, isLoading: isAdminLoading } = useIsAdmin();
 
   const tabs = [
     { id: 'preferences', label: 'Preferences' },
+    { id: 'keywords', label: 'Keywords' },
+    { id: 'logs', label: 'Logs' },
+  ];
+
+  const keywordTabs = [
     { id: 'genres', label: 'Genres' },
     { id: 'styles', label: 'Styles' },
     { id: 'artist-types', label: 'Artist Types' },
@@ -667,6 +688,9 @@ export function Settings() {
     try {
       setLoading(true);
       setError(null);
+      const retentionPromise = isAdmin
+        ? systemLogsApi.getLogRetention()
+        : Promise.resolve(null);
       const [
         preferencesResp,
         genresResp,
@@ -675,6 +699,7 @@ export function Settings() {
         releaseTypesResp,
         editionTypesResp,
         sleeveTypesResp,
+        retentionResp,
       ] = await Promise.all([
         preferencesApi.getPreferences(),
         lookupApi.getAllGenres(),
@@ -683,6 +708,7 @@ export function Settings() {
         lookupApi.getAllReleaseTypes(),
         lookupApi.getAllEditionTypes(),
         lookupApi.getAllSleeveTypes(),
+        retentionPromise,
       ]);
       setCurrency(preferencesResp.currency || '');
       setGenres(genresResp);
@@ -691,6 +717,9 @@ export function Settings() {
       setReleaseTypes(releaseTypesResp);
       setEditionTypes(editionTypesResp);
       setSleeveTypes(sleeveTypesResp);
+      if (retentionResp?.retention_days) {
+        setLogRetentionDays(retentionResp.retention_days);
+      }
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load settings data');
     } finally {
@@ -699,12 +728,32 @@ export function Settings() {
   };
 
   useEffect(() => {
+    if (isAdminLoading) {
+      return;
+    }
     loadAll();
-  }, []);
+  }, [isAdminLoading, isAdmin]);
 
   useEffect(() => {
     setControls(null);
   }, [setControls]);
+
+  const genreTotalPages = Math.max(1, Math.ceil(genres.length / pageSize));
+  const styleTotalPages = Math.max(1, Math.ceil(styles.length / pageSize));
+  const pagedGenres = genres.slice((genrePage - 1) * pageSize, genrePage * pageSize);
+  const pagedStyles = styles.slice((stylePage - 1) * pageSize, stylePage * pageSize);
+
+  useEffect(() => {
+    if (genrePage > genreTotalPages) {
+      setGenrePage(genreTotalPages);
+    }
+  }, [genrePage, genreTotalPages]);
+
+  useEffect(() => {
+    if (stylePage > styleTotalPages) {
+      setStylePage(styleTotalPages);
+    }
+  }, [stylePage, styleTotalPages]);
 
   const runAction = async (action: () => Promise<unknown>) => {
     try {
@@ -734,6 +783,50 @@ export function Settings() {
     }
   };
 
+  const handleRetentionSave = async () => {
+    setLogRetentionSaving(true);
+    try {
+      setError(null);
+      const updated = await systemLogsApi.updateLogRetention(logRetentionDays);
+      setLogRetentionDays(updated.retention_days);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to update log retention');
+    } finally {
+      setLogRetentionSaving(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab !== 'logs' || !isAdmin) {
+      return;
+    }
+    const fetchLogs = async () => {
+      try {
+        setLogLoading(true);
+        setLogError(null);
+        const response = await systemLogsApi.getLogs({
+          limit: logPageSize,
+          offset: (logPage - 1) * logPageSize,
+        });
+        setLogEntries(response.items || []);
+        setLogTotal(response.total || 0);
+      } catch (err: any) {
+        setLogError(err.response?.data?.detail || 'Failed to load logs');
+      } finally {
+        setLogLoading(false);
+      }
+    };
+    fetchLogs();
+  }, [activeTab, isAdmin, logPage, logPageSize]);
+
+  useEffect(() => {
+    if (activeTab === 'logs') {
+      setLogPage(1);
+    }
+  }, [activeTab]);
+
+  const logTotalPages = Math.max(1, Math.ceil(logTotal / logPageSize));
+
   if (loading) {
     return <Loading message="Loading settings..." />;
   }
@@ -743,7 +836,7 @@ export function Settings() {
       <div className="page-header">
         <div>
           <h1>Settings</h1>
-          <p>Manage keyword tables for the catalog.</p>
+          <p>Manage system-wide settings</p>
         </div>
       </div>
 
@@ -789,74 +882,254 @@ export function Settings() {
               {currencySaving ? 'Saving...' : 'Save'}
             </button>
           </div>
+          {isAdmin && (
+            <div className="settings-form-row settings-form-row--compact">
+              <select
+                value={logRetentionDays}
+                onChange={(e) => setLogRetentionDays(Number(e.target.value))}
+              >
+                {[30, 60, 90].map((value) => (
+                  <option key={value} value={value}>
+                    Log retention: {value} days
+                  </option>
+                ))}
+              </select>
+              <button
+                className="btn-primary"
+                type="button"
+                onClick={handleRetentionSave}
+                disabled={logRetentionSaving}
+              >
+                {logRetentionSaving ? 'Saving...' : 'Save'}
+              </button>
+            </div>
+          )}
         </section>
       )}
 
-      {activeTab === 'genres' && (
-        <NamedSection
-          title="Genres"
-          description="Controls available music genres."
-          items={genres}
-          onCreate={(payload) => runAction(() => lookupApi.createGenre(payload))}
-          onUpdate={(id, payload) => runAction(() => lookupApi.updateGenre(id, payload))}
-          onDelete={(id) => runAction(() => lookupApi.deleteGenre(id))}
-        />
+      {activeTab === 'keywords' && (
+        <div className="settings-keywords">
+          <div className="settings-subtabs" role="tablist" aria-label="Keyword sections">
+            {keywordTabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={activeKeywordTab === tab.id}
+                className={`settings-subtab ${activeKeywordTab === tab.id ? 'active' : ''}`}
+                onClick={() => setActiveKeywordTab(tab.id)}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {activeKeywordTab === 'genres' && (
+            <>
+              <NamedSection
+                title="Genres"
+                description="Controls available music genres."
+                items={pagedGenres}
+                onCreate={(payload) => runAction(() => lookupApi.createGenre(payload))}
+                onUpdate={(id, payload) => runAction(() => lookupApi.updateGenre(id, payload))}
+                onDelete={(id) => runAction(() => lookupApi.deleteGenre(id))}
+              />
+              {genreTotalPages > 1 && (
+                <div className="pagination settings-pagination">
+                  <div className="pagination-controls">
+                    <button
+                      onClick={() => setGenrePage((prev) => Math.max(1, prev - 1))}
+                      disabled={genrePage === 1}
+                      className="pagination-button"
+                    >
+                      Previous
+                    </button>
+                    <div className="pagination-info">
+                      Page {genrePage} of {genreTotalPages}
+                    </div>
+                    <button
+                      onClick={() => setGenrePage((prev) => Math.min(genreTotalPages, prev + 1))}
+                      disabled={genrePage === genreTotalPages}
+                      className="pagination-button"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeKeywordTab === 'styles' && (
+            <>
+              <StyleSection
+                title="Styles"
+                description="Controls available music styles (optional genre association)."
+                items={pagedStyles}
+                genres={genres}
+                onCreate={(payload) => runAction(() => lookupApi.createStyle(payload))}
+                onUpdate={(id, payload) => runAction(() => lookupApi.updateStyle(id, payload))}
+                onDelete={(id) => runAction(() => lookupApi.deleteStyle(id))}
+              />
+              {styleTotalPages > 1 && (
+                <div className="pagination settings-pagination">
+                  <div className="pagination-controls">
+                    <button
+                      onClick={() => setStylePage((prev) => Math.max(1, prev - 1))}
+                      disabled={stylePage === 1}
+                      className="pagination-button"
+                    >
+                      Previous
+                    </button>
+                    <div className="pagination-info">
+                      Page {stylePage} of {styleTotalPages}
+                    </div>
+                    <button
+                      onClick={() => setStylePage((prev) => Math.min(styleTotalPages, prev + 1))}
+                      disabled={stylePage === styleTotalPages}
+                      className="pagination-button"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {activeKeywordTab === 'artist-types' && (
+            <KeywordSection
+              title="Artist Types"
+              description="Controls available artist types in the catalog."
+              items={artistTypes}
+              onCreate={(payload) => runAction(() => lookupApi.createArtistType(payload))}
+              onUpdate={(code, payload) => runAction(() => lookupApi.updateArtistType(code, payload))}
+              onDelete={(code) => runAction(() => lookupApi.deleteArtistType(code))}
+            />
+          )}
+
+          {activeKeywordTab === 'release-types' && (
+            <KeywordSection
+              title="Release Types"
+              description="Controls available album release types."
+              items={releaseTypes}
+              onCreate={(payload) => runAction(() => lookupApi.createReleaseType(payload))}
+              onUpdate={(code, payload) => runAction(() => lookupApi.updateReleaseType(code, payload))}
+              onDelete={(code) => runAction(() => lookupApi.deleteReleaseType(code))}
+            />
+          )}
+
+          {activeKeywordTab === 'edition-types' && (
+            <KeywordSection
+              title="Edition Types"
+              description="Controls available pressing edition types."
+              items={editionTypes}
+              onCreate={(payload) => runAction(() => lookupApi.createEditionType(payload))}
+              onUpdate={(code, payload) => runAction(() => lookupApi.updateEditionType(code, payload))}
+              onDelete={(code) => runAction(() => lookupApi.deleteEditionType(code))}
+            />
+          )}
+
+          {activeKeywordTab === 'sleeve-types' && (
+            <KeywordSection
+              title="Sleeve Types"
+              description="Controls available sleeve/jacket types."
+              items={sleeveTypes}
+              onCreate={(payload) => runAction(() => lookupApi.createSleeveType(payload))}
+              onUpdate={(code, payload) => runAction(() => lookupApi.updateSleeveType(code, payload))}
+              onDelete={(code) => runAction(() => lookupApi.deleteSleeveType(code))}
+            />
+          )}
+        </div>
       )}
 
-      {activeTab === 'styles' && (
-        <StyleSection
-          title="Styles"
-          description="Controls available music styles (optional genre association)."
-          items={styles}
-          genres={genres}
-          onCreate={(payload) => runAction(() => lookupApi.createStyle(payload))}
-          onUpdate={(id, payload) => runAction(() => lookupApi.updateStyle(id, payload))}
-          onDelete={(id) => runAction(() => lookupApi.deleteStyle(id))}
-        />
-      )}
+      {activeTab === 'logs' && (
+        <section className="settings-section">
+          <div className="settings-section-header">
+            <div>
+              <h2>System Logs</h2>
+              <p>Audit trail of system activity and Settings changes.</p>
+            </div>
+          </div>
 
-      {activeTab === 'artist-types' && (
-        <KeywordSection
-          title="Artist Types"
-          description="Controls available artist types in the catalog."
-          items={artistTypes}
-          onCreate={(payload) => runAction(() => lookupApi.createArtistType(payload))}
-          onUpdate={(code, payload) => runAction(() => lookupApi.updateArtistType(code, payload))}
-          onDelete={(code) => runAction(() => lookupApi.deleteArtistType(code))}
-        />
-      )}
+          {logLoading && (
+            <div className="settings-status">Loading logs...</div>
+          )}
+          {logError && !logLoading && (
+            <div className="settings-status settings-status--error">{logError}</div>
+          )}
+          {!logLoading && !logError && logEntries.length === 0 && (
+            <div className="settings-status">No log entries found.</div>
+          )}
+          {!logLoading && !logError && logEntries.length > 0 && (
+            <div className="table-container">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Date/Time</th>
+                    <th>User</th>
+                    <th>Severity</th>
+                    <th>Component</th>
+                    <th>Log</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {logEntries.map((entry) => (
+                    <tr key={entry.id}>
+                      <td>{formatDateTime(entry.created_at)}</td>
+                      <td>{entry.user_name}</td>
+                      <td className={`log-severity log-severity--${entry.severity.toLowerCase()}`}>
+                        {entry.severity}
+                      </td>
+                      <td>{entry.component}</td>
+                      <td>{entry.message}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-      {activeTab === 'release-types' && (
-        <KeywordSection
-          title="Release Types"
-          description="Controls available album release types."
-          items={releaseTypes}
-          onCreate={(payload) => runAction(() => lookupApi.createReleaseType(payload))}
-          onUpdate={(code, payload) => runAction(() => lookupApi.updateReleaseType(code, payload))}
-          onDelete={(code) => runAction(() => lookupApi.deleteReleaseType(code))}
-        />
-      )}
-
-      {activeTab === 'edition-types' && (
-        <KeywordSection
-          title="Edition Types"
-          description="Controls available pressing edition types."
-          items={editionTypes}
-          onCreate={(payload) => runAction(() => lookupApi.createEditionType(payload))}
-          onUpdate={(code, payload) => runAction(() => lookupApi.updateEditionType(code, payload))}
-          onDelete={(code) => runAction(() => lookupApi.deleteEditionType(code))}
-        />
-      )}
-
-      {activeTab === 'sleeve-types' && (
-        <KeywordSection
-          title="Sleeve Types"
-          description="Controls available sleeve/jacket types."
-          items={sleeveTypes}
-          onCreate={(payload) => runAction(() => lookupApi.createSleeveType(payload))}
-          onUpdate={(code, payload) => runAction(() => lookupApi.updateSleeveType(code, payload))}
-          onDelete={(code) => runAction(() => lookupApi.deleteSleeveType(code))}
-        />
+          {logTotalPages > 1 && (
+            <div className="pagination settings-pagination">
+              <div className="pagination-controls">
+                <button
+                  onClick={() => setLogPage((prev) => Math.max(1, prev - 1))}
+                  disabled={logPage === 1}
+                  className="pagination-button"
+                >
+                  Previous
+                </button>
+                <div className="pagination-info">
+                  Page {logPage} of {logTotalPages}
+                </div>
+                <button
+                  onClick={() => setLogPage((prev) => Math.min(logTotalPages, prev + 1))}
+                  disabled={logPage === logTotalPages}
+                  className="pagination-button"
+                >
+                  Next
+                </button>
+              </div>
+              <div className="items-per-page">
+                <span>Per page</span>
+                <select
+                  value={logPageSize}
+                  onChange={(e) => {
+                    setLogPageSize(Number(e.target.value));
+                    setLogPage(1);
+                  }}
+                >
+                  {[50, 100, 200].map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+        </section>
       )}
     </div>
   );
