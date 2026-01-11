@@ -628,7 +628,9 @@ class CollectionImportService:
             raise ImportSkip("Unsupported format: non-vinyl")
 
         format_value = None
-        if any("cd" in token for token in tokens):
+        if any("non-vinyl" in token for token in tokens):
+            format_value = VinylFormat.CD
+        elif any("cd" in token for token in tokens):
             format_value = VinylFormat.CD
         elif any("lp" in token for token in tokens):
             format_value = VinylFormat.LP
