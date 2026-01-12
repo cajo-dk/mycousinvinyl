@@ -47,10 +47,7 @@ OPTION_KEYS = {
     "backup_sharepoint_client_secret": "BACKUP_SHAREPOINT_CLIENT_SECRET",
     "backup_timezone": "BACKUP_TIMEZONE",
     "vite_api_url": "VITE_API_URL",
-    "vite_azure_client_id": "VITE_AZURE_CLIENT_ID",
-    "vite_azure_tenant_id": "VITE_AZURE_TENANT_ID",
     "vite_azure_redirect_uri": "VITE_AZURE_REDIRECT_URI",
-    "vite_azure_group_admin": "VITE_AZURE_GROUP_ADMIN",
     "vite_debug_admin": "VITE_DEBUG_ADMIN",
     "vite_debug_nav": "VITE_DEBUG_NAV",
     "vite_manifest_env": "VITE_MANIFEST_ENV",
@@ -72,10 +69,21 @@ def main() -> None:
 
     options = json.loads(options_path.read_text())
 
+    env_values = {}
     for key, env_key in OPTION_KEYS.items():
         if key not in options:
             continue
         value = _coerce_value(options[key])
+        env_values[env_key] = value
+
+    if "azure_client_id" in options:
+        env_values["VITE_AZURE_CLIENT_ID"] = _coerce_value(options["azure_client_id"])
+    if "azure_tenant_id" in options:
+        env_values["VITE_AZURE_TENANT_ID"] = _coerce_value(options["azure_tenant_id"])
+    if "azure_group_admin" in options:
+        env_values["VITE_AZURE_GROUP_ADMIN"] = _coerce_value(options["azure_group_admin"])
+
+    for env_key, value in env_values.items():
         print(f"{env_key}={shlex.quote(value)}")
 
 

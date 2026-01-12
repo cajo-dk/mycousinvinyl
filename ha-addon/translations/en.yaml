@@ -1,0 +1,139 @@
+configuration:
+  environment:
+    name: "Environment"
+    description: "Runtime environment label (development/production)."
+  log_level:
+    name: "Log level"
+    description: "Logging verbosity for backend services."
+  rbac_strict:
+    name: "RBAC strict"
+    description: "Require group membership for access."
+  health_check_token:
+    name: "Health check token"
+    description: "Token required for the /health endpoint (optional)."
+  message_broker:
+    name: "Message broker"
+    description: "Select which broker to use for async events."
+  database_url:
+    name: "Database URL"
+    description: "Postgres connection string."
+  mqtt_url:
+    name: "MQTT URL"
+    description: "MQTT broker URL."
+  mqtt_username:
+    name: "MQTT username"
+    description: "MQTT auth username."
+  mqtt_password:
+    name: "MQTT password"
+    description: "MQTT auth password."
+  mqtt_topic_prefix:
+    name: "MQTT topic prefix"
+    description: "Prefix for published MQTT topics."
+  activemq_url:
+    name: "ActiveMQ URL"
+    description: "STOMP endpoint for ActiveMQ."
+  activity_topic:
+    name: "Activity topic"
+    description: "Topic for activity events."
+  activity_bridge_url:
+    name: "Activity bridge URL"
+    description: "Base URL for the activity bridge."
+  activity_bridge_token:
+    name: "Activity bridge token"
+    description: "Token used by the activity bridge."
+  azure_tenant_id:
+    name: "Azure tenant ID"
+    description: "Azure Entra tenant ID."
+  azure_client_id:
+    name: "Azure client ID"
+    description: "Azure Entra application client ID."
+  azure_audience:
+    name: "Azure audience"
+    description: "API audience / App ID URI."
+  azure_group_admin:
+    name: "Azure admin group"
+    description: "Group ID for Admin role."
+  azure_group_editor:
+    name: "Azure editor group"
+    description: "Group ID for Editor role."
+  azure_group_viewer:
+    name: "Azure viewer group"
+    description: "Group ID for Viewer role."
+  discogs_service_url:
+    name: "Discogs service URL"
+    description: "Discogs service base URL."
+  discogs_user_agent:
+    name: "Discogs user agent"
+    description: "User-Agent sent to Discogs."
+  discogs_key:
+    name: "Discogs key"
+    description: "Discogs consumer key."
+  discogs_secret:
+    name: "Discogs secret"
+    description: "Discogs consumer secret."
+  discogs_oauth_token:
+    name: "Discogs OAuth token"
+    description: "OAuth token or personal access token."
+  discogs_oauth_token_secret:
+    name: "Discogs OAuth token secret"
+    description: "OAuth 1.0a token secret."
+  album_wizard_api_url:
+    name: "Album wizard API URL"
+    description: "Base URL for the album wizard API."
+  album_wizard_api_key:
+    name: "Album wizard API key"
+    description: "API key for the album wizard."
+  album_wizard_model_id:
+    name: "Album wizard model ID"
+    description: "Model identifier used by the album wizard."
+  cors_allow_origins:
+    name: "CORS allow origins"
+    description: "Comma-separated list of allowed origins."
+  cors_allow_origin_regex:
+    name: "CORS allow origin regex"
+    description: "Regex for allowed origins."
+  backup_schedule_days:
+    name: "Backup schedule days"
+    description: "Days of week to run backups (comma-separated)."
+  backup_schedule_time:
+    name: "Backup schedule time"
+    description: "Time of day for backups (HH:MM)."
+  backup_timezone:
+    name: "Backup timezone"
+    description: "Timezone name for backup scheduling."
+  backup_external_path:
+    name: "Backup external path"
+    description: "Target path for backup files."
+  backup_sharepoint_site:
+    name: "Backup SharePoint site"
+    description: "SharePoint site name for backups."
+  backup_sharepoint_library:
+    name: "Backup SharePoint library"
+    description: "SharePoint document library."
+  backup_sharepoint_folder:
+    name: "Backup SharePoint folder"
+    description: "Folder path inside the library."
+  backup_sharepoint_tenant_id:
+    name: "Backup SharePoint tenant ID"
+    description: "Azure tenant ID for SharePoint."
+  backup_sharepoint_client_id:
+    name: "Backup SharePoint client ID"
+    description: "App client ID for SharePoint."
+  backup_sharepoint_client_secret:
+    name: "Backup SharePoint client secret"
+    description: "App client secret for SharePoint."
+  vite_api_url:
+    name: "Frontend API URL"
+    description: "API URL used by the SPA."
+  vite_azure_redirect_uri:
+    name: "Frontend redirect URI"
+    description: "Redirect URI for MSAL login."
+  vite_debug_admin:
+    name: "Frontend debug admin"
+    description: "Enable admin debug mode in the SPA."
+  vite_debug_nav:
+    name: "Frontend debug navigation"
+    description: "Enable debug navigation in the SPA."
+  vite_manifest_env:
+    name: "Frontend manifest env"
+    description: "Value for VITE_MANIFEST_ENV."

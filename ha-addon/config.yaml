@@ -23,39 +23,57 @@ map:
   - share:rw
   - media:rw
 options:
-  message_broker: mqtt
+  # Core runtime
   environment: production
+  log_level: INFO
   rbac_strict: true
   health_check_token: ""
+  message_broker: mqtt
+
+  # Database
+  database_url: postgresql://postgres:postgres@core-postgres:5432/mycousinvinyl
+
+  # Message brokers
   mqtt_url: mqtt://core-mosquitto:1883
   mqtt_username: ""
   mqtt_password: ""
   mqtt_topic_prefix: MyCousinVinyl
   activemq_url: stomp://activemq:61613
-  database_url: postgresql://postgres:postgres@core-postgres:5432/mycousinvinyl
+
+  # Activity bridge
   activity_topic: /topic/system.activity
   activity_bridge_url: http://127.0.0.1:8000
   activity_bridge_token: ""
+
+  # Azure Entra ID / RBAC
   azure_tenant_id: ""
   azure_client_id: ""
   azure_audience: ""
   azure_group_admin: ""
   azure_group_editor: ""
   azure_group_viewer: ""
+
+  # Discogs
   discogs_service_url: http://127.0.0.1:8001
   discogs_user_agent: MyCousinVinyl/1.0
   discogs_key: ""
   discogs_secret: ""
   discogs_oauth_token: ""
   discogs_oauth_token_secret: ""
+
+  # Album wizard
   album_wizard_api_url: ""
   album_wizard_api_key: ""
   album_wizard_model_id: ""
-  log_level: INFO
+
+  # CORS
   cors_allow_origins: ""
   cors_allow_origin_regex: ""
+
+  # Backups
   backup_schedule_days: ""
   backup_schedule_time: ""
+  backup_timezone: ""
   backup_external_path: "/share/mycousinvinyl-backups"
   backup_sharepoint_site: ""
   backup_sharepoint_library: ""
@@ -63,26 +81,25 @@ options:
   backup_sharepoint_tenant_id: ""
   backup_sharepoint_client_id: ""
   backup_sharepoint_client_secret: ""
-  backup_timezone: ""
+
+  # Frontend (Vite)
   vite_api_url: ""
-  vite_azure_client_id: ""
-  vite_azure_tenant_id: ""
   vite_azure_redirect_uri: ""
-  vite_azure_group_admin: ""
   vite_debug_admin: false
   vite_debug_nav: false
   vite_manifest_env: ""
 schema:
-  message_broker: list(mqtt|activemq)
   environment: str
+  log_level: str
   rbac_strict: bool
   health_check_token: str
+  message_broker: list(mqtt|activemq)
+  database_url: str
   mqtt_url: str
   mqtt_username: str
   mqtt_password: str
   mqtt_topic_prefix: str
   activemq_url: str
-  database_url: str
   activity_topic: str
   activity_bridge_url: str
   activity_bridge_token: str
@@ -101,11 +118,11 @@ schema:
   album_wizard_api_url: str
   album_wizard_api_key: str
   album_wizard_model_id: str
-  log_level: str
   cors_allow_origins: str
   cors_allow_origin_regex: str
   backup_schedule_days: str
   backup_schedule_time: str
+  backup_timezone: str
   backup_external_path: str
   backup_sharepoint_site: str
   backup_sharepoint_library: str
@@ -113,12 +130,8 @@ schema:
   backup_sharepoint_tenant_id: str
   backup_sharepoint_client_id: str
   backup_sharepoint_client_secret: str
-  backup_timezone: str
   vite_api_url: str
-  vite_azure_client_id: str
-  vite_azure_tenant_id: str
   vite_azure_redirect_uri: str
-  vite_azure_group_admin: str
   vite_debug_admin: bool
   vite_debug_nav: bool
   vite_manifest_env: str
