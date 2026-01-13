@@ -3,6 +3,7 @@ import asyncio
 import logging
 import time
 from typing import Optional, Tuple
+from urllib.parse import urlparse
 
 import httpx
 from oauthlib.oauth1 import Client as OAuthClient, SIGNATURE_TYPE_AUTH_HEADER
@@ -27,6 +28,21 @@ class RateLimiter:
             if delay > 0:
                 await asyncio.sleep(delay)
             self._last_request = time.monotonic()
+
+
+def _validate_discogs_base_url(base_url: str) -> str:
+    parsed = urlparse(base_url)
+    if parsed.scheme != "https":
+        raise ValueError("Discogs base URL must use https")
+    if parsed.username or parsed.password:
+        raise ValueError("Discogs base URL must not include credentials")
+    if parsed.hostname != "api.discogs.com":
+        raise ValueError("Discogs base URL host must be api.discogs.com")
+    if parsed.port not in (None, 443):
+        raise ValueError("Discogs base URL must not override the default port")
+    if parsed.path not in ("", "/") or parsed.params or parsed.query or parsed.fragment:
+        raise ValueError("Discogs base URL must not include path or query components")
+    return "https://api.discogs.com"
 
 
 NATIONALITY_TO_COUNTRY = {
@@ -157,7 +173,7 @@ VINYL_COLOR_KEYWORDS = (
 class DiscogsClient:
     def __init__(self, settings: Settings):
         self._settings = settings
-        self._base_url = settings.discogs_api_base_url.rstrip("/")
+        self._base_url = _validate_discogs_base_url(settings.discogs_api_base_url)
         self._limiter = RateLimiter(settings.discogs_rate_limit_per_minute)
         self._import_log_level = settings.discogs_import_log_level
 
@@ -173,7 +189,6 @@ class DiscogsClient:
         if self._settings.discogs_oauth_token and self._settings.discogs_oauth_token_secret:
             logger.info("Using OAuth 1.0a authentication (token + secret with signature)")
             logger.debug(f"OAuth credentials - Consumer Key: {self._settings.discogs_key[:10]}...")
-            logger.debug(f"OAuth credentials - Access Token: {self._settings.discogs_oauth_token[:10]}...")
             logger.debug(f"OAuth query params to sign: {params}")
 
             client = OAuthClient(
