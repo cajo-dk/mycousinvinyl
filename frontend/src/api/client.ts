@@ -19,6 +19,25 @@ export const apiClient = axios.create({
 // Store MSAL instance (will be set by configureMsalInstance)
 let msalInstanceRef: any = null;
 
+async function clearMsalSession() {
+  if (!msalInstanceRef) {
+    return;
+  }
+
+  const account = msalInstanceRef.getActiveAccount?.() || msalInstanceRef.getAllAccounts?.()[0];
+  const tokenCache = msalInstanceRef.getTokenCache?.();
+
+  if (account && tokenCache?.removeAccount) {
+    try {
+      await tokenCache.removeAccount(account);
+    } catch (cacheError) {
+      console.error('Failed to clear MSAL cache:', cacheError);
+    }
+  }
+
+  msalInstanceRef.setActiveAccount?.(null);
+}
+
 /**
  * Configure the API client with an initialized MSAL instance.
  * This must be called after MSAL is initialized in main.tsx
@@ -77,7 +96,10 @@ apiClient.interceptors.request.use(
       if (response && response.accessToken) {
         config.headers.Authorization = `Bearer ${response.accessToken}`;
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.errorCode === 'interaction_required' || error?.errorCode === 'login_required') {
+        await clearMsalSession();
+      }
       console.error('Error acquiring token:', error);
       // Token acquisition failed - request will proceed without auth header
     }
@@ -96,9 +118,9 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid - redirect to login
+      // Token expired or invalid - show login view
       console.error('Unauthorized - token may be expired');
-      // You can trigger re-authentication here
+      await clearMsalSession();
     }
 
     if (error.response?.status === 403) {
