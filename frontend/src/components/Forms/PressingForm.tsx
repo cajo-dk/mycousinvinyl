@@ -990,7 +990,7 @@ export function PressingForm({ pressingId, albumId, albumTitle, showAddToCollect
       {/* Add to Collection section (only shown when showAddToCollection is true) */}
       {showAddToCollection && !isEditMode && (
         <>
-          <div className="form-group" style={{ marginTop: '1.5rem', borderTop: '1px solid #444', paddingTop: '1.5rem' }}>
+          <div className="form-group" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--color-border-strong)', paddingTop: '1.5rem' }}>
             <label className="checkbox-label">
               <input
                 type="checkbox"

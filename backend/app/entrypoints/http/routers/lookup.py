@@ -1,7 +1,7 @@
 """
 Lookup data API endpoints (genres, styles, countries).
 
-Admin-focused endpoints for managing reference data.
+Editor-focused endpoints for managing reference data.
 """
 
 from typing import Annotated, List, Optional
@@ -90,7 +90,7 @@ async def create_genre(
     """
     Create a new genre.
 
-    Admin operation. Requires authentication.
+    Editor operation. Requires authentication.
     """
     genre = await service.create_genre(
         name=genre_data.name,
@@ -122,7 +122,7 @@ async def update_genre(
     """
     Update a genre.
 
-    Admin operation. Requires authentication.
+    Editor operation. Requires authentication.
     """
     genre = await service.update_genre(
         genre_id=genre_id,
@@ -155,7 +155,7 @@ async def delete_genre(
     Delete a genre.
 
     Will fail if genre is in use by albums (database constraint).
-    Admin operation. Requires authentication.
+    Editor operation. Requires authentication.
     """
     success = await service.delete_genre(genre_id)
     if not success:
@@ -236,7 +236,7 @@ async def create_style(
     """
     Create a new style.
 
-    Admin operation. Requires authentication.
+    Editor operation. Requires authentication.
     """
     style = await service.create_style(
         name=style_data.name,
@@ -269,7 +269,7 @@ async def update_style(
     """
     Update a style.
 
-    Admin operation. Requires authentication.
+    Editor operation. Requires authentication.
     """
     style = await service.update_style(
         style_id=style_id,
@@ -303,7 +303,7 @@ async def delete_style(
     Delete a style.
 
     Will fail if style is in use by albums (database constraint).
-    Admin operation. Requires authentication.
+    Editor operation. Requires authentication.
     """
     success = await service.delete_style(style_id)
     if not success:
@@ -383,7 +383,7 @@ async def create_country(
     """
     Create a new country.
 
-    Admin operation. Requires authentication.
+    Editor operation. Requires authentication.
     """
     country = await service.create_country(
         code=country_data.code,
@@ -416,7 +416,7 @@ async def update_country(
     """
     Update a country.
 
-    Admin operation. Requires authentication.
+    Editor operation. Requires authentication.
     """
     country = await service.update_country(
         code=code,
@@ -449,7 +449,7 @@ async def delete_country(
     Delete a country.
 
     Will fail if country is in use (database constraint).
-    Admin operation. Requires authentication.
+    Editor operation. Requires authentication.
     """
     success = await service.delete_country(code)
     if not success:

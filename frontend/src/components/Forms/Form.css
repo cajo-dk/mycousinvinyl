@@ -10,7 +10,7 @@
   margin-top: 1.5rem;
   margin-bottom: 0.5rem;
   padding-bottom: 0.5rem;
-  border-bottom: 2px solid #444;
+  border-bottom: 2px solid var(--color-border-strong);
 }
 
 .form-error {
@@ -42,7 +42,7 @@
 .form-group textarea {
   padding: 0.75rem;
   background: #2a2a2a;
-  border: 1px solid #444;
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   color: #fff;
   font-size: 1rem;
@@ -54,7 +54,7 @@
 .form-group textarea:focus {
   outline: none;
   border-color: #007bff;
-  background: #333;
+  background: var(--color-border);
 }
 
 .form-group select[multiple] {
@@ -77,7 +77,7 @@
 }
 
 .form-group small {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
 }
 
@@ -181,8 +181,8 @@
   width: 40px;
   height: 40px;
   border-radius: 6px;
-  border: 1px solid #444;
-  background: #222;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-background-hover);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -221,7 +221,7 @@
 
 .discogs-result-meta {
   font-size: 0.8rem;
-  color: #999;
+  color: var(--color-text-muted);
 }
 
 .checkbox-label {
@@ -252,11 +252,11 @@
   gap: 1rem;
   margin-top: 1rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--color-border);
 }
 
 .btn-secondary {
-  background: #444;
+  background: var(--color-border-strong);
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -288,8 +288,8 @@
   width: 96px;
   height: 96px;
   border-radius: 8px;
-  border: 1px solid #444;
-  background: #222;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-background-hover);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -88,7 +88,7 @@ export function PressingListItem({
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      border: '1px solid #444'
+      border: '1px solid var(--color-border-strong)'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1, minWidth: 0 }}>
         <div style={{
@@ -107,8 +107,8 @@ export function PressingListItem({
               width: '56px',
               height: '56px',
               borderRadius: '6px',
-              border: '1px solid #444',
-              background: '#1a1a1a',
+              border: '1px solid var(--color-border-strong)',
+              background: 'var(--color-background-subtle)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

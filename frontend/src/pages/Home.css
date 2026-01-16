@@ -16,7 +16,7 @@
 
 .home-header p {
   font-size: 1.1rem;
-  color: #999;
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -117,7 +117,7 @@
 
 .stat-label {
   font-size: 0.9rem;
-  color: #999;
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -137,7 +137,7 @@
 }
 
 .top-ten-header {
-  color: #999;
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 0.85rem;
@@ -223,7 +223,7 @@
 }
 
 .played-year-header span {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
@@ -280,7 +280,7 @@
 }
 
 .latest-addition-header {
-  color: #999;
+  color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 0.85rem;
@@ -298,8 +298,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: var(--color-background-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 0.75rem;
   min-height: 140px;
@@ -337,7 +337,7 @@
 }
 
 .latest-addition-label {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;

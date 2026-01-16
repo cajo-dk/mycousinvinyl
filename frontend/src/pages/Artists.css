@@ -19,7 +19,7 @@
 }
 
 .page-header p {
-  color: #999;
+  color: var(--color-text-muted);
   margin: 0;
 }
 
@@ -60,7 +60,7 @@
 
 .artist-card {
   background: #1f1f1f;
-  border: 1px solid #333;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: 1rem;
   display: flex;
@@ -78,8 +78,8 @@
   width: 56px;
   height: 56px;
   border-radius: 8px;
-  border: 1px solid #444;
-  background: #222;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-background-hover);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,8 +130,8 @@
 .artist-view-image {
   width: 100%;
   border-radius: 12px;
-  border: 1px solid #333;
-  background: #1a1a1a;
+  border: 1px solid var(--color-border);
+  background: var(--color-background-subtle);
   aspect-ratio: 1 / 1;
   display: flex;
   align-items: center;
@@ -169,7 +169,7 @@
 }
 
 .artist-view-label {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -180,11 +180,11 @@
   grid-row: 2;
   margin-top: 1.5rem;
   padding-top: 1.25rem;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--color-border);
 }
 
 .artist-view-bio-label {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -209,7 +209,7 @@
 .artist-view-albums {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--color-border);
 }
 
 .artist-view-albums-header {
@@ -225,14 +225,14 @@
 }
 
 .artist-view-albums-count {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
 .artist-view-albums-status {
   padding: 1rem;
   background: #1f1f1f;
-  border: 1px solid #333;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   color: #aaa;
   text-align: center;
@@ -252,8 +252,8 @@
   width: 36px;
   height: 36px;
   border-radius: 6px;
-  border: 1px solid #444;
-  background: #222;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-background-hover);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -295,7 +295,7 @@
 }
 
 .artist-bio {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   line-height: 1.5;
   margin: 0;

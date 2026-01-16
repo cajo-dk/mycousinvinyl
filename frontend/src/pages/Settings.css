@@ -35,11 +35,11 @@
 .settings-subtab.active {
   border-color: #ff6b35;
   color: #fff;
-  background: #1a1a1a;
+  background: var(--color-background-subtle);
 }
 
 .settings-tab {
-  border: 1px solid #333;
+  border: 1px solid var(--color-border);
   background: #141414;
   color: #cfcfcf;
   padding: 0.45rem 0.9rem;
@@ -51,12 +51,12 @@
 .settings-tab.active {
   border-color: #ff6b35;
   color: #fff;
-  background: #1a1a1a;
+  background: var(--color-background-subtle);
 }
 
 .settings-section {
-  background: #1a1a1a;
-  border: 1px solid #333;
+  background: var(--color-background-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 1.25rem;
   margin-bottom: 1.25rem;
@@ -69,7 +69,7 @@
 
 .settings-section-header p {
   margin: 0 0 1rem 0;
-  color: #999;
+  color: var(--color-text-muted);
 }
 
 .settings-form-row {
@@ -85,8 +85,8 @@
 
 .settings-form-row input,
 .settings-form-row select {
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: var(--color-background-subtle);
+  border: 1px solid var(--color-border);
   color: #fff;
   border-radius: 4px;
   padding: 0.5rem 0.65rem;
@@ -106,7 +106,7 @@
 .settings-section .data-table select {
   width: 100%;
   background-color: #111;
-  border: 1px solid #333;
+  border: 1px solid var(--color-border);
   color: #fff;
   border-radius: 4px;
   padding: 0.4rem 0.5rem;
@@ -135,8 +135,8 @@
 }
 
 .settings-log-controls select {
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: var(--color-background-subtle);
+  border: 1px solid var(--color-border);
   color: #fff;
   border-radius: 4px;
   padding: 0.4rem 0.6rem;
@@ -179,7 +179,7 @@
 .import-status {
   margin-top: 0.75rem;
   padding: 0.75rem;
-  border: 1px solid #333;
+  border: 1px solid var(--color-border);
   border-radius: 6px;
   background: #111;
   color: #cfcfcf;
@@ -225,7 +225,7 @@
 .settings-section--import .import-field input {
   padding: 0.75rem;
   background: #2a2a2a;
-  border: 1px solid #444;
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   color: #fff;
   font-size: 1rem;
@@ -235,7 +235,7 @@
 .settings-section--import .import-field input:focus {
   outline: none;
   border-color: #007bff;
-  background: #333;
+  background: var(--color-border);
 }
 
 .import-pat-fields {
@@ -261,7 +261,7 @@
 .settings-section--import .import-csv-row input[type="file"] {
   padding: 0.5rem;
   background: #2a2a2a;
-  border: 1px solid #444;
+  border: 1px solid var(--color-border-strong);
   border-radius: 4px;
   color: #ddd;
   font-size: 1rem;
@@ -279,7 +279,7 @@
   margin: 1rem 0 0.75rem;
   padding-top: 0.75rem;
   border-top: 1px solid #2a2a2a;
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -335,7 +335,7 @@
   align-items: center;
   gap: 12px;
   padding: 12px;
-  border: 1px solid #333;
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   background-color: #151515;
 }
@@ -364,7 +364,7 @@
 
 .follow-item-handle {
   font-size: 12px;
-  color: #999;
+  color: var(--color-text-muted);
 }
 
 @media (max-width: 900px) {

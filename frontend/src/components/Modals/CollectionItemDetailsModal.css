@@ -15,8 +15,8 @@
   text-align: center;
   background: #2a2a2a;
   border-radius: 4px;
-  color: #999;
-  border: 1px solid #444;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border-strong);
 }
 
 .collection-item-card {
@@ -24,7 +24,7 @@
   margin-bottom: 0.75rem;
   background: #2a2a2a;
   border-radius: 4px;
-  border: 1px solid #444;
+  border: 1px solid var(--color-border-strong);
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -79,8 +79,8 @@
   width: 56px;
   height: 56px;
   border-radius: 6px;
-  border: 1px solid #444;
-  background: #1a1a1a;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-background-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -144,7 +144,7 @@
 
 .collection-pressing-picker-header p {
   margin: 0.25rem 0 0;
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
 }
 
@@ -189,7 +189,7 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: #999;
+  color: var(--color-text-muted);
   margin-bottom: 0.25rem;
 }
 

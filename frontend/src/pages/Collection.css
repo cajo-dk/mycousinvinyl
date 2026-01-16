@@ -14,7 +14,7 @@
 }
 
 .collection-header p {
-  color: #999;
+  color: var(--color-text-muted);
   margin: 0;
   font-size: 1rem;
 }
@@ -31,8 +31,8 @@
 .search-input {
   flex: 1;
   padding: 0.75rem 1rem;
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: var(--color-background-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   color: #fff;
   font-size: 1rem;
@@ -67,15 +67,15 @@
 }
 
 .artist-group {
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: var(--color-background-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .artist-header {
   padding: 1rem 1.5rem;
-  background-color: #222;
+  background-color: var(--color-background-hover);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -103,7 +103,7 @@
 }
 
 .artist-count {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   font-weight: normal;
 }
@@ -113,7 +113,7 @@
 }
 
 .album-section {
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--color-border);
 }
 
 .album-table {
@@ -136,8 +136,8 @@
   width: 48px;
   height: 48px;
   border-radius: 6px;
-  border: 1px solid #444;
-  background: #1a1a1a;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-background-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -231,7 +231,7 @@
 
 .detail-label {
   font-weight: 600;
-  color: #999;
+  color: var(--color-text-muted);
   min-width: 100px;
 }
 
@@ -249,7 +249,7 @@
   flex-direction: column;
   align-items: flex-end;
   gap: 0.5rem;
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
@@ -273,7 +273,7 @@
 }
 
 .empty-state p {
-  color: #999;
+  color: var(--color-text-muted);
 }
 
 /* Album title with updated date */
@@ -289,7 +289,7 @@
 }
 
 .album-updated {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.75rem;
 }
 

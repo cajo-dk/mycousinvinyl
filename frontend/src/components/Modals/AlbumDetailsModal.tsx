@@ -347,8 +347,8 @@ export function AlbumDetailsModal({ albumId, isOpen, onClose }: AlbumDetailsModa
                   textAlign: 'center',
                   background: '#2a2a2a',
                   borderRadius: '4px',
-                  color: '#999',
-                  border: '1px solid #444'
+                  color: 'var(--color-text-muted)',
+                  border: '1px solid var(--color-border-strong)'
                 }}>
                   <p>No pressings found for this album.</p>
                 </div>

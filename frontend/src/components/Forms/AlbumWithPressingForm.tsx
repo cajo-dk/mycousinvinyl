@@ -1193,7 +1193,7 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
       )}
 
       {!isWizardMode && (
-        <div className="form-group" style={{ marginTop: '1.5rem', borderTop: '1px solid #444', paddingTop: '1.5rem' }}>
+        <div className="form-group" style={{ marginTop: '1.5rem', borderTop: '1px solid var(--color-border-strong)', paddingTop: '1.5rem' }}>
           <label className="checkbox-label">
             <input
               type="checkbox"
@@ -1271,7 +1271,7 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
                   id="artist_name_readonly"
                   value={initialArtistName}
                   disabled
-                  style={{ background: '#1a1a1a', color: '#999', cursor: 'not-allowed' }}
+                  style={{ background: 'var(--color-background-subtle)', color: 'var(--color-text-muted)', cursor: 'not-allowed' }}
                 />
               </div>
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
@@ -1281,7 +1281,7 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
                   id="album_title_readonly"
                   value={initialAlbumTitle}
                   disabled
-                  style={{ background: '#1a1a1a', color: '#999', cursor: 'not-allowed' }}
+                  style={{ background: 'var(--color-background-subtle)', color: 'var(--color-text-muted)', cursor: 'not-allowed' }}
                 />
               </div>
             </div>
@@ -1749,9 +1749,9 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
                     <span style={{
                       padding: '0.75rem',
                       background: '#2a2a2a',
-                      border: '1px solid #444',
+                      border: '1px solid var(--color-border-strong)',
                       borderRadius: '4px',
-                      color: '#999',
+                      color: 'var(--color-text-muted)',
                       fontSize: '1rem',
                       minWidth: '60px',
                       textAlign: 'center'

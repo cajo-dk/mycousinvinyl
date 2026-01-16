@@ -15,8 +15,8 @@
 .search-input {
   flex: 1;
   padding: 0.75rem 1rem;
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: var(--color-background-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   color: #fff;
   font-size: 1rem;
@@ -51,15 +51,15 @@
 }
 
 .artist-group {
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: var(--color-background-subtle);
+  border: 1px solid var(--color-border);
   border-radius: 8px;
   overflow: hidden;
 }
 
 .artist-header {
   padding: 1rem 1.5rem;
-  background-color: #222;
+  background-color: var(--color-background-hover);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -87,7 +87,7 @@
 }
 
 .artist-count {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   font-weight: normal;
 }
@@ -97,12 +97,12 @@
 }
 
 .album-section {
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--color-border);
 }
 
 .album-header {
   padding: 0.75rem 1.5rem 0.75rem 3rem;
-  background-color: #1a1a1a;
+  background-color: var(--color-background-subtle);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -123,12 +123,12 @@
 }
 
 .album-year {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
 .pressing-count {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
   font-weight: normal;
 }
@@ -138,12 +138,12 @@
 }
 
 .master-section {
-  border-top: 1px solid #333;
+  border-top: 1px solid var(--color-border);
 }
 
 .master-header {
   padding: 0.75rem 1.5rem 0.75rem 4.5rem;
-  background-color: #1a1a1a;
+  background-color: var(--color-background-subtle);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -165,7 +165,7 @@
 }
 
 .master-count {
-  color: #999;
+  color: var(--color-text-muted);
   font-size: 0.85rem;
   font-weight: normal;
 }
@@ -191,8 +191,8 @@
   width: 48px;
   height: 48px;
   border-radius: 6px;
-  border: 1px solid #444;
-  background: #1a1a1a;
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-background-subtle);
   display: flex;
   align-items: center;
   justify-content: center;

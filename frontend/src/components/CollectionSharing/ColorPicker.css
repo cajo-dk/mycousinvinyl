@@ -15,7 +15,7 @@
 .color-picker-label {
   font-size: 14px;
   font-weight: 500;
-  color: #999;
+  color: var(--color-text-muted);
 }
 
 .color-picker-inputs {
@@ -93,7 +93,7 @@
   align-items: center;
   gap: 6px;
   font-size: 14px;
-  color: #999;
+  color: var(--color-text-muted);
   cursor: pointer;
   user-select: none;
 }
