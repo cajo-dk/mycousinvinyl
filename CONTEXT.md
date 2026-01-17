@@ -329,7 +329,7 @@
 
 - Keep PRs focused; avoid unrelated refactors.
 - Use Trunk Based Development practices:
-  - Changes should never be committed directly to the main branch.
+  - Changes should only be committed to the main branch via a pull request.
   - A Feature Request (FR) should always be coded and tested within its own branch. When asked to start working on a feature, you must create a new branch named after the feature request. For FR-001, you must create a branch named fr-001 and implement the feature request within that branch.
   - When instructed to merge the feature, you must create a Pull Request (PR) and merge the branch into main.
   - When not actively working on a FR, you are in Fix Mode, and all changes should be made on a fix branch, e.g., fix-0001. You may open fix branches as necessary and merge them when instructed to do so.
