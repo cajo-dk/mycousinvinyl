@@ -95,4 +95,4 @@ certs/
 .claude/
 
 # Codex
-AGENTS.md
+!AGENTS.md
