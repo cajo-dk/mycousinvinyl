@@ -332,7 +332,12 @@
   - Changes should only be committed to the main branch via a pull request.
   - A Feature Request (FR) should always be coded and tested within its own branch. When asked to start working on a feature, you must create a new branch named after the feature request. For FR-001, you must create a branch named fr-001 and implement the feature request within that branch.
   - When instructed to merge the feature, you must create a Pull Request (PR) and merge the branch into main.
-  - When not actively working on a FR, you are in Fix Mode, and all changes should be made on a fix branch, e.g., fix-0001. You may open fix branches as necessary and merge them when instructed to do so.
+  - When not actively working on a FR, you are in Fix Mode, and all changes should be made on a fix branch, e.g., fix-0001. You may open fix branches as necessary and execute a pull request to merge them into main when instructed to do so.
+  - Once a fix has been merged to main, the branch should be removed and never reused.
+  - Maintain a fix list in docs/fixlist.md by writing a line whenever a fix is pulled into main. The list should contain:
+    - Fix ID (e.g., fix-0002)
+    - Date/Time when applied to main
+    - Summary of the fix
 
 ### Tooling
 
