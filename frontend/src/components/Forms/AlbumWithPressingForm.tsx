@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useMemo, FormEvent, forwardRef, useImperativeHandle, useRef } from 'react';
 import { albumsApi, pressingsApi, collectionApi, artistsApi, lookupApi, discogsApi } from '@/api/services';
-import { Icon } from '@/components/UI';
+import { Icon, Pager } from '@/components/UI';
 import { mdiInformationBoxOutline, mdiLinkBoxOutline, mdiMagnify, mdiMagnifyScan } from '@mdi/js';
 import {
   ArtistResponse,
@@ -972,27 +972,12 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
             </div>
             {albumSearchTotalPages > 1 && (
               <div className="pagination" style={{ marginTop: '1rem', padding: '0 1rem' }}>
-                <div className="pagination-controls">
-                  <button
-                    type="button"
-                    onClick={() => handleDiscogsSearch(albumSearchPage - 1)}
-                    disabled={albumSearchPage === 1 || discogsLoading}
-                    className="pagination-button"
-                  >
-                    Previous
-                  </button>
-                  <div className="pagination-info">
-                    Page {albumSearchPage} of {albumSearchTotalPages}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleDiscogsSearch(albumSearchPage + 1)}
-                    disabled={albumSearchPage === albumSearchTotalPages || discogsLoading}
-                    className="pagination-button"
-                  >
-                    Next
-                  </button>
-                </div>
+                <Pager
+                  currentPage={albumSearchPage}
+                  totalPages={albumSearchTotalPages}
+                  onPageChange={handleDiscogsSearch}
+                  disabled={discogsLoading}
+                />
               </div>
             )}
             <div className="discogs-results-footer">
@@ -1422,27 +1407,13 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
               </div>
               {showPagination && (
                 <div className="pagination" style={{ marginTop: '1rem', padding: '0 1rem' }}>
-                  <div className="pagination-controls">
-                    <button
-                      type="button"
-                      onClick={() => handlePressingDiscogsSearch(currentPage - 1)}
-                      disabled={currentPage === 1 || isLoadingPage}
-                      className="pagination-button"
-                    >
-                      Previous
-                    </button>
-                    <div className="pagination-info">
-                      Page {currentPage} of {totalPages} ({pressingDiscogsTotal} total)
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handlePressingDiscogsSearch(currentPage + 1)}
-                      disabled={currentPage === totalPages || isLoadingPage}
-                      className="pagination-button"
-                    >
-                      Next
-                    </button>
-                  </div>
+                  <Pager
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePressingDiscogsSearch}
+                    disabled={isLoadingPage}
+                    infoText={`${pressingDiscogsTotal} total`}
+                  />
                 </div>
               )}
               <div className="discogs-results-footer">

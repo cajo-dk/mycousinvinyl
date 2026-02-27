@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { artistsApi, albumsApi } from '@/api/services';
 import { AlbumDetailResponse, ArtistResponse } from '@/types/api';
-import { Loading, ErrorAlert, Modal, Icon } from '@/components/UI';
+import { Loading, ErrorAlert, Modal, Icon, Pager } from '@/components/UI';
 import { ArtistFiltersPanel, ArtistFilterValues } from '@/components/Search/ArtistFiltersPanel';
 import { ArtistForm } from '@/components/Forms';
 import { AlbumDetailsModal, AlbumWizardModal, PressingWizardModal } from '@/components/Modals';
@@ -516,25 +516,7 @@ export function Artists() {
 
       {totalPages > 1 && !loading && (
         <div className="pagination">
-          <div className="pagination-controls">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="pagination-button"
-            >
-              Previous
-            </button>
-            <div className="pagination-info">
-              Page {currentPage} of {totalPages}
-            </div>
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="pagination-button"
-            >
-              Next
-            </button>
-          </div>
+          <Pager currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageChange} />
           <div className="items-per-page">
             <span>Per page</span>
             <select

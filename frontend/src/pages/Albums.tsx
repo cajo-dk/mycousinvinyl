@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import { albumsApi } from '@/api/services';
 import { AlbumDetailResponse } from '@/types/api';
-import { Loading, ErrorAlert, Modal, Icon } from '@/components/UI';
+import { Loading, ErrorAlert, Modal, Icon, Pager } from '@/components/UI';
 import { AlbumWithPressingForm, AlbumForm } from '@/components/Forms';
 import { PressingWizardModal, AlbumDetailsModal, AlbumWizardModal } from '@/components/Modals';
 import { OwnersGrid } from '@/components/CollectionSharing';
@@ -447,25 +447,7 @@ export function Albums() {
 
       {totalPages > 1 && !loading && (
         <div className="pagination">
-          <div className="pagination-controls">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="pagination-button"
-            >
-              Previous
-            </button>
-            <div className="pagination-info">
-              Page {currentPage} of {totalPages}
-            </div>
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="pagination-button"
-            >
-              Next
-            </button>
-          </div>
+          <Pager currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
           <div className="items-per-page">
             <span>Per page</span>
             <select

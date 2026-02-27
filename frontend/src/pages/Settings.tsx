@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { lookupApi, preferencesApi, systemLogsApi, toolsApi } from '@/api/services';
-import { Loading, ErrorAlert, Icon } from '@/components/UI';
+import { Loading, ErrorAlert, Icon, Pager } from '@/components/UI';
 import { mdiPencilOutline, mdiTrashCanOutline } from '@mdi/js';
 import {
   GenreResponse,
@@ -968,25 +968,7 @@ export function Settings() {
               />
               {genreTotalPages > 1 && (
                 <div className="pagination settings-pagination">
-                  <div className="pagination-controls">
-                    <button
-                      onClick={() => setGenrePage((prev) => Math.max(1, prev - 1))}
-                      disabled={genrePage === 1}
-                      className="pagination-button"
-                    >
-                      Previous
-                    </button>
-                    <div className="pagination-info">
-                      Page {genrePage} of {genreTotalPages}
-                    </div>
-                    <button
-                      onClick={() => setGenrePage((prev) => Math.min(genreTotalPages, prev + 1))}
-                      disabled={genrePage === genreTotalPages}
-                      className="pagination-button"
-                    >
-                      Next
-                    </button>
-                  </div>
+                  <Pager currentPage={genrePage} totalPages={genreTotalPages} onPageChange={setGenrePage} />
                 </div>
               )}
             </>
@@ -1005,25 +987,7 @@ export function Settings() {
               />
               {styleTotalPages > 1 && (
                 <div className="pagination settings-pagination">
-                  <div className="pagination-controls">
-                    <button
-                      onClick={() => setStylePage((prev) => Math.max(1, prev - 1))}
-                      disabled={stylePage === 1}
-                      className="pagination-button"
-                    >
-                      Previous
-                    </button>
-                    <div className="pagination-info">
-                      Page {stylePage} of {styleTotalPages}
-                    </div>
-                    <button
-                      onClick={() => setStylePage((prev) => Math.min(styleTotalPages, prev + 1))}
-                      disabled={stylePage === styleTotalPages}
-                      className="pagination-button"
-                    >
-                      Next
-                    </button>
-                  </div>
+                  <Pager currentPage={stylePage} totalPages={styleTotalPages} onPageChange={setStylePage} />
                 </div>
               )}
             </>
@@ -1109,37 +1073,7 @@ export function Settings() {
           </div>
 
           <div className="pagination settings-pagination settings-log-controls">
-            <div className="pagination-controls">
-              <button
-                onClick={() => setLogPage((prev) => Math.max(1, prev - 1))}
-                disabled={logPage === 1}
-                className="pagination-button"
-              >
-                Previous
-              </button>
-              <div className="pagination-info">
-                <label htmlFor="log-page-select">Page</label>
-                <select
-                  id="log-page-select"
-                  value={logPage}
-                  onChange={(e) => setLogPage(Number(e.target.value))}
-                >
-                  {Array.from({ length: logTotalPages }, (_, index) => index + 1).map((page) => (
-                    <option key={page} value={page}>
-                      {page}
-                    </option>
-                  ))}
-                </select>
-                <span>of {logTotalPages}</span>
-              </div>
-              <button
-                onClick={() => setLogPage((prev) => Math.min(logTotalPages, prev + 1))}
-                disabled={logPage === logTotalPages}
-                className="pagination-button"
-              >
-                Next
-              </button>
-            </div>
+            <Pager currentPage={logPage} totalPages={logTotalPages} onPageChange={setLogPage} />
             <div className="items-per-page">
               <label htmlFor="log-severity-filter">Severity</label>
               <select
@@ -1216,25 +1150,7 @@ export function Settings() {
 
           {logTotalPages > 1 && (
             <div className="pagination settings-pagination">
-              <div className="pagination-controls">
-                <button
-                  onClick={() => setLogPage((prev) => Math.max(1, prev - 1))}
-                  disabled={logPage === 1}
-                  className="pagination-button"
-                >
-                  Previous
-                </button>
-                <div className="pagination-info">
-                  Page {logPage} of {logTotalPages}
-                </div>
-                <button
-                  onClick={() => setLogPage((prev) => Math.min(logTotalPages, prev + 1))}
-                  disabled={logPage === logTotalPages}
-                  className="pagination-button"
-                >
-                  Next
-                </button>
-              </div>
+              <Pager currentPage={logPage} totalPages={logTotalPages} onPageChange={setLogPage} />
               <div className="items-per-page">
                 <span>Per page</span>
                 <select

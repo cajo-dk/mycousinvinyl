@@ -1,0 +1,46 @@
+.pager-controls {
+  flex-wrap: wrap;
+  row-gap: 0.5rem;
+}
+
+.pager-page-list {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pager-page-number {
+  min-width: 2.2rem;
+  text-align: center;
+}
+
+.pager-current {
+  display: inline-flex;
+  align-items: center;
+}
+
+.pager-input {
+  width: 4.5rem;
+  background: #1f1f1f;
+  border: 1px solid var(--color-border-strong);
+  color: #ddd;
+  padding: 0.45rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.pager-input:focus {
+  outline: 2px solid var(--app-accent);
+  outline-offset: 1px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
