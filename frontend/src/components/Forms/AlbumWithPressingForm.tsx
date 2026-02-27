@@ -21,6 +21,7 @@ import {
   DiscogsReleaseSearchResult,
   DiscogsReleaseDetails,
 } from '@/types/api';
+import { useIsAdmin } from '@/auth/useAdmin';
 import { usePreferences } from '@/hooks/usePreferences';
 import { parseLocaleNumber } from '@/utils/format';
 import './Form.css';
@@ -155,6 +156,9 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<DiscogsReleaseSearchResult[]>([]);
   const [isSearchMode, setIsSearchMode] = useState(false);
+  const { isAdmin, isLoading: isAdminLoading } = useIsAdmin();
+  const isEditMode = !!initialAlbumId;
+  const canEditDiscogsId = isEditMode && isAdmin && !isAdminLoading;
 
   // Filter out master records (only show actual releases)
   const actualReleases = useMemo(() => {
@@ -234,6 +238,15 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    if (name === 'discogs_id') {
+      const trimmed = value.trim();
+      setFormData((prev) => ({
+        ...prev,
+        discogs_id: trimmed ? Number(trimmed) || null : null,
+      }));
+      return;
+    }
+
     if (name === 'title' || name === 'artist_id') {
       setDiscogsResults([]);
       setDiscogsError(null);
@@ -1078,12 +1091,14 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
             <div className="form-group">
               <label htmlFor="discogs_id">Discogs ID</label>
               <input
-                type="text"
+                type="number"
                 id="discogs_id"
                 name="discogs_id"
                 value={formData.discogs_id ?? ''}
-                disabled
-                placeholder="Select album"
+                onChange={handleChange}
+                min={1}
+                disabled={!canEditDiscogsId}
+                placeholder={canEditDiscogsId ? 'Enter Discogs album ID' : 'Select album'}
               />
             </div>
           </div>
