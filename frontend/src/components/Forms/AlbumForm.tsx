@@ -13,6 +13,7 @@ import {
   DataSource,
   ReleaseTypeResponse,
 } from '@/types/api';
+import { useIsAdmin } from '@/auth/useAdmin';
 import './Form.css';
 
 interface AlbumFormProps {
@@ -70,6 +71,8 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
   const [discogsLoading, setDiscogsLoading] = useState(false);
   const [discogsError, setDiscogsError] = useState<string | null>(null);
   const [discogsSelectedId, setDiscogsSelectedId] = useState<number | null>(null);
+  const { isAdmin, isLoading: isAdminLoading } = useIsAdmin();
+  const canEditDiscogsId = isEditMode && isAdmin && !isAdminLoading;
 
   // Load lookup data and album data on mount
   useEffect(() => {
@@ -149,6 +152,15 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    if (name === 'discogs_id') {
+      const trimmed = value.trim();
+      setFormData((prev) => ({
+        ...prev,
+        discogs_id: trimmed ? Number(trimmed) || null : null,
+      }));
+      return;
+    }
+
     if (name === 'title' || name === 'artist_id') {
       setDiscogsResults([]);
       setDiscogsError(null);
@@ -680,12 +692,14 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
       <div className="form-group">
         <label htmlFor="discogs_id">Discogs Album ID</label>
         <input
-          type="text"
+          type="number"
           id="discogs_id"
           name="discogs_id"
           value={formData.discogs_id ?? ''}
-          disabled
-          placeholder="Select a Discogs album"
+          onChange={handleChange}
+          min={1}
+          disabled={!canEditDiscogsId}
+          placeholder={canEditDiscogsId ? 'Enter Discogs album ID' : 'Select a Discogs album'}
         />
       </div>
 

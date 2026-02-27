@@ -6,6 +6,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { artistsApi, lookupApi, discogsApi } from '@/api/services';
 import { CountryResponse, ArtistTypeResponse, DiscogsArtistSearchResult } from '@/types/api';
 import { Icon } from '@/components/UI';
+import { useIsAdmin } from '@/auth/useAdmin';
 import { mdiMagnify } from '@mdi/js';
 import './Form.css';
 
@@ -41,6 +42,8 @@ export function ArtistForm({ artistId, onSuccess, onCancel }: ArtistFormProps) {
   const [discogsLoading, setDiscogsLoading] = useState(false);
   const [discogsError, setDiscogsError] = useState<string | null>(null);
   const [discogsSelectedId, setDiscogsSelectedId] = useState<number | null>(null);
+  const { isAdmin, isLoading: isAdminLoading } = useIsAdmin();
+  const canEditDiscogsId = isEditMode && isAdmin && !isAdminLoading;
 
   // Load countries and artist data on mount
   useEffect(() => {
@@ -135,6 +138,15 @@ export function ArtistForm({ artistId, onSuccess, onCancel }: ArtistFormProps) {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    if (e.target.name === 'discogs_id') {
+      const trimmed = e.target.value.trim();
+      setFormData((prev) => ({
+        ...prev,
+        discogs_id: trimmed ? Number(trimmed) || null : null,
+      }));
+      return;
+    }
+
     if (e.target.name === 'name') {
       setDiscogsResults([]);
       setDiscogsError(null);
@@ -458,12 +470,14 @@ export function ArtistForm({ artistId, onSuccess, onCancel }: ArtistFormProps) {
         <div className="form-group">
           <label htmlFor="discogs_id">Discogs Artist ID</label>
           <input
-            type="text"
+            type="number"
             id="discogs_id"
             name="discogs_id"
             value={formData.discogs_id ?? ''}
-            disabled
-            placeholder="Select a Discogs artist"
+            onChange={handleChange}
+            min={1}
+            disabled={!canEditDiscogsId}
+            placeholder={canEditDiscogsId ? 'Enter Discogs artist ID' : 'Select a Discogs artist'}
           />
         </div>
 
