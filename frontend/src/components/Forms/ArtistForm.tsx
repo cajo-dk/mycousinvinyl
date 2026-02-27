@@ -117,7 +117,11 @@ export function ArtistForm({ artistId, onSuccess, onCancel }: ArtistFormProps) {
       if (formData.end_date || endDateTouched) {
         payload.end_date = formData.end_date ? formData.end_date : null;
       }
-      if (formData.discogs_id) payload.discogs_id = formData.discogs_id;
+      if (isEditMode && canEditDiscogsId) {
+        payload.discogs_id = formData.discogs_id;
+      } else if (formData.discogs_id) {
+        payload.discogs_id = formData.discogs_id;
+      }
 
       if (isEditMode && artistId) {
         await artistsApi.update(artistId, payload);
@@ -139,10 +143,10 @@ export function ArtistForm({ artistId, onSuccess, onCancel }: ArtistFormProps) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     if (e.target.name === 'discogs_id') {
-      const trimmed = e.target.value.trim();
+      const digitsOnly = e.target.value.replace(/\D/g, '');
       setFormData((prev) => ({
         ...prev,
-        discogs_id: trimmed ? Number(trimmed) || null : null,
+        discogs_id: digitsOnly ? Number(digitsOnly) : null,
       }));
       return;
     }
@@ -470,12 +474,13 @@ export function ArtistForm({ artistId, onSuccess, onCancel }: ArtistFormProps) {
         <div className="form-group">
           <label htmlFor="discogs_id">Discogs Artist ID</label>
           <input
-            type="number"
+            type="text"
             id="discogs_id"
             name="discogs_id"
             value={formData.discogs_id ?? ''}
             onChange={handleChange}
-            min={1}
+            inputMode="numeric"
+            pattern="[0-9]*"
             disabled={!canEditDiscogsId}
             placeholder={canEditDiscogsId ? 'Enter Discogs artist ID' : 'Select a Discogs artist'}
           />

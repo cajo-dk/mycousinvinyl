@@ -153,10 +153,10 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
   ) => {
     const { name, value } = e.target;
     if (name === 'discogs_id') {
-      const trimmed = value.trim();
+      const digitsOnly = value.replace(/\D/g, '');
       setFormData((prev) => ({
         ...prev,
-        discogs_id: trimmed ? Number(trimmed) || null : null,
+        discogs_id: digitsOnly ? Number(digitsOnly) : null,
       }));
       return;
     }
@@ -393,7 +393,11 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
       if (formData.label) payload.label = formData.label;
       if (formData.catalog_number) payload.catalog_number = formData.catalog_number;
       if (formData.notes) payload.notes = formData.notes;
-      if (formData.discogs_id) payload.discogs_id = formData.discogs_id;
+      if (isEditMode && canEditDiscogsId) {
+        payload.discogs_id = formData.discogs_id;
+      } else if (formData.discogs_id) {
+        payload.discogs_id = formData.discogs_id;
+      }
       if (formData.image_url && (!isEditMode || imageTouched)) {
         payload.image_url = formData.image_url;
       } else if (isEditMode && imageTouched && !formData.image_url) {
@@ -692,12 +696,13 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
       <div className="form-group">
         <label htmlFor="discogs_id">Discogs Album ID</label>
         <input
-          type="number"
+          type="text"
           id="discogs_id"
           name="discogs_id"
           value={formData.discogs_id ?? ''}
           onChange={handleChange}
-          min={1}
+          inputMode="numeric"
+          pattern="[0-9]*"
           disabled={!canEditDiscogsId}
           placeholder={canEditDiscogsId ? 'Enter Discogs album ID' : 'Select a Discogs album'}
         />
