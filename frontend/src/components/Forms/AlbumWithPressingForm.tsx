@@ -239,10 +239,10 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     if (name === 'discogs_id') {
-      const trimmed = value.trim();
+      const digitsOnly = value.replace(/\D/g, '');
       setFormData((prev) => ({
         ...prev,
-        discogs_id: trimmed ? Number(trimmed) || null : null,
+        discogs_id: digitsOnly ? Number(digitsOnly) : null,
       }));
       return;
     }
@@ -763,6 +763,10 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
       if (initialAlbumId) {
         // Use the provided album ID (we're adding a pressing to an existing album)
         albumId = initialAlbumId;
+        if (canEditDiscogsId) {
+          const discogsUpdatePayload = formData.discogs_id !== null ? { discogs_id: formData.discogs_id } : {};
+          await albumsApi.update(albumId, discogsUpdatePayload);
+        }
       } else {
         // Create a new album
         const albumPayload: any = {
@@ -1091,12 +1095,13 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
             <div className="form-group">
               <label htmlFor="discogs_id">Discogs ID</label>
               <input
-                type="number"
+                type="text"
                 id="discogs_id"
                 name="discogs_id"
                 value={formData.discogs_id ?? ''}
                 onChange={handleChange}
-                min={1}
+                inputMode="numeric"
+                pattern="[0-9]*"
                 disabled={!canEditDiscogsId}
                 placeholder={canEditDiscogsId ? 'Enter Discogs album ID' : 'Select album'}
               />
