@@ -170,6 +170,7 @@ class ArtistRepositoryAdapter(ArtistRepository):
         model.aliases = artist.aliases
         model.notes = artist.notes
         model.image_url = artist.image_url
+        model.discogs_id = artist.discogs_id
         model.data_source = artist.data_source
         model.verification_status = artist.verification_status
 
