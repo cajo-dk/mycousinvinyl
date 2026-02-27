@@ -287,6 +287,7 @@ class AlbumRepositoryAdapter(AlbumRepository):
         model.catalog_number_base = album.catalog_number_base
         model.description = album.description
         model.image_url = album.image_url
+        model.discogs_id = album.discogs_id
         model.original_release_id = album.original_release_id
         model.data_source = album.data_source
         model.verification_status = album.verification_status
