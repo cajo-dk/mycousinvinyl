@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collectionApi } from '@/api/services';
 import { CollectionItemDetailResponse, CollectionStatistics, PlayedAlbumEntry } from '@/types/api';
-import { Card, Loading, ErrorAlert, Icon } from '@/components/UI';
+import { Card, Loading, ErrorAlert, Icon, Pager } from '@/components/UI';
 import { mdiEyeOutline } from '@mdi/js';
 import { formatDecimal, parseLocaleNumber, formatDateTime } from '@/utils/format';
 import { useViewControls } from '@/components/Layout/ViewControlsContext';
@@ -417,25 +417,7 @@ export function Home() {
           )}
           {playedYearTotalPages > 1 && (
             <div className="played-year-pagination">
-              <div className="pagination-controls">
-                <button
-                  onClick={() => setPlayedYearPage((prev) => Math.max(1, prev - 1))}
-                  disabled={playedYearPage === 1}
-                  className="pagination-button"
-                >
-                  Previous
-                </button>
-                <div className="pagination-info">
-                  Page {playedYearPage} of {playedYearTotalPages}
-                </div>
-                <button
-                  onClick={() => setPlayedYearPage((prev) => Math.min(playedYearTotalPages, prev + 1))}
-                  disabled={playedYearPage === playedYearTotalPages}
-                  className="pagination-button"
-                >
-                  Next
-                </button>
-              </div>
+              <Pager currentPage={playedYearPage} totalPages={playedYearTotalPages} onPageChange={setPlayedYearPage} />
               <div className="items-per-page">
                 <span>Per page</span>
                 <select

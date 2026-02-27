@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { Modal } from '../UI/Modal';
-import { ErrorAlert, Loading, Icon } from '../UI';
+import { ErrorAlert, Loading, Icon, Pager } from '../UI';
 import { albumsApi, artistsApi, lookupApi, pressingsApi, collectionApi } from '@/api/services';
 import type {
   AlbumResponse,
@@ -641,25 +641,11 @@ export function CollectionItemDetailsModal({
 
           {pressingPickerTotalPages > 1 && (
             <div className="collection-pressing-picker-pagination">
-              <button
-                type="button"
-                className="pagination-button"
-                onClick={() => setPressingPickerPage((prev) => Math.max(1, prev - 1))}
-                disabled={pressingPickerPage === 1}
-              >
-                Previous
-              </button>
-              <span>
-                Page {pressingPickerPage} of {pressingPickerTotalPages}
-              </span>
-              <button
-                type="button"
-                className="pagination-button"
-                onClick={() => setPressingPickerPage((prev) => Math.min(pressingPickerTotalPages, prev + 1))}
-                disabled={pressingPickerPage === pressingPickerTotalPages}
-              >
-                Next
-              </button>
+              <Pager
+                currentPage={pressingPickerPage}
+                totalPages={pressingPickerTotalPages}
+                onPageChange={setPressingPickerPage}
+              />
             </div>
           )}
         </div>

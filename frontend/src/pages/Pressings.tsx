@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { pressingsApi } from '@/api/services';
 import { PressingDetailResponse } from '@/types/api';
-import { Loading, ErrorAlert, Modal, Icon } from '@/components/UI';
+import { Loading, ErrorAlert, Modal, Icon, Pager } from '@/components/UI';
 import { PressingForm, CollectionItemForm } from '@/components/Forms';
 import { PressingWizardModal } from '@/components/Modals';
 import { OwnersGrid } from '@/components/CollectionSharing';
@@ -561,25 +561,11 @@ export function Pressings() {
                                 </table>
                                 {totalMasterPages > 1 && (
                                   <div className="pagination" style={{ marginTop: '0.75rem' }}>
-                                    <div className="pagination-controls">
-                                      <button
-                                        onClick={() => updateMasterPressingPage(albumGroup.albumId, masterGroup.masterTitle, Math.max(1, masterPage - 1))}
-                                        disabled={masterPage === 1}
-                                        className="pagination-button"
-                                      >
-                                        Previous
-                                      </button>
-                                      <div className="pagination-info">
-                                        Page {masterPage} of {totalMasterPages}
-                                      </div>
-                                      <button
-                                        onClick={() => updateMasterPressingPage(albumGroup.albumId, masterGroup.masterTitle, Math.min(totalMasterPages, masterPage + 1))}
-                                        disabled={masterPage === totalMasterPages}
-                                        className="pagination-button"
-                                      >
-                                        Next
-                                      </button>
-                                    </div>
+                                    <Pager
+                                      currentPage={masterPage}
+                                      totalPages={totalMasterPages}
+                                      onPageChange={(page) => updateMasterPressingPage(albumGroup.albumId, masterGroup.masterTitle, page)}
+                                    />
                                   </div>
                                 )}
                               </>
@@ -708,25 +694,11 @@ export function Pressings() {
                                 </table>
                                 {totalMasterPages > 1 && (
                                   <div className="pagination" style={{ marginTop: '0.75rem' }}>
-                                    <div className="pagination-controls">
-                                      <button
-                                        onClick={() => updateMasterPressingPage(albumGroup.albumId, masterGroup.masterTitle, Math.max(1, masterPage - 1))}
-                                        disabled={masterPage === 1}
-                                        className="pagination-button"
-                                      >
-                                        Previous
-                                      </button>
-                                      <div className="pagination-info">
-                                        Page {masterPage} of {totalMasterPages}
-                                      </div>
-                                      <button
-                                        onClick={() => updateMasterPressingPage(albumGroup.albumId, masterGroup.masterTitle, Math.min(totalMasterPages, masterPage + 1))}
-                                        disabled={masterPage === totalMasterPages}
-                                        className="pagination-button"
-                                      >
-                                        Next
-                                      </button>
-                                    </div>
+                                    <Pager
+                                      currentPage={masterPage}
+                                      totalPages={totalMasterPages}
+                                      onPageChange={(page) => updateMasterPressingPage(albumGroup.albumId, masterGroup.masterTitle, page)}
+                                    />
                                   </div>
                                 )}
                                   </>
@@ -749,25 +721,7 @@ export function Pressings() {
 
       {totalPages > 1 && !loading && (
         <div className="pagination">
-          <div className="pagination-controls">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="pagination-button"
-            >
-              Previous
-            </button>
-            <div className="pagination-info">
-              Page {currentPage} of {totalPages}
-            </div>
-            <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={currentPage === totalPages}
-              className="pagination-button"
-            >
-              Next
-            </button>
-          </div>
+          <Pager currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
           <div className="items-per-page">
             <span>Per page</span>
             <select
