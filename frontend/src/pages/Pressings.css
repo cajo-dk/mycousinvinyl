@@ -54,7 +54,7 @@
   background-color: var(--color-background-subtle);
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .artist-header {
@@ -92,7 +92,7 @@
   font-weight: normal;
 }
 
-.albums-list {
+.pressings-albums-list {
   padding: 0;
 }
 
@@ -252,5 +252,41 @@
 
   .album-header h3 {
     font-size: 1rem;
+  }
+}
+
+@media (pointer: coarse) and (max-width: 499px) and (orientation: portrait) {
+  .pressing-table .col-size,
+  .pressing-table .col-country,
+  .pressing-table .col-color,
+  .pressing-table .col-type,
+  .pressing-table .col-sleeve,
+  .pressing-table .col-owned {
+    display: none;
+  }
+
+  .pressing-table .col-format {
+    min-width: 110px;
+  }
+
+  .pressing-table .col-year {
+    width: 64px;
+    white-space: nowrap;
+  }
+
+  .pressing-table .col-actions {
+    width: 48px;
+    text-align: right;
+  }
+
+  .pressing-table .col-actions .responsive-row-actions {
+    justify-content: flex-end;
+  }
+}
+
+@media (pointer: coarse) and (min-width: 500px) and (max-width: 999px) and (orientation: portrait) {
+  .pressing-table .col-type,
+  .pressing-table .col-sleeve {
+    display: none;
   }
 }

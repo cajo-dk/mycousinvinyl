@@ -7,7 +7,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import { albumsApi } from '@/api/services';
 import { AlbumDetailResponse } from '@/types/api';
-import { Loading, ErrorAlert, Modal, Icon, Pager } from '@/components/UI';
+import { Loading, ErrorAlert, Modal, Icon, Pager, ResponsiveRowActions } from '@/components/UI';
 import { AlbumWithPressingForm, AlbumForm } from '@/components/Forms';
 import { PressingWizardModal, AlbumDetailsModal, AlbumWizardModal } from '@/components/Modals';
 import { OwnersGrid } from '@/components/CollectionSharing';
@@ -19,6 +19,7 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { resolveItemsPerPage } from '@/utils/preferences';
 import { useViewControls } from '@/components/Layout/ViewControlsContext';
 import { useAlbumOwners } from '@/hooks/useAlbumOwners';
+import { useResponsiveMode } from '@/hooks/useResponsiveMode';
 import './Albums.css';
 import '../styles/Table.css';
 
@@ -53,6 +54,8 @@ export function Albums() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const { preferences } = usePreferences();
   const { setControls } = useViewControls();
+  const { isPortraitTouch, deviceType, orientation } = useResponsiveMode();
+  const isPhonePortrait = isPortraitTouch && deviceType === 'phone' && orientation === 'portrait';
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -392,44 +395,125 @@ export function Albums() {
                           />
                         </td>
                         <td className="actions-cell col-actions">
-                          <button
-                            className="btn-action btn-action-view"
-                            onClick={() => openAlbumDetails(album.id)}
-                            title="View Details"
-                            aria-label="View Details"
-                          >
-                            <Icon path={mdiEyeOutline} />
-                          </button>
-                          <button
-                            className="btn-action"
-                            onClick={() => {
-                              setSelectedAlbumForPressing({ id: album.id, title: album.title, artistName: album.artist.name, discogsId: album.discogs_id || null });
-                              setShowAddPressingModal(true);
-                            }}
-                            title="Add Pressing"
-                            aria-label="Add Pressing"
-                          >
-                            <Icon path={mdiMusicBoxOutline} />
-                          </button>
-                          <button
-                            className="btn-action"
-                            onClick={() => {
-                              setSelectedAlbumId(album.id);
-                              setShowEditModal(true);
-                            }}
-                            title="Edit"
-                            aria-label="Edit"
-                          >
-                            <Icon path={mdiPencilOutline} />
-                          </button>
-                          <button
-                            className="btn-action btn-danger"
-                            onClick={() => handleDelete(album.id, album.title)}
-                            title="Delete"
-                            aria-label="Delete"
-                          >
-                            <Icon path={mdiTrashCanOutline} />
-                          </button>
+                          {isPhonePortrait ? (
+                            <ResponsiveRowActions
+                              primaryActions={[]}
+                              overflowActions={[
+                                {
+                                  key: `view-owned-${album.id}`,
+                                  label: 'View Details',
+                                  iconPath: mdiEyeOutline,
+                                  onClick: () => openAlbumDetails(album.id),
+                                },
+                                {
+                                  key: `pressing-owned-${album.id}`,
+                                  label: 'Add Pressing',
+                                  iconPath: mdiMusicBoxOutline,
+                                  onClick: () => {
+                                    setSelectedAlbumForPressing({ id: album.id, title: album.title, artistName: album.artist.name, discogsId: album.discogs_id || null });
+                                    setShowAddPressingModal(true);
+                                  },
+                                },
+                                {
+                                  key: `edit-owned-${album.id}`,
+                                  label: 'Edit',
+                                  iconPath: mdiPencilOutline,
+                                  onClick: () => {
+                                    setSelectedAlbumId(album.id);
+                                    setShowEditModal(true);
+                                  },
+                                },
+                                {
+                                  key: `delete-owned-${album.id}`,
+                                  label: 'Delete',
+                                  iconPath: mdiTrashCanOutline,
+                                  onClick: () => handleDelete(album.id, album.title),
+                                  buttonClassName: 'btn-danger',
+                                },
+                              ]}
+                              menuAriaLabel="More row actions"
+                            />
+                          ) : isPortraitTouch ? (
+                            <ResponsiveRowActions
+                              primaryActions={[
+                                {
+                                  key: `view-${album.id}`,
+                                  label: 'View Details',
+                                  iconPath: mdiEyeOutline,
+                                  onClick: () => openAlbumDetails(album.id),
+                                },
+                              ]}
+                              overflowActions={[
+                                {
+                                  key: `pressing-${album.id}`,
+                                  label: 'Add Pressing',
+                                  iconPath: mdiMusicBoxOutline,
+                                  onClick: () => {
+                                    setSelectedAlbumForPressing({ id: album.id, title: album.title, artistName: album.artist.name, discogsId: album.discogs_id || null });
+                                    setShowAddPressingModal(true);
+                                  },
+                                },
+                                {
+                                  key: `edit-${album.id}`,
+                                  label: 'Edit',
+                                  iconPath: mdiPencilOutline,
+                                  onClick: () => {
+                                    setSelectedAlbumId(album.id);
+                                    setShowEditModal(true);
+                                  },
+                                },
+                                {
+                                  key: `delete-${album.id}`,
+                                  label: 'Delete',
+                                  iconPath: mdiTrashCanOutline,
+                                  onClick: () => handleDelete(album.id, album.title),
+                                  buttonClassName: 'btn-danger',
+                                },
+                              ]}
+                              menuAriaLabel="More row actions"
+                            />
+                          ) : (
+                            <>
+                              <button
+                                className="btn-action btn-action-view"
+                                onClick={() => openAlbumDetails(album.id)}
+                                title="View Details"
+                                aria-label="View Details"
+                              >
+                                <Icon path={mdiEyeOutline} />
+                              </button>
+                              <button
+                                className="btn-action"
+                                onClick={() => {
+                                  setSelectedAlbumForPressing({ id: album.id, title: album.title, artistName: album.artist.name, discogsId: album.discogs_id || null });
+                                  setShowAddPressingModal(true);
+                                }}
+                                title="Add Pressing"
+                                aria-label="Add Pressing"
+                              >
+                                <Icon path={mdiMusicBoxOutline} />
+                              </button>
+                              <button
+                                className="btn-action"
+                                onClick={() => {
+                                  setSelectedAlbumId(album.id);
+                                  setShowEditModal(true);
+                                }}
+                                title="Edit"
+                                aria-label="Edit"
+                              >
+                                <Icon path={mdiPencilOutline} />
+                              </button>
+                              <button
+                                className="btn-action btn-danger"
+                                onClick={() => handleDelete(album.id, album.title)}
+                                title="Delete"
+                                aria-label="Delete"
+                              >
+                                <Icon path={mdiTrashCanOutline} />
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     ))}

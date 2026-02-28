@@ -23,6 +23,7 @@ import {
   mdiClose,
 } from '@mdi/js';
 import { useViewControls } from './ViewControlsContext';
+import { useResponsiveMode } from '@/hooks/useResponsiveMode';
 import './Navigation.css';
 
 export function Navigation() {
@@ -34,6 +35,7 @@ export function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isOtherOpen, setIsOtherOpen] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const { isPortraitTouch } = useResponsiveMode();
   const debugNav = getEnv('VITE_DEBUG_NAV') === 'true';
   const claimGroups = (accounts[0]?.idTokenClaims as { groups?: string[] } | undefined)?.groups;
 
@@ -90,6 +92,8 @@ export function Navigation() {
     setShowFilters(false);
   };
 
+  const useShortBrand = isPortraitTouch;
+
   return (
     <nav className="navigation">
       <div className="nav-container">
@@ -97,8 +101,8 @@ export function Navigation() {
           <div className="nav-brand">
             <Link to="/">
               <h1>
-                <span className="nav-brand-full">MyCousinVinyl</span>
-                <span className="nav-brand-short">MyCousinVinyl</span>
+                <span className={`nav-brand-full ${useShortBrand ? 'hidden' : ''}`}>MyCousinVinyl</span>
+                <span className={`nav-brand-short ${useShortBrand ? 'visible' : ''}`}>MCV</span>
               </h1>
             </Link>
             <div className="nav-page-title">{currentTitle}</div>

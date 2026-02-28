@@ -9,10 +9,15 @@
   font-size: 0.95rem;
   border-top: 1px solid var(--app-border);
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .activity-status-text {
   display: block;
+  flex: 1;
+  min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -26,4 +31,11 @@
 
 .activity-status-text.fade-out {
   opacity: 0;
+}
+
+.activity-status-version {
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
 }

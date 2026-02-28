@@ -14,6 +14,8 @@ interface ImportMeta {
   readonly env: ImportMetaEnv
 }
 
+declare const __APP_VERSION__: string
+
 interface Window {
   __ENV?: Partial<ImportMetaEnv> & {
     VITE_AZURE_GROUP_ADMIN?: string

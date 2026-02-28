@@ -6,11 +6,11 @@ import { useState, useEffect, useMemo } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { collectionApi } from '@/api/services';
 import { CollectionItemDetailResponse } from '@/types/api';
-import { Loading, ErrorAlert, Modal, Icon, Pager } from '@/components/UI';
+import { Loading, ErrorAlert, Modal, Icon, Pager, ResponsiveRowActions } from '@/components/UI';
 import { CollectionItemForm } from '@/components/Forms';
 import { CollectionItemDetailsModal } from '@/components/Modals';
 import { OwnersGrid } from '@/components/CollectionSharing';
-import { mdiEyeOutline, mdiPencilOutline, mdiTrashCanOutline, mdiPlus } from '@mdi/js';
+import { mdiEyeOutline, mdiPencilOutline, mdiTrashCanOutline, mdiMenu } from '@mdi/js';
 import { formatDecimal, parseLocaleNumber } from '@/utils/format';
 import { AlphabetFilterBar } from '@/components/AlphabetFilterBar';
 import { getInitialToken } from '@/utils/alpha';
@@ -18,6 +18,7 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { resolveItemsPerPage } from '@/utils/preferences';
 import { useViewControls } from '@/components/Layout/ViewControlsContext';
 import { usePressingOwners } from '@/hooks/usePressingOwners';
+import { useResponsiveMode } from '@/hooks/useResponsiveMode';
 import './Collection.css';
 import '../styles/Table.css';
 
@@ -58,6 +59,10 @@ export function Collection() {
   const [playIncrementing, setPlayIncrementing] = useState<Set<string>>(new Set());
   const { preferences } = usePreferences();
   const { setControls } = useViewControls();
+  const { orientation, viewportWidth, deviceType } = useResponsiveMode();
+  const isPhoneLayout = viewportWidth > 0 && viewportWidth <= 499;
+  const isPhonePortrait = isPhoneLayout && orientation === 'portrait';
+  const isTabletPortrait = deviceType === 'tablet' && orientation === 'portrait';
 
   const fetchCollection = async (query?: string) => {
     const cleanedQuery = query?.trim();
@@ -351,7 +356,7 @@ export function Collection() {
             </div>
 
             {expandedArtists.has(artistGroup.artistId) && (
-              <div className="albums-list">
+              <div className="collection-albums-list">
                 <table className="data-table album-table">
                   <thead>
                     <tr>
@@ -359,9 +364,9 @@ export function Collection() {
                       <th className="col-album">Album</th>
                       <th className="col-year">Year</th>
                       <th className="col-genre">Genre</th>
-                      <th className="col-purchase">Purchase Price</th>
+                      <th className="col-purchase">Price</th>
                       <th className="col-est">Est. Sales Price</th>
-                      <th className="col-condition">Condition (Media/Sleeve)</th>
+                      <th className="col-condition">Condition</th>
                       <th className="col-owned">Owned</th>
                       <th className="col-play">Play</th>
                       <th className="col-actions">Actions</th>
@@ -409,8 +414,61 @@ export function Collection() {
                                 showEmpty
                                 className="owners-grid-large"
                               />
+                              {isPhonePortrait && (
+                                <div className="owned-mobile-actions">
+                                  <div className="phone-row-actions">
+                                    <button
+                                      className="btn-action btn-action-play"
+                                      onClick={() => handleIncrementPlay(album.albumId)}
+                                      disabled={playIncrementing.has(album.albumId)}
+                                      title="Add play"
+                                      aria-label="Add play"
+                                      type="button"
+                                    >
+                                      <span className="play-count-label">+1</span>
+                                    </button>
+                                    <details className="phone-overflow-menu">
+                                      <summary className="btn-action" aria-label="More row actions">
+                                        <Icon path={mdiMenu} />
+                                      </summary>
+                                      <div className="phone-overflow-panel">
+                                        <button
+                                          className="btn-action"
+                                          onClick={() => openAlbumDetails(album)}
+                                          title="View Details"
+                                          aria-label="View Details"
+                                          type="button"
+                                        >
+                                          <Icon path={mdiEyeOutline} />
+                                        </button>
+                                        <button
+                                          className="btn-action"
+                                          onClick={() => {
+                                            setSelectedItemId(item.id);
+                                            setShowEditModal(true);
+                                          }}
+                                          title="Edit"
+                                          aria-label="Edit"
+                                          type="button"
+                                        >
+                                          <Icon path={mdiPencilOutline} />
+                                        </button>
+                                        <button
+                                          className="btn-action btn-danger"
+                                          onClick={() => handleDelete(item.id, album.albumTitle)}
+                                          title="Delete"
+                                          aria-label="Delete"
+                                          type="button"
+                                        >
+                                          <Icon path={mdiTrashCanOutline} />
+                                        </button>
+                                      </div>
+                                    </details>
+                                  </div>
+                                </div>
+                              )}
                             </td>
-                            {index === 0 && (
+                            {index === 0 && !isPhoneLayout && (
                               <td rowSpan={album.items.length} className="col-play">
                                 <button
                                   className="btn-action btn-action-play"
@@ -419,39 +477,118 @@ export function Collection() {
                                   title="Add play"
                                   aria-label="Add play"
                                 >
-                                  <Icon path={mdiPlus} size={16} />
-                                  <span className="play-count-label">1</span>
+                                  <span className="play-count-label">+1</span>
                                 </button>
                               </td>
                             )}
                             <td className="actions-cell col-actions">
-                              <button
-                                className="btn-action btn-action-view"
-                                onClick={() => openAlbumDetails(album)}
-                                title="View Details"
-                                aria-label="View Details"
-                              >
-                                <Icon path={mdiEyeOutline} />
-                              </button>
-                              <button
-                                className="btn-action btn-action-edit"
-                                onClick={() => {
-                                  setSelectedItemId(item.id);
-                                  setShowEditModal(true);
-                                }}
-                                title="Edit"
-                                aria-label="Edit"
-                              >
-                                <Icon path={mdiPencilOutline} />
-                              </button>
-                              <button
-                                className="btn-action btn-danger btn-action-delete"
-                                onClick={() => handleDelete(item.id, album.albumTitle)}
-                                title="Delete"
-                                aria-label="Delete"
-                              >
-                                <Icon path={mdiTrashCanOutline} />
-                              </button>
+                              {isPhonePortrait ? null : isTabletPortrait ? (
+                                <ResponsiveRowActions
+                                  primaryActions={[
+                                    {
+                                      key: `play-tablet-${album.albumId}-${item.id}`,
+                                      label: 'Add play',
+                                      onClick: () => handleIncrementPlay(album.albumId),
+                                      displayLabel: '+1',
+                                      buttonClassName: 'btn-action-play',
+                                      disabled: playIncrementing.has(album.albumId),
+                                    },
+                                  ]}
+                                  overflowActions={[
+                                    {
+                                      key: `view-tablet-${item.id}`,
+                                      label: 'View Details',
+                                      iconPath: mdiEyeOutline,
+                                      onClick: () => openAlbumDetails(album),
+                                    },
+                                    {
+                                      key: `edit-tablet-${item.id}`,
+                                      label: 'Edit',
+                                      iconPath: mdiPencilOutline,
+                                      onClick: () => {
+                                        setSelectedItemId(item.id);
+                                        setShowEditModal(true);
+                                      },
+                                    },
+                                    {
+                                      key: `delete-tablet-${item.id}`,
+                                      label: 'Delete',
+                                      iconPath: mdiTrashCanOutline,
+                                      onClick: () => handleDelete(item.id, album.albumTitle),
+                                      buttonClassName: 'btn-danger',
+                                    },
+                                  ]}
+                                  menuAriaLabel="More row actions"
+                                />
+                              ) : isPhoneLayout ? (
+                                <ResponsiveRowActions
+                                  primaryActions={[
+                                    {
+                                      key: `play-${album.albumId}-${item.id}`,
+                                      label: 'Add play',
+                                      onClick: () => handleIncrementPlay(album.albumId),
+                                      displayLabel: '+1',
+                                      buttonClassName: 'btn-action-play',
+                                      disabled: playIncrementing.has(album.albumId),
+                                    },
+                                  ]}
+                                  overflowActions={[
+                                    {
+                                      key: `view-overflow-landscape-${item.id}`,
+                                      label: 'View Details',
+                                      iconPath: mdiEyeOutline,
+                                      onClick: () => openAlbumDetails(album),
+                                    },
+                                    {
+                                      key: `edit-${item.id}`,
+                                      label: 'Edit',
+                                      iconPath: mdiPencilOutline,
+                                      onClick: () => {
+                                        setSelectedItemId(item.id);
+                                        setShowEditModal(true);
+                                      },
+                                    },
+                                    {
+                                      key: `delete-${item.id}`,
+                                      label: 'Delete',
+                                      iconPath: mdiTrashCanOutline,
+                                      onClick: () => handleDelete(item.id, album.albumTitle),
+                                      buttonClassName: 'btn-danger',
+                                    },
+                                  ]}
+                                  menuAriaLabel="More row actions"
+                                />
+                              ) : (
+                                <>
+                                  <button
+                                    className="btn-action btn-action-view"
+                                    onClick={() => openAlbumDetails(album)}
+                                    title="View Details"
+                                    aria-label="View Details"
+                                  >
+                                    <Icon path={mdiEyeOutline} />
+                                  </button>
+                                  <button
+                                    className="btn-action btn-action-edit"
+                                    onClick={() => {
+                                      setSelectedItemId(item.id);
+                                      setShowEditModal(true);
+                                    }}
+                                    title="Edit"
+                                    aria-label="Edit"
+                                  >
+                                    <Icon path={mdiPencilOutline} />
+                                  </button>
+                                  <button
+                                    className="btn-action btn-danger btn-action-delete"
+                                    onClick={() => handleDelete(item.id, album.albumTitle)}
+                                    title="Delete"
+                                    aria-label="Delete"
+                                  >
+                                    <Icon path={mdiTrashCanOutline} />
+                                  </button>
+                                </>
+                              )}
                             </td>
                           </tr>
                         );

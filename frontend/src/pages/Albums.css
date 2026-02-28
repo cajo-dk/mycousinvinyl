@@ -54,7 +54,7 @@
   background-color: var(--color-background-subtle);
   border: 1px solid var(--color-border);
   border-radius: 8px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .artist-header {
@@ -191,7 +191,7 @@
     display: none;
   }
 
-  .albums-list .btn-action:not(.btn-action-view) {
+  .albums-list .btn-action:not(.btn-action-view):not(.responsive-row-actions-menu-toggle) {
     display: none;
   }
 }
@@ -207,7 +207,7 @@
 
   .albums-list .data-table tbody tr {
     display: grid;
-    grid-template-columns: 64px 1fr auto;
+    grid-template-columns: 64px 1fr auto auto;
     grid-template-rows: auto auto;
     align-items: center;
     column-gap: 0.75rem;
@@ -231,11 +231,10 @@
 
   .albums-list .col-album {
     grid-column: 2;
-    grid-row: 1 / span 2;
+    grid-row: 1;
   }
 
-  .albums-list .col-genre,
-  .albums-list .col-actions {
+  .albums-list .col-genre {
     display: none;
   }
 
@@ -246,7 +245,36 @@
     justify-self: end;
   }
 
+  .albums-list .col-actions {
+    display: block;
+    grid-column: 4;
+    grid-row: 1 / span 2;
+    justify-self: end;
+    align-self: end;
+    width: auto;
+  }
+
+  .albums-list .col-actions .responsive-row-actions {
+    justify-content: flex-end;
+  }
+
   .album-genre-mobile {
     display: block;
+  }
+}
+
+@media (pointer: coarse) and (min-width: 500px) and (max-width: 999px) and (orientation: portrait) {
+  .albums-list .col-label,
+  .albums-list .col-pressings {
+    display: none;
+  }
+
+  .albums-list .col-owned,
+  .albums-list .col-actions {
+    display: table-cell;
+  }
+
+  .albums-list .col-actions .responsive-row-actions {
+    justify-content: flex-end;
   }
 }

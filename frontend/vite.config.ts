@@ -40,6 +40,9 @@ export default defineConfig(({ mode }) => {
     : ['icons/icon-192-dev.png', 'icons/icon-512-dev.png']
 
   return {
+    define: {
+      __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.3.0'),
+    },
     plugins: [
       react(),
       VitePWA({

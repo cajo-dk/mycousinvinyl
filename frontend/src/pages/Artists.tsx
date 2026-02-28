@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { artistsApi, albumsApi } from '@/api/services';
 import { AlbumDetailResponse, ArtistResponse } from '@/types/api';
-import { Loading, ErrorAlert, Modal, Icon, Pager } from '@/components/UI';
+import { Loading, ErrorAlert, Modal, Icon, Pager, ResponsiveRowActions } from '@/components/UI';
 import { ArtistFiltersPanel, ArtistFilterValues } from '@/components/Search/ArtistFiltersPanel';
 import { ArtistForm } from '@/components/Forms';
 import { AlbumDetailsModal, AlbumWizardModal, PressingWizardModal } from '@/components/Modals';
@@ -16,6 +16,7 @@ import { formatDate, formatDateTime } from '@/utils/format';
 import { usePreferences } from '@/hooks/usePreferences';
 import { resolveItemsPerPage } from '@/utils/preferences';
 import { useViewControls } from '@/components/Layout/ViewControlsContext';
+import { useResponsiveMode } from '@/hooks/useResponsiveMode';
 import {
   mdiEyeOutline,
   mdiPencilOutline,
@@ -49,8 +50,11 @@ export function Artists() {
   const [showPressingWizardModal, setShowPressingWizardModal] = useState(false);
   const [selectedAlbumForPressing, setSelectedAlbumForPressing] = useState<{ id: string; title: string; artistName: string; artistDiscogsId: number | null; albumDiscogsId: number | null } | null>(null);
   const [initialFilter, setInitialFilter] = useState<string | null>(null);
+  const [expandedArtistCards, setExpandedArtistCards] = useState<Set<string>>(new Set());
   const { preferences } = usePreferences();
   const { setControls } = useViewControls();
+  const { isPortraitTouch, orientation } = useResponsiveMode();
+  const isPortraitCardsMode = isPortraitTouch && orientation === 'portrait';
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -378,59 +382,132 @@ export function Artists() {
                   <span className="artist-card-placeholder">{getArtistInitial(artist)}</span>
                 )}
               </div>
-              <div>
-                <h3>{artist.name}</h3>
+              <div className="artist-card-main">
+                <button
+                  type="button"
+                  className={`artist-card-title-toggle ${isPortraitCardsMode ? 'is-phone-portrait' : ''}`.trim()}
+                  onClick={() => {
+                    if (!isPortraitCardsMode) return;
+                    setExpandedArtistCards((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(artist.id)) {
+                        next.delete(artist.id);
+                      } else {
+                        next.add(artist.id);
+                      }
+                      return next;
+                    });
+                  }}
+                  aria-expanded={!isPortraitCardsMode || expandedArtistCards.has(artist.id)}
+                >
+                  <span className="artist-card-name">{artist.name}</span>
+                  {isPortraitCardsMode && (
+                    <span className="artist-card-expand-icon">
+                      {expandedArtistCards.has(artist.id) ? '▼' : '▶'}
+                    </span>
+                  )}
+                </button>
                 <div className="artist-meta">
                   <span className="artist-type">{getArtistType(artist)}</span>
                   <span className="artist-country">{getCountryName(artist.country)}</span>
+                  {isPortraitCardsMode && (
+                    <span className="artist-active-years">{formatActiveDates(artist.begin_date, artist.end_date)}</span>
+                  )}
                 </div>
               </div>
             </div>
-            <div className="artist-card-stats">
-              <span>{artist.album_count ?? 0} albums</span>
-              <span>{formatActiveDates(artist.begin_date, artist.end_date)}</span>
-            </div>
-            {artist.bio && <p className="artist-bio">{artist.bio}</p>}
-            <div className="artist-card-actions">
-              <button
-                className="btn-action"
-                onClick={() => openViewModal(artist)}
-                title="View"
-                aria-label="View"
-              >
-                <Icon path={mdiEyeOutline} />
-              </button>
-              <button
-                className="btn-action"
-                onClick={() => {
-                  setSelectedArtistForAlbum({ id: artist.id, name: artist.name, discogsId: artist.discogs_id || null });
-                  setShowAlbumModal(true);
-                }}
-                title="Create Album"
-                aria-label="Create Album"
-              >
-                <Icon path={mdiAlbum} />
-              </button>
-              <button
-                className="btn-action"
-                onClick={() => {
-                  setSelectedArtistId(artist.id);
-                  setShowEditModal(true);
-                }}
-                title="Edit"
-                aria-label="Edit"
-              >
-                <Icon path={mdiPencilOutline} />
-              </button>
-              <button
-                className="btn-action btn-danger"
-                onClick={() => handleDelete(artist.id, artist.name)}
-                title="Delete"
-                aria-label="Delete"
-              >
-                <Icon path={mdiTrashCanOutline} />
-              </button>
-            </div>
+            {(!isPortraitCardsMode || expandedArtistCards.has(artist.id)) && (
+              <>
+                <div className="artist-card-stats">
+                  <span>{artist.album_count ?? 0} albums</span>
+                  <span>{formatActiveDates(artist.begin_date, artist.end_date)}</span>
+                </div>
+                {artist.bio && <p className="artist-bio">{artist.bio}</p>}
+                <div className="artist-card-actions">
+                  {isPortraitTouch ? (
+                    <ResponsiveRowActions
+                      primaryActions={[
+                        {
+                          key: `view-card-${artist.id}`,
+                          label: 'View',
+                          iconPath: mdiEyeOutline,
+                          onClick: () => openViewModal(artist),
+                        },
+                      ]}
+                      overflowActions={[
+                        {
+                          key: `album-card-${artist.id}`,
+                          label: 'Create Album',
+                          iconPath: mdiAlbum,
+                          onClick: () => {
+                            setSelectedArtistForAlbum({ id: artist.id, name: artist.name, discogsId: artist.discogs_id || null });
+                            setShowAlbumModal(true);
+                          },
+                        },
+                        {
+                          key: `edit-card-${artist.id}`,
+                          label: 'Edit',
+                          iconPath: mdiPencilOutline,
+                          onClick: () => {
+                            setSelectedArtistId(artist.id);
+                            setShowEditModal(true);
+                          },
+                        },
+                        {
+                          key: `delete-card-${artist.id}`,
+                          label: 'Delete',
+                          iconPath: mdiTrashCanOutline,
+                          onClick: () => handleDelete(artist.id, artist.name),
+                          buttonClassName: 'btn-danger',
+                        },
+                      ]}
+                      menuAriaLabel="More artist actions"
+                    />
+                  ) : (
+                    <>
+                      <button
+                        className="btn-action"
+                        onClick={() => openViewModal(artist)}
+                        title="View"
+                        aria-label="View"
+                      >
+                        <Icon path={mdiEyeOutline} />
+                      </button>
+                      <button
+                        className="btn-action"
+                        onClick={() => {
+                          setSelectedArtistForAlbum({ id: artist.id, name: artist.name, discogsId: artist.discogs_id || null });
+                          setShowAlbumModal(true);
+                        }}
+                        title="Create Album"
+                        aria-label="Create Album"
+                      >
+                        <Icon path={mdiAlbum} />
+                      </button>
+                      <button
+                        className="btn-action"
+                        onClick={() => {
+                          setSelectedArtistId(artist.id);
+                          setShowEditModal(true);
+                        }}
+                        title="Edit"
+                        aria-label="Edit"
+                      >
+                        <Icon path={mdiPencilOutline} />
+                      </button>
+                      <button
+                        className="btn-action btn-danger"
+                        onClick={() => handleDelete(artist.id, artist.name)}
+                        title="Delete"
+                        aria-label="Delete"
+                      >
+                        <Icon path={mdiTrashCanOutline} />
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         ))}
       </div>
@@ -467,44 +544,87 @@ export function Artists() {
                 <td>{artist.album_count ?? 0}</td>
                 <td>{formatActiveDates(artist.begin_date, artist.end_date)}</td>
                 <td className="actions-cell">
-                  <button
-                    className="btn-action"
-                    onClick={() => openViewModal(artist)}
-                    title="View"
-                    aria-label="View"
-                  >
-                    <Icon path={mdiEyeOutline} />
-                  </button>
-                  <button
-                    className="btn-action"
-                    onClick={() => {
-                      setSelectedArtistForAlbum({ id: artist.id, name: artist.name, discogsId: artist.discogs_id || null });
-                      setShowAlbumModal(true);
-                    }}
-                    title="Create Album"
-                    aria-label="Create Album"
-                  >
-                    <Icon path={mdiAlbum} />
-                  </button>
-                  <button
-                    className="btn-action"
-                    onClick={() => {
-                      setSelectedArtistId(artist.id);
-                      setShowEditModal(true);
-                    }}
-                    title="Edit"
-                    aria-label="Edit"
-                  >
-                    <Icon path={mdiPencilOutline} />
-                  </button>
-                  <button
-                    className="btn-action btn-danger"
-                    onClick={() => handleDelete(artist.id, artist.name)}
-                    title="Delete"
-                    aria-label="Delete"
-                  >
-                    <Icon path={mdiTrashCanOutline} />
-                  </button>
+                  {isPortraitTouch ? (
+                    <ResponsiveRowActions
+                      primaryActions={[
+                        {
+                          key: `view-row-${artist.id}`,
+                          label: 'View',
+                          iconPath: mdiEyeOutline,
+                          onClick: () => openViewModal(artist),
+                        },
+                      ]}
+                      overflowActions={[
+                        {
+                          key: `album-row-${artist.id}`,
+                          label: 'Create Album',
+                          iconPath: mdiAlbum,
+                          onClick: () => {
+                            setSelectedArtistForAlbum({ id: artist.id, name: artist.name, discogsId: artist.discogs_id || null });
+                            setShowAlbumModal(true);
+                          },
+                        },
+                        {
+                          key: `edit-row-${artist.id}`,
+                          label: 'Edit',
+                          iconPath: mdiPencilOutline,
+                          onClick: () => {
+                            setSelectedArtistId(artist.id);
+                            setShowEditModal(true);
+                          },
+                        },
+                        {
+                          key: `delete-row-${artist.id}`,
+                          label: 'Delete',
+                          iconPath: mdiTrashCanOutline,
+                          onClick: () => handleDelete(artist.id, artist.name),
+                          buttonClassName: 'btn-danger',
+                        },
+                      ]}
+                      menuAriaLabel="More artist actions"
+                    />
+                  ) : (
+                    <>
+                      <button
+                        className="btn-action"
+                        onClick={() => openViewModal(artist)}
+                        title="View"
+                        aria-label="View"
+                      >
+                        <Icon path={mdiEyeOutline} />
+                      </button>
+                      <button
+                        className="btn-action"
+                        onClick={() => {
+                          setSelectedArtistForAlbum({ id: artist.id, name: artist.name, discogsId: artist.discogs_id || null });
+                          setShowAlbumModal(true);
+                        }}
+                        title="Create Album"
+                        aria-label="Create Album"
+                      >
+                        <Icon path={mdiAlbum} />
+                      </button>
+                      <button
+                        className="btn-action"
+                        onClick={() => {
+                          setSelectedArtistId(artist.id);
+                          setShowEditModal(true);
+                        }}
+                        title="Edit"
+                        aria-label="Edit"
+                      >
+                        <Icon path={mdiPencilOutline} />
+                      </button>
+                      <button
+                        className="btn-action btn-danger"
+                        onClick={() => handleDelete(artist.id, artist.name)}
+                        title="Delete"
+                        aria-label="Delete"
+                      >
+                        <Icon path={mdiTrashCanOutline} />
+                      </button>
+                    </>
+                  )}
                 </td>
               </tr>
             ))}

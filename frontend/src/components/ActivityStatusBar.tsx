@@ -78,6 +78,7 @@ export function ActivityStatusBar() {
   const fadeTimer = useRef<number | null>(null);
   const hideTimer = useRef<number | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
+  const appVersion = `v${__APP_VERSION__}`;
 
   const clearTimers = () => {
     if (fadeTimer.current) window.clearTimeout(fadeTimer.current);
@@ -163,6 +164,8 @@ export function ActivityStatusBar() {
     };
   }, [instance, accounts]);
 
+  const hasActiveMessage = Boolean(message) && visible && !fading;
+
   return (
     <div className="activity-status-bar">
       <span
@@ -170,6 +173,11 @@ export function ActivityStatusBar() {
       >
         {message || ''}
       </span>
+      {!hasActiveMessage && (
+        <span className="activity-status-version" aria-label={`Application version ${appVersion}`}>
+          {appVersion}
+        </span>
+      )}
     </div>
   );
 }
