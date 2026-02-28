@@ -24,6 +24,7 @@ from app.application.services.album_wizard_service import AlbumWizardService
 from app.application.services.discogs_oauth_service import DiscogsOAuthService
 from app.application.services.discogs_pat_service import DiscogsPatService
 from app.application.services.discogs_collection_sync_service import DiscogsCollectionSyncService
+from app.application.services.discogs_tracklist_sync_service import DiscogsTracklistSyncService
 from app.application.services.system_log_service import SystemLogService
 from app.adapters.http.discogs_client import DiscogsClientAdapter
 from app.adapters.http.discogs_oauth_client import DiscogsOAuthClientAdapter
@@ -221,4 +222,20 @@ async def get_discogs_collection_sync_service() -> DiscogsCollectionSyncService:
             oauth_client=oauth_client,
             import_service=import_service,
             import_log_level=settings.discogs_import_log_level,
+        )
+
+
+async def get_discogs_tracklist_sync_service() -> DiscogsTracklistSyncService:
+    """Provides DiscogsTracklistSyncService composed from existing services."""
+    discogs_client = DiscogsClientAdapter(settings.discogs_service_url, timeout_seconds=60.0)
+    async with async_session_factory() as session:
+        uow = SqlAlchemyUnitOfWork(session)
+        cache_repo = PostgresDiscogsCacheRepository(session)
+        discogs_service = DiscogsService(discogs_client, cache_repo)
+        album_service = AlbumService(uow)
+        track_service = TrackService(uow)
+        yield DiscogsTracklistSyncService(
+            album_service=album_service,
+            discogs_service=discogs_service,
+            track_service=track_service,
         )

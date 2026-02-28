@@ -2,12 +2,19 @@ from typing import List, Optional
 from pydantic import BaseModel
 
 
+class DiscogsTrackEntry(BaseModel):
+  position: Optional[str] = None
+  title: str
+  duration: Optional[str] = None
+  type_: Optional[str] = None
+
+
 class DiscogsArtistSearchResult(BaseModel):
-    id: int
-    name: str
-    thumb_url: Optional[str] = None
-    uri: Optional[str] = None
-    resource_url: Optional[str] = None
+  id: int
+  name: str
+  thumb_url: Optional[str] = None
+  uri: Optional[str] = None
+  resource_url: Optional[str] = None
 
 
 class DiscogsArtistSearchResponse(BaseModel):
@@ -53,6 +60,7 @@ class DiscogsAlbumDetails(BaseModel):
   catalog_number: Optional[str] = None
   image_url: Optional[str] = None
   type: Optional[str] = None
+  tracklist: Optional[List[DiscogsTrackEntry]] = None
 
 
 class DiscogsReleaseSearchResult(BaseModel):

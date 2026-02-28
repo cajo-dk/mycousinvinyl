@@ -7,6 +7,7 @@
 export { artistsApi } from './artists';
 export { albumsApi } from './albums';
 export { pressingsApi } from './pressings';
+export { tracksApi } from './tracks';
 export { collectionApi } from './collection';
 export { lookupApi } from './lookup';
 export { preferencesApi } from './preferences';

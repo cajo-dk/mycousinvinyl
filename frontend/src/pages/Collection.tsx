@@ -8,9 +8,9 @@ import { collectionApi } from '@/api/services';
 import { CollectionItemDetailResponse } from '@/types/api';
 import { Loading, ErrorAlert, Modal, Icon, Pager, ResponsiveRowActions } from '@/components/UI';
 import { CollectionItemForm } from '@/components/Forms';
-import { CollectionItemDetailsModal } from '@/components/Modals';
+import { CollectionItemDetailsModal, TrackListModal } from '@/components/Modals';
 import { OwnersGrid } from '@/components/CollectionSharing';
-import { mdiEyeOutline, mdiPencilOutline, mdiTrashCanOutline, mdiMenu } from '@mdi/js';
+import { mdiEyeOutline, mdiPencilOutline, mdiTrashCanOutline, mdiMenu, mdiMusicNoteOutline } from '@mdi/js';
 import { formatDecimal, parseLocaleNumber } from '@/utils/format';
 import { AlphabetFilterBar } from '@/components/AlphabetFilterBar';
 import { getInitialToken } from '@/utils/alpha';
@@ -50,6 +50,12 @@ export function Collection() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [showAlbumDetailsModal, setShowAlbumDetailsModal] = useState(false);
+  const [selectedTrackContext, setSelectedTrackContext] = useState<{
+    albumId: string;
+    albumTitle: string;
+    artistName: string;
+    pressingId: string;
+  } | null>(null);
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [selectedAlbumItems, setSelectedAlbumItems] = useState<CollectionItemDetailResponse[]>([]);
   const [expandedArtists, setExpandedArtists] = useState<Set<string>>(new Set());
@@ -229,6 +235,15 @@ export function Collection() {
     setSelectedAlbumId(album.albumId);
     setSelectedAlbumItems(album.items);
     setShowAlbumDetailsModal(true);
+  };
+
+  const openTrackList = (album: AlbumGroup, item: CollectionItemDetailResponse) => {
+    setSelectedTrackContext({
+      albumId: album.albumId,
+      albumTitle: album.albumTitle,
+      artistName: item.artist.name,
+      pressingId: item.pressing_id,
+    });
   };
 
   const toggleArtist = (artistId: string) => {
@@ -443,6 +458,15 @@ export function Collection() {
                                         </button>
                                         <button
                                           className="btn-action"
+                                          onClick={() => openTrackList(album, item)}
+                                          title="Track List"
+                                          aria-label="Track List"
+                                          type="button"
+                                        >
+                                          <Icon path={mdiMusicNoteOutline} />
+                                        </button>
+                                        <button
+                                          className="btn-action"
                                           onClick={() => {
                                             setSelectedItemId(item.id);
                                             setShowEditModal(true);
@@ -502,6 +526,12 @@ export function Collection() {
                                       onClick: () => openAlbumDetails(album),
                                     },
                                     {
+                                      key: `tracks-tablet-${item.id}`,
+                                      label: 'Track List',
+                                      iconPath: mdiMusicNoteOutline,
+                                      onClick: () => openTrackList(album, item),
+                                    },
+                                    {
                                       key: `edit-tablet-${item.id}`,
                                       label: 'Edit',
                                       iconPath: mdiPencilOutline,
@@ -540,6 +570,12 @@ export function Collection() {
                                       onClick: () => openAlbumDetails(album),
                                     },
                                     {
+                                      key: `tracks-${item.id}`,
+                                      label: 'Track List',
+                                      iconPath: mdiMusicNoteOutline,
+                                      onClick: () => openTrackList(album, item),
+                                    },
+                                    {
                                       key: `edit-${item.id}`,
                                       label: 'Edit',
                                       iconPath: mdiPencilOutline,
@@ -560,6 +596,14 @@ export function Collection() {
                                 />
                               ) : (
                                 <>
+                                  <button
+                                    className="btn-action btn-action-view"
+                                    onClick={() => openTrackList(album, item)}
+                                    title="Track List"
+                                    aria-label="Track List"
+                                  >
+                                    <Icon path={mdiMusicNoteOutline} />
+                                  </button>
                                   <button
                                     className="btn-action btn-action-view"
                                     onClick={() => openAlbumDetails(album)}
@@ -667,6 +711,15 @@ export function Collection() {
           onCollectionChange={() => fetchCollection(searchQuery)}
         />
       )}
+
+      <TrackListModal
+        isOpen={!!selectedTrackContext}
+        albumId={selectedTrackContext?.albumId || null}
+        albumTitle={selectedTrackContext?.albumTitle}
+        artistName={selectedTrackContext?.artistName}
+        pressingId={selectedTrackContext?.pressingId}
+        onClose={() => setSelectedTrackContext(null)}
+      />
     </div>
   );
 }

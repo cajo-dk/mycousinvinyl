@@ -773,9 +773,13 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
         // Use the provided album ID (we're adding a pressing to an existing album)
         albumId = initialAlbumId;
         if (canEditDiscogsId) {
-          const discogsUpdatePayload = formData.discogs_id !== null ? { discogs_id: formData.discogs_id } : null;
-          if (discogsUpdatePayload) {
-            await albumsApi.update(albumId, discogsUpdatePayload);
+          const discogsId = formData.discogs_id;
+          const discogsChanged = discogsId !== null && discogsId !== (initialAlbumDiscogsId ?? null);
+          if (discogsChanged) {
+            await albumsApi.update(albumId, {
+              discogs_id: discogsId,
+              sync_tracklist_from_discogs: true,
+            });
           }
         }
       } else {

@@ -184,6 +184,14 @@ export interface DiscogsAlbumDetails {
   catalog_number?: string;
   image_url?: string;
   type?: string;
+  tracklist?: DiscogsTrackEntry[];
+}
+
+export interface DiscogsTrackEntry {
+  position?: string;
+  title: string;
+  duration?: string;
+  type_?: string;
 }
 
 export interface DiscogsReleaseSearchResult {
@@ -341,6 +349,10 @@ export interface AlbumUpdate {
   notes?: string;
   image_url?: string | null;
   discogs_id?: number;
+  sync_tracklist_from_discogs?: boolean;
+  sync_pressing_id?: string;
+  sync_artist_name?: string;
+  sync_album_name?: string;
 }
 
 export interface AlbumResponse {
@@ -426,6 +438,7 @@ export interface TrackUpdate {
 }
 
 export interface TrackResponse {
+  id: string;
   album_id: string;
   side: string;
   position: string;

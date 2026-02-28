@@ -377,6 +377,18 @@ class DiscogsClient:
             selected = primary or images[0]
             image_url = selected.get("uri") or selected.get("uri150")
         release_type = _infer_release_type(data)
+        raw_tracklist = data.get("tracklist") or []
+        tracklist = []
+        for item in raw_tracklist:
+            title = str(item.get("title") or "").strip()
+            if not title:
+                continue
+            tracklist.append({
+                "position": item.get("position"),
+                "title": title,
+                "duration": item.get("duration"),
+                "type_": item.get("type_"),
+            })
 
         return {
             "id": data.get("id"),
@@ -389,6 +401,7 @@ class DiscogsClient:
             "catalog_number": catalog_number,
             "image_url": image_url,
             "type": release_type or None,
+            "tracklist": tracklist or None,
         }
 
     async def search_master_releases(self, master_id: int, query: str, limit: int = 25) -> dict:

@@ -8,9 +8,9 @@ import { pressingsApi } from '@/api/services';
 import { PressingDetailResponse } from '@/types/api';
 import { Loading, ErrorAlert, Modal, Icon, Pager, ResponsiveRowActions } from '@/components/UI';
 import { PressingForm, CollectionItemForm } from '@/components/Forms';
-import { PressingWizardModal } from '@/components/Modals';
+import { PressingWizardModal, TrackListModal } from '@/components/Modals';
 import { OwnersGrid } from '@/components/CollectionSharing';
-import { mdiPencilOutline, mdiTrashCanOutline, mdiMusicBoxOutline, mdiPlus } from '@mdi/js';
+import { mdiPencilOutline, mdiTrashCanOutline, mdiMusicBoxOutline, mdiPlus, mdiMusicNoteOutline } from '@mdi/js';
 import { AlphabetFilterBar } from '@/components/AlphabetFilterBar';
 import { getInitialToken } from '@/utils/alpha';
 import { usePreferences } from '@/hooks/usePreferences';
@@ -56,6 +56,12 @@ export function Pressings() {
   const [showAddToCollectionModal, setShowAddToCollectionModal] = useState(false);
   const [selectedPressingId, setSelectedPressingId] = useState<string | null>(null);
   const [selectedAlbumForPressing, setSelectedAlbumForPressing] = useState<{ id: string; title: string; artistName: string; artistDiscogsId: number | null; albumDiscogsId: number | null } | null>(null);
+  const [selectedTrackContext, setSelectedTrackContext] = useState<{
+    albumId: string;
+    albumTitle: string;
+    artistName: string;
+    pressingId: string;
+  } | null>(null);
   const [showPressingWizardModal, setShowPressingWizardModal] = useState(false);
   const [expandedArtists, setExpandedArtists] = useState<Set<string>>(new Set());
   const [expandedAlbums, setExpandedAlbums] = useState<Set<string>>(new Set());
@@ -295,6 +301,15 @@ export function Pressings() {
 
   const getPressingCover = (pressing: PressingDetailResponse) => {
     return pressing.image_url || pressing.album.image_url || '';
+  };
+
+  const openTrackList = (pressing: PressingDetailResponse) => {
+    setSelectedTrackContext({
+      albumId: pressing.album.id,
+      albumTitle: pressing.album.title,
+      artistName: pressing.artist.name,
+      pressingId: pressing.id,
+    });
   };
 
   const getCountryName = (code: string | undefined): string => {
@@ -541,6 +556,12 @@ export function Pressings() {
                                             buttonClassName: 'btn-success',
                                           },
                                           {
+                                            key: `tracks-${pressing.id}`,
+                                            label: 'Track List',
+                                            iconPath: mdiMusicNoteOutline,
+                                            onClick: () => openTrackList(pressing),
+                                          },
+                                          {
                                             key: `edit-${pressing.id}`,
                                             label: 'Edit',
                                             iconPath: mdiPencilOutline,
@@ -575,6 +596,12 @@ export function Pressings() {
                                         ]}
                                         overflowActions={[
                                           {
+                                            key: `tracks-${pressing.id}`,
+                                            label: 'Track List',
+                                            iconPath: mdiMusicNoteOutline,
+                                            onClick: () => openTrackList(pressing),
+                                          },
+                                          {
                                             key: `edit-${pressing.id}`,
                                             label: 'Edit',
                                             iconPath: mdiPencilOutline,
@@ -595,6 +622,14 @@ export function Pressings() {
                                       />
                                     ) : (
                                       <>
+                                        <button
+                                          className="btn-action"
+                                          onClick={() => openTrackList(pressing)}
+                                          title="Track List"
+                                          aria-label="Track List"
+                                        >
+                                          <Icon path={mdiMusicNoteOutline} />
+                                        </button>
                                         <button
                                           className="btn-action"
                                           onClick={() => {
@@ -745,6 +780,12 @@ export function Pressings() {
                                             buttonClassName: 'btn-success',
                                           },
                                           {
+                                            key: `tracks-master-${pressing.id}`,
+                                            label: 'Track List',
+                                            iconPath: mdiMusicNoteOutline,
+                                            onClick: () => openTrackList(pressing),
+                                          },
+                                          {
                                             key: `edit-master-${pressing.id}`,
                                             label: 'Edit',
                                             iconPath: mdiPencilOutline,
@@ -779,6 +820,12 @@ export function Pressings() {
                                         ]}
                                         overflowActions={[
                                           {
+                                            key: `tracks-master-${pressing.id}`,
+                                            label: 'Track List',
+                                            iconPath: mdiMusicNoteOutline,
+                                            onClick: () => openTrackList(pressing),
+                                          },
+                                          {
                                             key: `edit-master-${pressing.id}`,
                                             label: 'Edit',
                                             iconPath: mdiPencilOutline,
@@ -799,6 +846,14 @@ export function Pressings() {
                                       />
                                     ) : (
                                       <>
+                                        <button
+                                          className="btn-action"
+                                          onClick={() => openTrackList(pressing)}
+                                          title="Track List"
+                                          aria-label="Track List"
+                                        >
+                                          <Icon path={mdiMusicNoteOutline} />
+                                        </button>
                                         <button
                                           className="btn-action"
                                           onClick={() => {
@@ -981,6 +1036,15 @@ export function Pressings() {
           artistDiscogsId={selectedAlbumForPressing.artistDiscogsId}
         />
       )}
+
+      <TrackListModal
+        isOpen={!!selectedTrackContext}
+        albumId={selectedTrackContext?.albumId || null}
+        albumTitle={selectedTrackContext?.albumTitle}
+        artistName={selectedTrackContext?.artistName}
+        pressingId={selectedTrackContext?.pressingId}
+        onClose={() => setSelectedTrackContext(null)}
+      />
     </div>
   );
 }
