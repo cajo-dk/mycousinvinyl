@@ -73,8 +73,12 @@ export function PressingWizardModal({ albumId, albumTitle, artistName, discogsId
   };
 
   const handleSuccess = () => {
+    const shouldCloseAfterSuccess = pressingOnly;
     setCurrentStep(1);
     setPressingOnly(false);
+    if (shouldCloseAfterSuccess) {
+      onClose();
+    }
     onSuccess();
   };
 
