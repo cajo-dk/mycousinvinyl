@@ -42,7 +42,11 @@ async def create_track(
             position=track_data.position,
             title=track_data.title,
             duration=track_data.duration,
-            credits=track_data.credits
+            credits=track_data.credits,
+            layout_type=track_data.layout_type,
+            parent_track_id=track_data.parent_track_id,
+            performers=track_data.performers,
+            layout_order=track_data.layout_order,
         )
         return track
     except ValueError as e:

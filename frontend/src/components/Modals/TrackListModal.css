@@ -38,3 +38,30 @@
 .track-list-table .col-duration {
   width: 120px;
 }
+
+.track-list-table .col-performers {
+  width: 240px;
+}
+
+.track-list-table .col-heading {
+  font-weight: 700;
+  color: var(--app-accent);
+  background: rgba(255, 107, 53, 0.08);
+}
+
+.track-row-subtrack .col-title {
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.track-list-table .col-title.depth-1 {
+  padding-left: 1.5rem;
+}
+
+.track-list-table .col-title.depth-2 {
+  padding-left: 2.25rem;
+}
+
+.track-list-table .col-title.depth-3 {
+  padding-left: 3rem;
+}

@@ -61,6 +61,7 @@ export function Pressings() {
     albumTitle: string;
     artistName: string;
     pressingId: string;
+    discogsReleaseId?: number;
   } | null>(null);
   const [showPressingWizardModal, setShowPressingWizardModal] = useState(false);
   const [expandedArtists, setExpandedArtists] = useState<Set<string>>(new Set());
@@ -172,6 +173,9 @@ export function Pressings() {
     const grouped = Array.from(artistMap.values()).sort((a, b) =>
       a.sortName.localeCompare(b.sortName)
     );
+    grouped.forEach((artistGroup) => {
+      artistGroup.albums.sort((a, b) => a.albumTitle.localeCompare(b.albumTitle, undefined, { sensitivity: 'base' }));
+    });
 
     setGroupedData(grouped);
 
@@ -309,6 +313,7 @@ export function Pressings() {
       albumTitle: pressing.album.title,
       artistName: pressing.artist.name,
       pressingId: pressing.id,
+      discogsReleaseId: pressing.discogs_release_id,
     });
   };
 
@@ -1043,6 +1048,7 @@ export function Pressings() {
         albumTitle={selectedTrackContext?.albumTitle}
         artistName={selectedTrackContext?.artistName}
         pressingId={selectedTrackContext?.pressingId}
+        discogsReleaseId={selectedTrackContext?.discogsReleaseId}
         onClose={() => setSelectedTrackContext(null)}
       />
     </div>

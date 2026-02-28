@@ -343,7 +343,11 @@ class Track:
     title: str = ""
     duration: Optional[int] = None  # Duration in seconds
     songwriters: List[str] = field(default_factory=list)
+    performers: List[str] = field(default_factory=list)
     notes: Optional[str] = None
+    layout_type: str = "track"  # heading, track, subtrack
+    parent_track_id: Optional[UUID] = None
+    layout_order: int = 0
 
     # System metadata
     created_at: datetime = field(default_factory=datetime.utcnow)
@@ -368,6 +372,9 @@ class Track:
         self.side = self.side.strip().upper()
         self.position = self.position.strip()
         self.title = self.title.strip()
+        self.layout_type = (self.layout_type or "track").strip().lower()
+        if self.layout_type not in {"heading", "track", "subtrack"}:
+            raise ValueError("Track layout_type must be one of: heading, track, subtrack")
 
     @property
     def full_position(self) -> str:

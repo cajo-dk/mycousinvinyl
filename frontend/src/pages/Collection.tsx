@@ -55,6 +55,7 @@ export function Collection() {
     albumTitle: string;
     artistName: string;
     pressingId: string;
+    discogsReleaseId?: number;
   } | null>(null);
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [selectedAlbumItems, setSelectedAlbumItems] = useState<CollectionItemDetailResponse[]>([]);
@@ -133,6 +134,9 @@ export function Collection() {
     const grouped = Array.from(artistMap.values()).sort((a, b) =>
       a.sortName.localeCompare(b.sortName)
     );
+    grouped.forEach((artistGroup) => {
+      artistGroup.albums.sort((a, b) => a.albumTitle.localeCompare(b.albumTitle, undefined, { sensitivity: 'base' }));
+    });
 
     setGroupedData(grouped);
   };
@@ -718,6 +722,7 @@ export function Collection() {
         albumTitle={selectedTrackContext?.albumTitle}
         artistName={selectedTrackContext?.artistName}
         pressingId={selectedTrackContext?.pressingId}
+        discogsReleaseId={selectedTrackContext?.discogsReleaseId}
         onClose={() => setSelectedTrackContext(null)}
       />
     </div>

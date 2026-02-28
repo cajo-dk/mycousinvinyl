@@ -203,7 +203,7 @@ class AlbumRepositoryAdapter(AlbumRepository):
         ).options(
             selectinload(AlbumModel.genres),
             selectinload(AlbumModel.styles)
-        ).order_by(AlbumModel.original_release_year.desc())
+        ).order_by(func.lower(AlbumModel.title).asc(), AlbumModel.title.asc())
 
         # Get total count
         count_query = select(func.count()).select_from(AlbumModel).where(
@@ -454,12 +454,19 @@ class AlbumRepositoryAdapter(AlbumRepository):
         total = count_result.scalar_one()
 
         # Apply ordering and pagination
-        stmt = stmt.order_by(
-            ArtistModel.sort_name.asc().nullslast(),
-            ArtistModel.name.asc(),
-            AlbumModel.original_release_year.asc().nullslast(),
-            AlbumModel.title.asc()
-        ).limit(limit).offset(offset)
+        if artist_id:
+            stmt = stmt.order_by(
+                func.lower(AlbumModel.title).asc(),
+                AlbumModel.title.asc(),
+            )
+        else:
+            stmt = stmt.order_by(
+                ArtistModel.sort_name.asc().nullslast(),
+                ArtistModel.name.asc(),
+                func.lower(AlbumModel.title).asc(),
+                AlbumModel.title.asc()
+            )
+        stmt = stmt.limit(limit).offset(offset)
 
         # Execute query
         result = await self.session.execute(stmt)

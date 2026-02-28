@@ -11,6 +11,8 @@ class DiscogsTrackEntry(BaseModel):
     title: str
     duration: Optional[str] = None
     type_: Optional[str] = None
+    artists: Optional[List[str]] = None
+    sub_tracks: Optional[List[dict]] = None
 
 
 class DiscogsArtistSearchResult(BaseModel):

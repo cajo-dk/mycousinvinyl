@@ -125,6 +125,9 @@ export function Albums() {
     const grouped = Array.from(artistMap.values()).sort((a, b) =>
       a.sortName.localeCompare(b.sortName)
     );
+    grouped.forEach((artistGroup) => {
+      artistGroup.albums.sort((a, b) => a.title.localeCompare(b.title, undefined, { sensitivity: 'base' }));
+    });
 
     setGroupedData(grouped);
 

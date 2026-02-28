@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import { albumsApi, tracksApi } from '@/api/services';
 import { TrackResponse } from '@/types/api';
 import { Modal, Loading, ErrorAlert } from '@/components/UI';
@@ -10,6 +10,7 @@ interface TrackListModalProps {
   albumTitle?: string;
   artistName?: string;
   pressingId?: string;
+  discogsReleaseId?: number;
   onClose: () => void;
 }
 
@@ -28,6 +29,7 @@ export function TrackListModal({
   albumTitle,
   artistName,
   pressingId,
+  discogsReleaseId,
   onClose,
 }: TrackListModalProps) {
   const [tracks, setTracks] = useState<TrackResponse[]>([]);
@@ -43,16 +45,20 @@ export function TrackListModal({
       setLoading(true);
       setError(null);
       const response = await tracksApi.getByAlbum(albumId);
-      if (response.length > 0) {
+      const hasPerformerData = response.some((track) => (track.performers || []).length > 0);
+      const shouldRefreshFromDiscogs = response.length === 0 || (!!discogsReleaseId && !hasPerformerData);
+
+      if (!shouldRefreshFromDiscogs) {
         setTracks(response);
         return;
       }
 
-      // No tracklist yet: import from Discogs on demand.
+      // Tracklist missing or missing performer data: import from Discogs on demand.
       setSyncing(true);
       await albumsApi.update(albumId, {
         sync_tracklist_from_discogs: true,
         sync_pressing_id: pressingId,
+        sync_discogs_release_id: discogsReleaseId,
         sync_artist_name: artistName,
         sync_album_name: albumTitle,
       });
@@ -64,7 +70,7 @@ export function TrackListModal({
       setSyncing(false);
       setLoading(false);
     }
-  }, [albumId, albumTitle, artistName, pressingId]);
+  }, [albumId, albumTitle, artistName, pressingId, discogsReleaseId]);
 
   useEffect(() => {
     if (!isOpen || !albumId) {
@@ -74,18 +80,57 @@ export function TrackListModal({
   }, [isOpen, loadTracks]);
 
   const groupedTracks = useMemo(() => {
-    const groups = new Map<string, TrackResponse[]>();
-    tracks.forEach((track) => {
-      const side = (track.side || 'A').toUpperCase();
-      const entries = groups.get(side);
-      if (entries) {
-        entries.push(track);
-      } else {
-        groups.set(side, [track]);
+    const byParent = new Map<string, TrackResponse[]>();
+    const rootsBySide = new Map<string, TrackResponse[]>();
+    const sorted = [...tracks].sort((a, b) => a.layout_order - b.layout_order);
+
+    sorted.forEach((track) => {
+      const parentId = track.parent_track_id;
+      if (parentId) {
+        const children = byParent.get(parentId) || [];
+        children.push(track);
+        byParent.set(parentId, children);
+        return;
       }
+      const side = (track.side || 'A').toUpperCase();
+      const roots = rootsBySide.get(side) || [];
+      roots.push(track);
+      rootsBySide.set(side, roots);
     });
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+
+    return Array.from(rootsBySide.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([side, rootNodes]) => ({ side, rootNodes, byParent }));
   }, [tracks]);
+
+  const renderTrackRows = useCallback((track: TrackResponse, byParent: Map<string, TrackResponse[]>, depth = 0) => {
+    const children = byParent.get(track.id) || [];
+    const artistText = track.performers?.length ? track.performers.join(', ') : '-';
+
+    if (track.layout_type === 'heading') {
+      return (
+        <Fragment key={track.id}>
+          <tr key={track.id} className="track-row-heading">
+            <td className="col-heading" colSpan={4}>{track.title}</td>
+          </tr>
+          {children.map((child) => renderTrackRows(child, byParent, 1))}
+        </Fragment>
+      );
+    }
+
+    const rowClass = track.layout_type === 'subtrack' ? 'track-row-subtrack' : 'track-row-track';
+    return (
+      <Fragment key={track.id}>
+        <tr key={track.id} className={rowClass}>
+          <td className="col-position">{track.position || '-'}</td>
+          <td className={`col-title depth-${Math.min(depth, 3)}`}>{track.title}</td>
+          <td className="col-performers">{artistText}</td>
+          <td className="col-duration">{formatDuration(track.duration)}</td>
+        </tr>
+        {children.map((child) => renderTrackRows(child, byParent, depth + 1))}
+      </Fragment>
+    );
+  }, []);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Track List${albumTitle ? ` - ${albumTitle}` : ''}`} size="large">
@@ -102,25 +147,20 @@ export function TrackListModal({
 
         {!loading && !error && tracks.length > 0 && (
           <div className="track-list-groups">
-            {groupedTracks.map(([side, sideTracks]) => (
-              <section key={side} className="track-list-side">
-                <h4>Side {side}</h4>
+            {groupedTracks.map((group) => (
+              <section key={group.side} className="track-list-side">
+                <h4>Side {group.side}</h4>
                 <table className="data-table track-list-table">
                   <thead>
                     <tr>
                       <th className="col-position">#</th>
                       <th className="col-title">Title</th>
+                      <th className="col-performers">Performed By</th>
                       <th className="col-duration">Duration</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {sideTracks.map((track) => (
-                      <tr key={track.id}>
-                        <td className="col-position">{track.position || '-'}</td>
-                        <td className="col-title">{track.title}</td>
-                        <td className="col-duration">{formatDuration(track.duration)}</td>
-                      </tr>
-                    ))}
+                    {group.rootNodes.map((track) => renderTrackRows(track, group.byParent))}
                   </tbody>
                 </table>
               </section>

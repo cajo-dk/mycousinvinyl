@@ -42,12 +42,22 @@ class TrackService:
                 raise ValueError(f"Album {album_id} does not exist")
 
         # Create domain entity
+        credits = kwargs.pop("credits", None)
+        layout_type = kwargs.pop("layout_type", "track")
+        parent_track_id = kwargs.pop("parent_track_id", None)
+        performers = kwargs.pop("performers", None) or []
+        layout_order = kwargs.pop("layout_order", 0)
         track = Track(
             album_id=album_id,
             side=side,
             position=position,
             title=title,
             duration=duration,
+            layout_type=layout_type,
+            parent_track_id=parent_track_id,
+            performers=performers,
+            layout_order=layout_order,
+            notes=credits,
             **kwargs
         )
 
@@ -81,6 +91,9 @@ class TrackService:
 
             # Apply updates to domain entity
             for key, value in updates.items():
+                if key == "credits":
+                    track.notes = value
+                    continue
                 if hasattr(track, key) and key not in ['id', 'created_at']:
                     setattr(track, key, value)
 
@@ -133,7 +146,7 @@ class TrackService:
                 await self.uow.track_repository.delete(track.id)
 
             created: List[Track] = []
-            for entry in tracks:
+            for order, entry in enumerate(tracks):
                 track = Track(
                     album_id=album_id,
                     side=entry["side"],
@@ -141,8 +154,25 @@ class TrackService:
                     title=entry["title"],
                     duration=entry.get("duration"),
                     notes=entry.get("credits"),
+                    layout_type=entry.get("layout_type", "track"),
+                    performers=entry.get("performers") or [],
+                    layout_order=order,
                 )
                 created.append(await self.uow.track_repository.add(track))
+
+            for index, entry in enumerate(tracks):
+                parent_index = entry.get("parent_index")
+                if parent_index is None:
+                    continue
+                if not isinstance(parent_index, int):
+                    continue
+                if parent_index < 0 or parent_index >= len(created):
+                    continue
+                child = created[index]
+                parent = created[parent_index]
+                child.parent_track_id = parent.id
+                child = await self.uow.track_repository.update(child)
+                created[index] = child
 
             await self.uow.commit()
             return created

@@ -351,6 +351,7 @@ async def update_album(
     updates = album_data.model_dump(exclude_unset=True, by_alias=True)
     sync_tracklist = bool(updates.pop("sync_tracklist_from_discogs", False))
     sync_pressing_id = updates.pop("sync_pressing_id", None)
+    sync_discogs_release_id = updates.pop("sync_discogs_release_id", None)
     sync_artist_name = updates.pop("sync_artist_name", None)
     sync_album_name = updates.pop("sync_album_name", None)
 
@@ -377,7 +378,11 @@ async def update_album(
                 )
 
         if sync_tracklist:
-            await tracklist_sync_service.sync_album(album_id, album.discogs_id)
+            await tracklist_sync_service.sync_album(
+                album_id,
+                album.discogs_id,
+                preferred_release_id=sync_discogs_release_id,
+            )
             album = await service.get_album(album_id)
 
         if sync_tracklist:
