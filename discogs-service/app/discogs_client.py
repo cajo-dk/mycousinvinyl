@@ -380,15 +380,10 @@ class DiscogsClient:
         raw_tracklist = data.get("tracklist") or []
         tracklist = []
         for item in raw_tracklist:
-            title = str(item.get("title") or "").strip()
-            if not title:
+            entry = _normalize_track_entry(item)
+            if not entry:
                 continue
-            tracklist.append({
-                "position": item.get("position"),
-                "title": title,
-                "duration": item.get("duration"),
-                "type_": item.get("type_"),
-            })
+            tracklist.append(entry)
 
         return {
             "id": data.get("id"),
@@ -984,6 +979,55 @@ def _infer_release_type(payload: dict) -> Optional[str]:
     if "album" in combined or "studio" in combined:
         return "Studio"
     return None
+
+
+def _normalize_track_entry(item: object) -> Optional[dict]:
+    if not isinstance(item, dict):
+        return None
+
+    title = str(item.get("title") or "").strip()
+    if not title:
+        return None
+
+    sub_entries = []
+    for sub_item in item.get("sub_tracks") or []:
+        normalized_sub = _normalize_track_entry(sub_item)
+        if normalized_sub:
+            sub_entries.append(normalized_sub)
+
+    entry = {
+        "position": item.get("position"),
+        "title": title,
+        "duration": item.get("duration"),
+        "type_": item.get("type_"),
+        "artists": _extract_track_artists(item),
+    }
+    if sub_entries:
+        entry["sub_tracks"] = sub_entries
+    return entry
+
+
+def _extract_track_artists(item: dict) -> Optional[list[str]]:
+    raw_artists = item.get("artists")
+    if not isinstance(raw_artists, list):
+        return None
+
+    artists: list[str] = []
+    seen: set[str] = set()
+    for artist in raw_artists:
+        if not isinstance(artist, dict):
+            continue
+        raw_name = str(artist.get("name") or artist.get("anv") or "").strip()
+        if not raw_name:
+            continue
+        clean_name = re.sub(r"\s\(\d+\)$", "", raw_name).strip()
+        key = clean_name.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        artists.append(clean_name)
+
+    return artists or None
 
 
 def _join_unique(values: list[str], preserve_order: bool = True, separator: str = "; ") -> Optional[str]:

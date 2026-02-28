@@ -59,6 +59,10 @@ class AlbumUpdate(BaseModel):
         default=None,
         description="Optional pressing ID context for tracklist sync logging"
     )
+    sync_discogs_release_id: Optional[int] = Field(
+        default=None,
+        description="Optional Discogs release ID to prefer when importing per-track artists"
+    )
     sync_artist_name: Optional[str] = Field(
         default=None,
         max_length=500,

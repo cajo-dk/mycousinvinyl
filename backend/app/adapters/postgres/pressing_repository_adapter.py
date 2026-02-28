@@ -327,7 +327,7 @@ class PressingRepositoryAdapter(PressingRepository):
         stmt = stmt.order_by(
             ArtistModel.sort_name.asc().nullslast(),
             ArtistModel.name.asc(),
-            AlbumModel.original_release_year.asc().nullslast(),
+            func.lower(AlbumModel.title).asc(),
             AlbumModel.title.asc(),
             PressingModel.pressing_year.asc().nullslast()
         ).limit(limit).offset(offset)

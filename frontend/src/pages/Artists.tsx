@@ -104,10 +104,7 @@ export function Artists() {
       setArtistAlbumsError(null);
       const response = await albumsApi.getAlbumsWithDetails({ artist_id: artistId, limit: 200, offset: 0 });
       const sorted = [...response.items].sort((a, b) => {
-        const yearA = a.release_year || 0;
-        const yearB = b.release_year || 0;
-        if (yearA !== yearB) return yearA - yearB;
-        return a.title.localeCompare(b.title);
+        return a.title.localeCompare(b.title, undefined, { sensitivity: 'base' });
       });
       setArtistAlbums(sorted);
     } catch (err: any) {

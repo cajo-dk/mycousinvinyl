@@ -37,7 +37,7 @@ class TrackRepositoryAdapter(TrackRepository):
         result = await self.session.execute(
             select(TrackModel)
             .where(TrackModel.album_id == album_id)
-            .order_by(TrackModel.side, TrackModel.position)
+            .order_by(TrackModel.layout_order.asc(), TrackModel.side.asc(), TrackModel.position.asc())
         )
         models = result.scalars().all()
         return [m.to_domain() for m in models]
@@ -59,7 +59,11 @@ class TrackRepositoryAdapter(TrackRepository):
         model.title = track.title
         model.duration = track.duration
         model.songwriters = track.songwriters
+        model.performers = track.performers
         model.notes = track.notes
+        model.layout_type = track.layout_type
+        model.parent_track_id = track.parent_track_id
+        model.layout_order = track.layout_order
 
         await self.session.flush()
         await self.session.refresh(model)

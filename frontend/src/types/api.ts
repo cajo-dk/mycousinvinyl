@@ -192,6 +192,8 @@ export interface DiscogsTrackEntry {
   title: string;
   duration?: string;
   type_?: string;
+  artists?: string[];
+  sub_tracks?: DiscogsTrackEntry[];
 }
 
 export interface DiscogsReleaseSearchResult {
@@ -351,6 +353,7 @@ export interface AlbumUpdate {
   discogs_id?: number;
   sync_tracklist_from_discogs?: boolean;
   sync_pressing_id?: string;
+  sync_discogs_release_id?: number;
   sync_artist_name?: string;
   sync_album_name?: string;
 }
@@ -445,6 +448,10 @@ export interface TrackResponse {
   title: string;
   duration?: number;
   credits?: string;
+  layout_type: 'heading' | 'track' | 'subtrack';
+  parent_track_id?: string;
+  performers: string[];
+  layout_order: number;
   created_at: string;
   updated_at: string;
 }

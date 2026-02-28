@@ -16,6 +16,10 @@ class TrackBase(BaseModel):
     title: str = Field(..., min_length=1, max_length=500, example="Come Together")
     duration: Optional[int] = Field(None, ge=0, example=259, description="Duration in seconds")
     credits: Optional[str] = Field(None, example="Lennon/McCartney")
+    layout_type: str = Field("track", description="Track layout node type: heading, track, subtrack")
+    parent_track_id: Optional[UUID] = Field(None, description="Parent track ID for hierarchical layouts")
+    performers: List[str] = Field(default_factory=list, description="Per-track performers from Discogs")
+    layout_order: int = Field(0, ge=0, description="Stable ordering index within album tracklist")
 
 
 class TrackCreate(TrackBase):
@@ -30,6 +34,10 @@ class TrackUpdate(BaseModel):
     title: Optional[str] = Field(None, min_length=1, max_length=500)
     duration: Optional[int] = Field(None, ge=0)
     credits: Optional[str] = None
+    layout_type: Optional[str] = None
+    parent_track_id: Optional[UUID] = None
+    performers: Optional[List[str]] = None
+    layout_order: Optional[int] = Field(None, ge=0)
 
 
 class TrackResponse(TrackBase):

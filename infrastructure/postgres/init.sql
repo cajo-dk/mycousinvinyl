@@ -163,7 +163,11 @@ CREATE TABLE tracks (
     title VARCHAR(500) NOT NULL,
     duration INT,  -- Duration in seconds
     songwriters TEXT[],
+    performers TEXT[],
     notes TEXT,
+    layout_type VARCHAR(20) NOT NULL DEFAULT 'track',
+    parent_track_id UUID REFERENCES tracks(id) ON DELETE CASCADE,
+    layout_order INT NOT NULL DEFAULT 0,
 
     -- System metadata
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

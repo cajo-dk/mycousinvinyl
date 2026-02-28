@@ -394,7 +394,7 @@ class CollectionRepositoryAdapter(CollectionRepository):
             stmt = stmt.order_by(
                 ArtistModel.sort_name.asc().nullslast(),
                 ArtistModel.name.asc(),
-                AlbumModel.original_release_year.asc().nullslast(),
+                func.lower(AlbumModel.title).asc(),
                 AlbumModel.title.asc()
             )
         stmt = stmt.limit(limit).offset(offset)

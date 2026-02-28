@@ -330,7 +330,11 @@ class TrackModel(Base):
     title = Column(String(500), nullable=False)
     duration = Column(Integer, nullable=True)  # seconds
     songwriters = Column(ARRAY(Text), nullable=True)
+    performers = Column(ARRAY(Text), nullable=True)
     notes = Column(Text, nullable=True)
+    layout_type = Column(String(20), nullable=False, default="track")
+    parent_track_id = Column(UUID(as_uuid=True), ForeignKey('tracks.id', ondelete='CASCADE'), nullable=True)
+    layout_order = Column(Integer, nullable=False, default=0)
 
     # System metadata
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
@@ -350,7 +354,11 @@ class TrackModel(Base):
             title=self.title,
             duration=self.duration,
             songwriters=self.songwriters or [],
+            performers=self.performers or [],
             notes=self.notes,
+            layout_type=self.layout_type,
+            parent_track_id=self.parent_track_id,
+            layout_order=self.layout_order,
             created_at=self.created_at,
             updated_at=self.updated_at,
             events=[]
@@ -367,7 +375,11 @@ class TrackModel(Base):
             title=entity.title,
             duration=entity.duration,
             songwriters=entity.songwriters,
+            performers=entity.performers,
             notes=entity.notes,
+            layout_type=entity.layout_type,
+            parent_track_id=entity.parent_track_id,
+            layout_order=entity.layout_order,
             created_at=entity.created_at,
             updated_at=entity.updated_at
         )
