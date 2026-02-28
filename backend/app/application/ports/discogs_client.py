@@ -46,6 +46,7 @@ class DiscogsAlbumDetails(TypedDict):
     catalog_number: Optional[str]
     image_url: Optional[str]
     type: Optional[str]
+    tracklist: Optional[list[dict]]
 
 
 class DiscogsReleaseSearchResult(TypedDict):

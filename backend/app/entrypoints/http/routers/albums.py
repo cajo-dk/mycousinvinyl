@@ -11,6 +11,7 @@ from app.entrypoints.http.authorization import require_viewer, require_editor
 from app.entrypoints.http.dependencies import (
     get_album_service,
     get_collection_sharing_service,
+    get_discogs_tracklist_sync_service,
     get_preferences_service,
     get_system_log_service,
 )
@@ -22,6 +23,7 @@ from app.entrypoints.http.schemas.common import PaginatedResponse, MessageRespon
 from app.entrypoints.http.schemas.collection_sharing import UserOwnerInfoResponse
 from app.application.services.album_service import AlbumService
 from app.application.services.collection_sharing_service import CollectionSharingService
+from app.application.services.discogs_tracklist_sync_service import DiscogsTracklistSyncService
 from app.application.services.preferences_service import PreferencesService
 from app.application.services.system_log_service import SystemLogService
 
@@ -337,6 +339,7 @@ async def update_album(
     album_id: UUID,
     album_data: AlbumUpdate,
     service: Annotated[AlbumService, Depends(get_album_service)],
+    tracklist_sync_service: Annotated[DiscogsTracklistSyncService, Depends(get_discogs_tracklist_sync_service)],
     log_service: Annotated[SystemLogService, Depends(get_system_log_service)],
     user: Annotated[User, Depends(get_current_user)]
 ):
@@ -346,40 +349,69 @@ async def update_album(
     Requires authentication.
     """
     updates = album_data.model_dump(exclude_unset=True, by_alias=True)
-    if not updates:
-        album = await service.get_album(album_id)
-        if not album:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Album {album_id} not found"
-            )
-        return album
+    sync_tracklist = bool(updates.pop("sync_tracklist_from_discogs", False))
+    sync_pressing_id = updates.pop("sync_pressing_id", None)
+    sync_artist_name = updates.pop("sync_artist_name", None)
+    sync_album_name = updates.pop("sync_album_name", None)
 
     try:
-        album = await service.update_album(
-            album_id,
-            user_id=user.sub,
-            user_name=user.name,
-            user_email=user.email,
-            **updates
-        )
-        if not album:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Album {album_id} not found"
+        if updates:
+            album = await service.update_album(
+                album_id,
+                user_id=user.sub,
+                user_name=user.name,
+                user_email=user.email,
+                **updates
             )
-        await log_service.create_log(
-            user_name=user.name or user.email or "*system",
-            user_id=user.sub,
-            severity="INFO",
-            component="Albums",
-            message=f"Updated album '{album.title}'",
-        )
+            if not album:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Album {album_id} not found"
+                )
+        else:
+            album = await service.get_album(album_id)
+            if not album:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail=f"Album {album_id} not found"
+                )
+
+        if sync_tracklist:
+            await tracklist_sync_service.sync_album(album_id, album.discogs_id)
+            album = await service.get_album(album_id)
+
+        if sync_tracklist:
+            artist_label = sync_artist_name or "Unknown Artist"
+            album_label = sync_album_name or album.title
+            pressing_label = str(sync_pressing_id) if sync_pressing_id else "N/A"
+            await log_service.create_log(
+                user_name=user.name or user.email or "*system",
+                user_id=user.sub,
+                severity="INFO",
+                component="Albums",
+                message=f"Track List imported - {artist_label} - {album_label} - {pressing_label}",
+            )
+        elif updates:
+            await log_service.create_log(
+                user_name=user.name or user.email or "*system",
+                user_id=user.sub,
+                severity="INFO",
+                component="Albums",
+                message=f"Updated album '{album.title}'",
+            )
+
         return album
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Failed to sync Discogs track list: {e}"
         )
 
 

@@ -9,3 +9,4 @@ export { CollectionItemDetailsModal } from './CollectionItemDetailsModal';
 export { AlbumWizardModal } from './AlbumWizardModal';
 export { PressingWizardModal } from './PressingWizardModal';
 export { DiscogsReleaseSearchModal } from './DiscogsReleaseSearchModal';
+export { TrackListModal } from './TrackListModal';

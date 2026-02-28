@@ -12,4 +12,8 @@ export const toolsApi = {
     const response = await apiClient.post<MessageResponse>(`${BASE_URL}/backup`);
     return response.data;
   },
+  runTracklistSync: async (): Promise<MessageResponse> => {
+    const response = await apiClient.post<MessageResponse>(`${BASE_URL}/tracklist-sync`);
+    return response.data;
+  },
 };

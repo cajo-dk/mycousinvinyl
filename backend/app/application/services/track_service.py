@@ -116,3 +116,33 @@ class TrackService:
             await self.uow.commit()
 
         return True
+
+    async def replace_album_tracks(self, album_id: UUID, tracks: List[Dict[str, Any]]) -> List[Track]:
+        """
+        Replace all tracks for an album in a single transaction.
+
+        Existing tracks are removed before new entries are inserted.
+        """
+        async with self.uow:
+            album_exists = await self.uow.album_repository.exists(album_id)
+            if not album_exists:
+                raise ValueError(f"Album {album_id} does not exist")
+
+            existing = await self.uow.track_repository.get_by_album(album_id)
+            for track in existing:
+                await self.uow.track_repository.delete(track.id)
+
+            created: List[Track] = []
+            for entry in tracks:
+                track = Track(
+                    album_id=album_id,
+                    side=entry["side"],
+                    position=entry["position"],
+                    title=entry["title"],
+                    duration=entry.get("duration"),
+                    notes=entry.get("credits"),
+                )
+                created.append(await self.uow.track_repository.add(track))
+
+            await self.uow.commit()
+            return created

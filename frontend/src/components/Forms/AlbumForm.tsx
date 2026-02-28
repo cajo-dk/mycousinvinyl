@@ -71,6 +71,7 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
   const [discogsLoading, setDiscogsLoading] = useState(false);
   const [discogsError, setDiscogsError] = useState<string | null>(null);
   const [discogsSelectedId, setDiscogsSelectedId] = useState<number | null>(null);
+  const [syncTracklistFromDiscogs, setSyncTracklistFromDiscogs] = useState(false);
   const { isAdmin, isLoading: isAdminLoading } = useIsAdmin();
   const canEditDiscogsId = isEditMode && isAdmin && !isAdminLoading;
 
@@ -345,6 +346,7 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
         style_ids: styleIds.length ? styleIds : prev.style_ids,
         release_type: resolvedReleaseType || prev.release_type,
       }));
+      setSyncTracklistFromDiscogs(true);
       if (details.image_url) {
         setImageTouched(true);
       }
@@ -397,6 +399,9 @@ export function AlbumForm({ albumId, initialArtistId, onSuccess, onCancel }: Alb
         payload.discogs_id = formData.discogs_id;
       } else if (formData.discogs_id) {
         payload.discogs_id = formData.discogs_id;
+      }
+      if (isEditMode && syncTracklistFromDiscogs && formData.discogs_id) {
+        payload.sync_tracklist_from_discogs = true;
       }
       if (formData.image_url && (!isEditMode || imageTouched)) {
         payload.image_url = formData.image_url;

@@ -665,6 +665,8 @@ export function Settings() {
   const [logError, setLogError] = useState<string | null>(null);
   const [backupRunning, setBackupRunning] = useState(false);
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
+  const [tracklistSyncRunning, setTracklistSyncRunning] = useState(false);
+  const [tracklistSyncMessage, setTracklistSyncMessage] = useState<string | null>(null);
   const pageSize = 10;
   const [currency, setCurrency] = useState('');
   const [currencySaving, setCurrencySaving] = useState(false);
@@ -811,6 +813,19 @@ export function Settings() {
       setBackupMessage(err.response?.data?.detail || 'Failed to start backup');
     } finally {
       setBackupRunning(false);
+    }
+  };
+
+  const handleRunTracklistSync = async () => {
+    setTracklistSyncRunning(true);
+    setTracklistSyncMessage(null);
+    try {
+      const response = await toolsApi.runTracklistSync();
+      setTracklistSyncMessage(response.message || 'Tracklist sync completed');
+    } catch (err: any) {
+      setTracklistSyncMessage(err.response?.data?.detail || 'Failed to run tracklist sync');
+    } finally {
+      setTracklistSyncRunning(false);
     }
   };
 
@@ -1056,9 +1071,20 @@ export function Settings() {
             >
               {backupRunning ? 'Starting...' : 'Run Backup Now'}
             </button>
+            <button
+              className="btn-primary"
+              type="button"
+              onClick={handleRunTracklistSync}
+              disabled={tracklistSyncRunning}
+            >
+              {tracklistSyncRunning ? 'Running...' : 'Sync Tracklists From Discogs'}
+            </button>
           </div>
           {backupMessage && (
             <div className="settings-status">{backupMessage}</div>
+          )}
+          {tracklistSyncMessage && (
+            <div className="settings-status">{tracklistSyncMessage}</div>
           )}
         </section>
       )}

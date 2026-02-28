@@ -51,6 +51,24 @@ class AlbumUpdate(BaseModel):
     notes: Optional[str] = Field(None, alias='description')
     image_url: Optional[str] = None
     discogs_id: Optional[int] = None
+    sync_tracklist_from_discogs: Optional[bool] = Field(
+        default=False,
+        description="When true, refresh album tracks from Discogs after update"
+    )
+    sync_pressing_id: Optional[UUID] = Field(
+        default=None,
+        description="Optional pressing ID context for tracklist sync logging"
+    )
+    sync_artist_name: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        description="Optional artist name context for tracklist sync logging"
+    )
+    sync_album_name: Optional[str] = Field(
+        default=None,
+        max_length=500,
+        description="Optional album name context for tracklist sync logging"
+    )
 
 
 class GenreSummary(BaseModel):
