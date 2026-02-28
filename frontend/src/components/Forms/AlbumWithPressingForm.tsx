@@ -231,6 +231,15 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
   }, [initialArtistId]);
 
   useEffect(() => {
+    if (initialAlbumDiscogsId) {
+      setFormData((prev) => ({
+        ...prev,
+        discogs_id: prev.discogs_id ?? initialAlbumDiscogsId,
+      }));
+    }
+  }, [initialAlbumDiscogsId]);
+
+  useEffect(() => {
     if (preferences?.currency) {
       setFormData((prev) => ({ ...prev, purchase_currency: preferences.currency }));
     }
@@ -764,8 +773,10 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
         // Use the provided album ID (we're adding a pressing to an existing album)
         albumId = initialAlbumId;
         if (canEditDiscogsId) {
-          const discogsUpdatePayload = formData.discogs_id !== null ? { discogs_id: formData.discogs_id } : {};
-          await albumsApi.update(albumId, discogsUpdatePayload);
+          const discogsUpdatePayload = formData.discogs_id !== null ? { discogs_id: formData.discogs_id } : null;
+          if (discogsUpdatePayload) {
+            await albumsApi.update(albumId, discogsUpdatePayload);
+          }
         }
       } else {
         // Create a new album

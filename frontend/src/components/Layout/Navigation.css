@@ -68,6 +68,14 @@
   display: none;
 }
 
+.nav-brand-full.hidden {
+  display: none;
+}
+
+.nav-brand-short.visible {
+  display: inline;
+}
+
 .nav-brand a {
   text-decoration: none;
   color: inherit;

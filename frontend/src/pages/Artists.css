@@ -74,6 +74,33 @@
   align-items: center;
 }
 
+.artist-card-main {
+  flex: 1;
+}
+
+.artist-card-title-toggle {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  cursor: default;
+  text-align: left;
+}
+
+.artist-card-title-toggle.is-phone-portrait {
+  cursor: pointer;
+}
+
+.artist-card-expand-icon {
+  color: #ff6b35;
+  font-size: 0.8rem;
+  margin-left: 0.5rem;
+}
+
 .artist-card-image {
   width: 56px;
   height: 56px;
@@ -279,6 +306,13 @@
   font-size: 1.2rem;
 }
 
+.artist-card-name {
+  margin: 0 0 0.75rem 0;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
 .artist-meta {
   display: flex;
   gap: 0.5rem;
@@ -292,6 +326,11 @@
   border-radius: 12px;
   font-size: 0.85rem;
   color: #ff6b35;
+}
+
+.artist-active-years {
+  color: #bbb;
+  font-size: 0.85rem;
 }
 
 .artist-bio {

@@ -347,10 +347,13 @@ async def update_album(
     """
     updates = album_data.model_dump(exclude_unset=True, by_alias=True)
     if not updates:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No fields to update"
-        )
+        album = await service.get_album(album_id)
+        if not album:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Album {album_id} not found"
+            )
+        return album
 
     try:
         album = await service.update_album(

@@ -6,7 +6,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { pressingsApi } from '@/api/services';
 import { PressingDetailResponse } from '@/types/api';
-import { Loading, ErrorAlert, Modal, Icon, Pager } from '@/components/UI';
+import { Loading, ErrorAlert, Modal, Icon, Pager, ResponsiveRowActions } from '@/components/UI';
 import { PressingForm, CollectionItemForm } from '@/components/Forms';
 import { PressingWizardModal } from '@/components/Modals';
 import { OwnersGrid } from '@/components/CollectionSharing';
@@ -17,6 +17,7 @@ import { usePreferences } from '@/hooks/usePreferences';
 import { resolveItemsPerPage } from '@/utils/preferences';
 import { useViewControls } from '@/components/Layout/ViewControlsContext';
 import { usePressingOwners } from '@/hooks/usePressingOwners';
+import { useResponsiveMode } from '@/hooks/useResponsiveMode';
 import './Pressings.css';
 import '../styles/Table.css';
 
@@ -65,6 +66,8 @@ export function Pressings() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const { preferences } = usePreferences();
   const { setControls } = useViewControls();
+  const { isPortraitTouch, deviceType, orientation } = useResponsiveMode();
+  const isPhonePortrait = isPortraitTouch && deviceType === 'phone' && orientation === 'portrait';
 
   const fetchPressings = async (query?: string) => {
     try {
@@ -404,7 +407,7 @@ export function Pressings() {
             </div>
 
             {expandedArtists.has(artistGroup.artistId) && (
-              <div className="albums-list">
+              <div className="pressings-albums-list">
                 {artistGroup.albums.map((albumGroup) => (
                   <div key={albumGroup.albumId} className="album-section">
                     <div
@@ -474,17 +477,17 @@ export function Pressings() {
                                 <table className="data-table pressing-table">
                         <thead>
                           <tr>
-                            <th>Cover</th>
-                            <th>Format</th>
-                            <th>Speed</th>
-                            <th>Size</th>
-                            <th>Country</th>
-                            <th>Year</th>
-                            <th>Color</th>
-                            <th>Type</th>
-                            <th>Sleeve Type</th>
-                            <th>Owned</th>
-                            <th>Actions</th>
+                            <th className="col-cover">Cover</th>
+                            <th className="col-format">Media Type</th>
+                            <th className="col-speed">Speed</th>
+                            <th className="col-size">Size</th>
+                            <th className="col-country">Country</th>
+                            <th className="col-year">Year</th>
+                            <th className="col-color">Color</th>
+                            <th className="col-type">Type</th>
+                            <th className="col-sleeve">Sleeve Type</th>
+                            <th className="col-owned">Owned</th>
+                            <th className="col-actions">Actions</th>
                           </tr>
                         </thead>
                           <tbody>
@@ -492,7 +495,7 @@ export function Pressings() {
                               const coverUrl = getPressingCover(pressing);
                               return (
                                 <tr key={pressing.id}>
-                                  <td className="pressing-cover-cell">
+                                  <td className="pressing-cover-cell col-cover">
                                     <div className="pressing-cover">
                                       {coverUrl ? (
                                         <img src={coverUrl} alt="Pressing cover" />
@@ -501,20 +504,20 @@ export function Pressings() {
                                       )}
                                     </div>
                                   </td>
-                                  <td>
+                                  <td className="col-format">
                                     {pressing.format}
                                     {pressing.is_master && (
                                       <span className="pressing-master-badge">Master</span>
                                     )}
                                   </td>
-                                  <td>{pressing.speed_rpm} RPM</td>
-                                  <td>{pressing.size_inches}</td>
-                                  <td>{getCountryName(pressing.country)}</td>
-                                  <td>{pressing.release_year || '-'}</td>
-                                  <td>{pressing.vinyl_color || '-'}</td>
-                                  <td>{pressing.edition_type || '-'}</td>
-                                  <td>{pressing.sleeve_type || '-'}</td>
-                                  <td className="owned-cell">
+                                  <td className="col-speed">{pressing.speed_rpm} RPM</td>
+                                  <td className="col-size">{pressing.size_inches}</td>
+                                  <td className="col-country">{getCountryName(pressing.country)}</td>
+                                  <td className="col-year">{pressing.release_year || '-'}</td>
+                                  <td className="col-color">{pressing.vinyl_color || '-'}</td>
+                                  <td className="col-type">{pressing.edition_type || '-'}</td>
+                                  <td className="col-sleeve">{pressing.sleeve_type || '-'}</td>
+                                  <td className="owned-cell col-owned">
                                     <OwnersGrid
                                       owners={pressingOwners[pressing.id] || []}
                                       currentUserId={currentUserId}
@@ -522,37 +525,108 @@ export function Pressings() {
                                       className="owners-grid-large"
                                     />
                                   </td>
-                                  <td className="actions-cell">
-                                    <button
-                                      className="btn-action"
-                                      onClick={() => {
-                                        setSelectedPressingId(pressing.id);
-                                        setShowEditModal(true);
-                                      }}
-                                      title="Edit"
-                                      aria-label="Edit"
-                                    >
-                                      <Icon path={mdiPencilOutline} />
-                                    </button>
-                                    <button
-                                      className="btn-action btn-success"
-                                      onClick={() => {
-                                        setSelectedPressingId(pressing.id);
-                                        setShowAddToCollectionModal(true);
-                                      }}
-                                      title="Add to Collection"
-                                      aria-label="Add to Collection"
-                                    >
-                                      <Icon path={mdiPlus} />
-                                    </button>
-                                    <button
-                                      className="btn-action btn-danger"
-                                      onClick={() => handleDelete(pressing.id, albumGroup.albumTitle)}
-                                      title="Delete"
-                                      aria-label="Delete"
-                                    >
-                                      <Icon path={mdiTrashCanOutline} />
-                                    </button>
+                                  <td className="actions-cell col-actions">
+                                    {isPhonePortrait ? (
+                                      <ResponsiveRowActions
+                                        primaryActions={[]}
+                                        overflowActions={[
+                                          {
+                                            key: `add-${pressing.id}`,
+                                            label: 'Add to Collection',
+                                            iconPath: mdiPlus,
+                                            onClick: () => {
+                                              setSelectedPressingId(pressing.id);
+                                              setShowAddToCollectionModal(true);
+                                            },
+                                            buttonClassName: 'btn-success',
+                                          },
+                                          {
+                                            key: `edit-${pressing.id}`,
+                                            label: 'Edit',
+                                            iconPath: mdiPencilOutline,
+                                            onClick: () => {
+                                              setSelectedPressingId(pressing.id);
+                                              setShowEditModal(true);
+                                            },
+                                          },
+                                          {
+                                            key: `delete-${pressing.id}`,
+                                            label: 'Delete',
+                                            iconPath: mdiTrashCanOutline,
+                                            onClick: () => handleDelete(pressing.id, albumGroup.albumTitle),
+                                            buttonClassName: 'btn-danger',
+                                          },
+                                        ]}
+                                        menuAriaLabel="More pressing actions"
+                                      />
+                                    ) : isPortraitTouch ? (
+                                      <ResponsiveRowActions
+                                        primaryActions={[
+                                          {
+                                            key: `add-${pressing.id}`,
+                                            label: 'Add to Collection',
+                                            iconPath: mdiPlus,
+                                            onClick: () => {
+                                              setSelectedPressingId(pressing.id);
+                                              setShowAddToCollectionModal(true);
+                                            },
+                                            buttonClassName: 'btn-success',
+                                          },
+                                        ]}
+                                        overflowActions={[
+                                          {
+                                            key: `edit-${pressing.id}`,
+                                            label: 'Edit',
+                                            iconPath: mdiPencilOutline,
+                                            onClick: () => {
+                                              setSelectedPressingId(pressing.id);
+                                              setShowEditModal(true);
+                                            },
+                                          },
+                                          {
+                                            key: `delete-${pressing.id}`,
+                                            label: 'Delete',
+                                            iconPath: mdiTrashCanOutline,
+                                            onClick: () => handleDelete(pressing.id, albumGroup.albumTitle),
+                                            buttonClassName: 'btn-danger',
+                                          },
+                                        ]}
+                                        menuAriaLabel="More pressing actions"
+                                      />
+                                    ) : (
+                                      <>
+                                        <button
+                                          className="btn-action"
+                                          onClick={() => {
+                                            setSelectedPressingId(pressing.id);
+                                            setShowEditModal(true);
+                                          }}
+                                          title="Edit"
+                                          aria-label="Edit"
+                                        >
+                                          <Icon path={mdiPencilOutline} />
+                                        </button>
+                                        <button
+                                          className="btn-action btn-success"
+                                          onClick={() => {
+                                            setSelectedPressingId(pressing.id);
+                                            setShowAddToCollectionModal(true);
+                                          }}
+                                          title="Add to Collection"
+                                          aria-label="Add to Collection"
+                                        >
+                                          <Icon path={mdiPlus} />
+                                        </button>
+                                        <button
+                                          className="btn-action btn-danger"
+                                          onClick={() => handleDelete(pressing.id, albumGroup.albumTitle)}
+                                          title="Delete"
+                                          aria-label="Delete"
+                                        >
+                                          <Icon path={mdiTrashCanOutline} />
+                                        </button>
+                                      </>
+                                    )}
                                   </td>
                                 </tr>
                               );
@@ -607,17 +681,17 @@ export function Pressings() {
                                 <table className="data-table pressing-table">
                         <thead>
                           <tr>
-                            <th>Cover</th>
-                            <th>Format</th>
-                            <th>Speed</th>
-                            <th>Size</th>
-                            <th>Country</th>
-                            <th>Year</th>
-                            <th>Color</th>
-                            <th>Type</th>
-                            <th>Sleeve Type</th>
-                            <th>Owned</th>
-                            <th>Actions</th>
+                            <th className="col-cover">Cover</th>
+                            <th className="col-format">Media Type</th>
+                            <th className="col-speed">Speed</th>
+                            <th className="col-size">Size</th>
+                            <th className="col-country">Country</th>
+                            <th className="col-year">Year</th>
+                            <th className="col-color">Color</th>
+                            <th className="col-type">Type</th>
+                            <th className="col-sleeve">Sleeve Type</th>
+                            <th className="col-owned">Owned</th>
+                            <th className="col-actions">Actions</th>
                           </tr>
                         </thead>
                           <tbody>
@@ -625,7 +699,7 @@ export function Pressings() {
                               const coverUrl = getPressingCover(pressing);
                               return (
                                 <tr key={pressing.id}>
-                                  <td className="pressing-cover-cell">
+                                  <td className="pressing-cover-cell col-cover">
                                     <div className="pressing-cover">
                                       {coverUrl ? (
                                         <img src={coverUrl} alt="Pressing cover" />
@@ -634,20 +708,20 @@ export function Pressings() {
                                       )}
                                     </div>
                                   </td>
-                                  <td>
+                                  <td className="col-format">
                                     {pressing.format}
                                     {pressing.is_master && (
                                       <span className="pressing-master-badge">Master</span>
                                     )}
                                   </td>
-                                  <td>{pressing.speed_rpm} RPM</td>
-                                  <td>{pressing.size_inches}</td>
-                                  <td>{getCountryName(pressing.country)}</td>
-                                  <td>{pressing.release_year || '-'}</td>
-                                  <td>{pressing.vinyl_color || '-'}</td>
-                                  <td>{pressing.edition_type || '-'}</td>
-                                  <td>{pressing.sleeve_type || '-'}</td>
-                                  <td className="owned-cell">
+                                  <td className="col-speed">{pressing.speed_rpm} RPM</td>
+                                  <td className="col-size">{pressing.size_inches}</td>
+                                  <td className="col-country">{getCountryName(pressing.country)}</td>
+                                  <td className="col-year">{pressing.release_year || '-'}</td>
+                                  <td className="col-color">{pressing.vinyl_color || '-'}</td>
+                                  <td className="col-type">{pressing.edition_type || '-'}</td>
+                                  <td className="col-sleeve">{pressing.sleeve_type || '-'}</td>
+                                  <td className="owned-cell col-owned">
                                     <OwnersGrid
                                       owners={pressingOwners[pressing.id] || []}
                                       currentUserId={currentUserId}
@@ -655,37 +729,108 @@ export function Pressings() {
                                       className="owners-grid-large"
                                     />
                                   </td>
-                                  <td className="actions-cell">
-                                    <button
-                                      className="btn-action"
-                                      onClick={() => {
-                                        setSelectedPressingId(pressing.id);
-                                        setShowEditModal(true);
-                                      }}
-                                      title="Edit"
-                                      aria-label="Edit"
-                                    >
-                                      <Icon path={mdiPencilOutline} />
-                                    </button>
-                                    <button
-                                      className="btn-action btn-success"
-                                      onClick={() => {
-                                        setSelectedPressingId(pressing.id);
-                                        setShowAddToCollectionModal(true);
-                                      }}
-                                      title="Add to Collection"
-                                      aria-label="Add to Collection"
-                                    >
-                                      <Icon path={mdiPlus} />
-                                    </button>
-                                    <button
-                                      className="btn-action btn-danger"
-                                      onClick={() => handleDelete(pressing.id, albumGroup.albumTitle)}
-                                      title="Delete"
-                                      aria-label="Delete"
-                                    >
-                                      <Icon path={mdiTrashCanOutline} />
-                                    </button>
+                                  <td className="actions-cell col-actions">
+                                    {isPhonePortrait ? (
+                                      <ResponsiveRowActions
+                                        primaryActions={[]}
+                                        overflowActions={[
+                                          {
+                                            key: `add-master-${pressing.id}`,
+                                            label: 'Add to Collection',
+                                            iconPath: mdiPlus,
+                                            onClick: () => {
+                                              setSelectedPressingId(pressing.id);
+                                              setShowAddToCollectionModal(true);
+                                            },
+                                            buttonClassName: 'btn-success',
+                                          },
+                                          {
+                                            key: `edit-master-${pressing.id}`,
+                                            label: 'Edit',
+                                            iconPath: mdiPencilOutline,
+                                            onClick: () => {
+                                              setSelectedPressingId(pressing.id);
+                                              setShowEditModal(true);
+                                            },
+                                          },
+                                          {
+                                            key: `delete-master-${pressing.id}`,
+                                            label: 'Delete',
+                                            iconPath: mdiTrashCanOutline,
+                                            onClick: () => handleDelete(pressing.id, albumGroup.albumTitle),
+                                            buttonClassName: 'btn-danger',
+                                          },
+                                        ]}
+                                        menuAriaLabel="More pressing actions"
+                                      />
+                                    ) : isPortraitTouch ? (
+                                      <ResponsiveRowActions
+                                        primaryActions={[
+                                          {
+                                            key: `add-master-${pressing.id}`,
+                                            label: 'Add to Collection',
+                                            iconPath: mdiPlus,
+                                            onClick: () => {
+                                              setSelectedPressingId(pressing.id);
+                                              setShowAddToCollectionModal(true);
+                                            },
+                                            buttonClassName: 'btn-success',
+                                          },
+                                        ]}
+                                        overflowActions={[
+                                          {
+                                            key: `edit-master-${pressing.id}`,
+                                            label: 'Edit',
+                                            iconPath: mdiPencilOutline,
+                                            onClick: () => {
+                                              setSelectedPressingId(pressing.id);
+                                              setShowEditModal(true);
+                                            },
+                                          },
+                                          {
+                                            key: `delete-master-${pressing.id}`,
+                                            label: 'Delete',
+                                            iconPath: mdiTrashCanOutline,
+                                            onClick: () => handleDelete(pressing.id, albumGroup.albumTitle),
+                                            buttonClassName: 'btn-danger',
+                                          },
+                                        ]}
+                                        menuAriaLabel="More pressing actions"
+                                      />
+                                    ) : (
+                                      <>
+                                        <button
+                                          className="btn-action"
+                                          onClick={() => {
+                                            setSelectedPressingId(pressing.id);
+                                            setShowEditModal(true);
+                                          }}
+                                          title="Edit"
+                                          aria-label="Edit"
+                                        >
+                                          <Icon path={mdiPencilOutline} />
+                                        </button>
+                                        <button
+                                          className="btn-action btn-success"
+                                          onClick={() => {
+                                            setSelectedPressingId(pressing.id);
+                                            setShowAddToCollectionModal(true);
+                                          }}
+                                          title="Add to Collection"
+                                          aria-label="Add to Collection"
+                                        >
+                                          <Icon path={mdiPlus} />
+                                        </button>
+                                        <button
+                                          className="btn-action btn-danger"
+                                          onClick={() => handleDelete(pressing.id, albumGroup.albumTitle)}
+                                          title="Delete"
+                                          aria-label="Delete"
+                                        >
+                                          <Icon path={mdiTrashCanOutline} />
+                                        </button>
+                                      </>
+                                    )}
                                   </td>
                                 </tr>
                               );
