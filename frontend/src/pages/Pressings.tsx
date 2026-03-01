@@ -87,7 +87,7 @@ export function Pressings() {
         limit: number;
         offset: number;
       } = {
-        limit: 500,
+        limit: 1000,
         offset: 0,
       };
 

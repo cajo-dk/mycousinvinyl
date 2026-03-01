@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     define: {
-      __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.4.0'),
+      __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.5.0'),
     },
     plugins: [
       react(),
