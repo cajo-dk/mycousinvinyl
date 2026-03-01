@@ -60,11 +60,12 @@ export const discogsApi = {
   searchMasterReleases: async (
     masterId: number,
     query: string,
-    limit = 25
+    limit = 25,
+    page = 1
   ): Promise<DiscogsReleaseSearchResponse> => {
     const response = await apiClient.get<DiscogsReleaseSearchResponse>(
       `/api/v1/discogs/masters/${masterId}/search`,
-      { params: { q: query, limit } }
+      { params: { q: query, limit, page } }
     );
     return response.data;
   },

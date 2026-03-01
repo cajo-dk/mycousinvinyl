@@ -78,18 +78,22 @@ class DiscogsClientAdapter(DiscogsClient):
                 "pages": data.get("pages"),
             }
 
-    async def search_master_releases(self, master_id: int, query: str, limit: int = 25) -> DiscogsReleaseSearchResponse:
+    async def search_master_releases(
+        self, master_id: int, query: str, limit: int = 25, page: int = 1
+    ) -> DiscogsReleaseSearchResponse:
         """Search for releases under a master via discogs-service."""
         async with httpx.AsyncClient(timeout=self._timeout) as client:
             response = await client.get(
                 f"{self._base_url}/masters/{master_id}/search",
-                params={"q": query, "limit": limit},
+                params={"q": query, "limit": limit, "page": page},
             )
             response.raise_for_status()
             data = response.json()
             return {
                 "items": data.get("items", []),
                 "total": data.get("total", 0),
+                "page": data.get("page", page),
+                "pages": data.get("pages", 1),
             }
 
     async def get_release(self, release_id: int) -> DiscogsReleaseDetails:

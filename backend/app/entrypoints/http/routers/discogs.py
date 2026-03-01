@@ -260,6 +260,7 @@ async def search_discogs_master_releases(
     service: Annotated[DiscogsService, Depends(get_discogs_service)],
     q: str = Query(..., min_length=4, description="Search query (min 4 characters)"),
     limit: int = Query(25, ge=1, le=100, description="Max results"),
+    page: int = Query(1, ge=1, description="Page number (1-indexed)"),
 ):
     """
     Search for releases under a master by barcode, catalog number, label, etc.
@@ -268,11 +269,13 @@ async def search_discogs_master_releases(
     """
     try:
         results = await service.search_master_releases(
-            master_id=master_id, query=q, limit=limit
+            master_id=master_id, query=q, limit=limit, page=page
         )
         return DiscogsReleaseSearchResponse(
             items=results["items"],
             total=results.get("total", 0),
+            page=results.get("page", page),
+            pages=results.get("pages", 1),
         )
     except httpx.HTTPError as exc:
         raise HTTPException(

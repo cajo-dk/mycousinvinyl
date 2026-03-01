@@ -45,6 +45,7 @@ const VINYL_SPEEDS = [VinylSpeed.RPM_33, VinylSpeed.RPM_45, VinylSpeed.RPM_78] a
 const VINYL_SIZES = [VinylSize.SIZE_7, VinylSize.SIZE_10, VinylSize.SIZE_12] as const;
 const CD_SPEEDS = [VinylSpeed.NA] as const;
 const CD_SIZES = [VinylSize.CD] as const;
+const PRESSING_PAGE_SIZES = [10, 25, 50] as const;
 type SpeedOption = typeof VINYL_SPEEDS[number] | typeof CD_SPEEDS[number];
 type SizeOption = typeof VINYL_SIZES[number] | typeof CD_SIZES[number];
 const FORMAT_LABELS: Record<VinylFormat, string> = {
@@ -151,6 +152,7 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
   const [importMasterReleases, setImportMasterReleases] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [pressingPageSize, setPressingPageSize] = useState<number>(10);
   const [isLoadingPage, setIsLoadingPage] = useState(false);
   const [openInfoBox, setOpenInfoBox] = useState<{ type: 'master' | 'pressing', id: string | number } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -173,7 +175,7 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
     return actualReleases;
   }, [isSearchMode, searchResults, actualReleases]);
 
-  const showPagination = !isSearchMode && totalPages > 1;
+  const showPagination = totalPages > 1;
 
   // Expose submit method to parent component
   useImperativeHandle(ref, () => ({
@@ -642,6 +644,8 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
     setSearchQuery('');
     setSearchResults([]);
     setIsSearchMode(false);
+    setCurrentPage(1);
+    setTotalPages(1);
   };
 
   const closePressingDiscogsResults = () => {
@@ -650,7 +654,7 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
     setPressingDiscogsSelectedId(null);
   };
 
-  const handlePressingDiscogsSearch = async (page: number = 1) => {
+  const handlePressingDiscogsSearch = async (page: number = 1, pageSize: number = pressingPageSize) => {
     const discogsId = initialAlbumDiscogsId || formData.discogs_id;
     if (!discogsId) {
       setPressingDiscogsError('Select a Discogs album to search pressings.');
@@ -673,30 +677,26 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
         const response = await discogsApi.searchMasterReleases(
           discogsId,
           searchQuery.trim(),
-          10
+          pageSize,
+          page
         );
         setSearchResults(response.items);
         setIsSearchMode(true);
         setPressingDiscogsTotal(response.total || response.items.length);
-        setCurrentPage(1);
-        setTotalPages(1);
+        setCurrentPage(response.page || page);
+        setTotalPages(response.pages || Math.max(1, Math.ceil((response.total || response.items.length) / pageSize)));
 
         if (response.items.length === 0) {
           setPressingDiscogsError('No pressings found for this search.');
         }
       } else {
         // Fetch paginated master releases list
-        const response = await discogsApi.getMasterReleases(discogsId, page, 10);
-        console.log('Discogs API Response:', response);
-        console.log('Total from API:', response.total);
-        console.log('Items count:', response.items.length);
+        const response = await discogsApi.getMasterReleases(discogsId, page, pageSize);
         setPressingDiscogsResults(response.items);
         setIsSearchMode(false);
         setPressingDiscogsTotal(response.total || response.items.length);
         setCurrentPage(response.page || page);
-        setTotalPages(response.pages || 1);
-
-        console.log('Set total to:', response.total || response.items.length);
+        setTotalPages(response.pages || Math.max(1, Math.ceil((response.total || response.items.length) / pageSize)));
         if (response.items.length === 0) {
           setPressingDiscogsError('No pressings found for this master.');
         }
@@ -713,6 +713,16 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
       setPressingDiscogsLoading(false);
       setIsLoadingPage(false);
     }
+  };
+
+  const handlePressingPageSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextSize = Number(event.target.value);
+    if (!PRESSING_PAGE_SIZES.includes(nextSize as typeof PRESSING_PAGE_SIZES[number])) {
+      return;
+    }
+    setPressingPageSize(nextSize);
+    setCurrentPage(1);
+    handlePressingDiscogsSearch(1, nextSize);
   };
 
   const handlePressingDiscogsSelect = async (result: DiscogsReleaseSearchResult) => {
@@ -1440,17 +1450,83 @@ export const AlbumWithPressingForm = forwardRef<{ submit: () => void }, AlbumWit
                   );
                 })}
               </div>
-              {showPagination && (
-                <div className="pagination" style={{ marginTop: '1rem', padding: '0 1rem' }}>
-                  <Pager
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePressingDiscogsSearch}
-                    disabled={isLoadingPage}
-                    infoText={`${pressingDiscogsTotal} total`}
-                  />
+              <div className="discogs-simple-pager">
+                <div className="discogs-simple-pager-controls">
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    onClick={() => handlePressingDiscogsSearch(1)}
+                    disabled={isLoadingPage || currentPage === 1}
+                    title="First page"
+                  >
+                    |&lt;&lt;
+                  </button>
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    onClick={() => handlePressingDiscogsSearch(Math.max(1, currentPage - 5))}
+                    disabled={isLoadingPage || currentPage === 1}
+                    title="Back 5 pages"
+                  >
+                    -5
+                  </button>
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    onClick={() => handlePressingDiscogsSearch(Math.max(1, currentPage - 1))}
+                    disabled={isLoadingPage || currentPage === 1}
+                    title="Previous page"
+                  >
+                    &lt;
+                  </button>
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    onClick={() => handlePressingDiscogsSearch(Math.min(totalPages, currentPage + 1))}
+                    disabled={isLoadingPage || currentPage === totalPages}
+                    title="Next page"
+                  >
+                    &gt;
+                  </button>
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    onClick={() => handlePressingDiscogsSearch(Math.min(totalPages, currentPage + 5))}
+                    disabled={isLoadingPage || currentPage === totalPages}
+                    title="Forward 5 pages"
+                  >
+                    +5
+                  </button>
+                  <button
+                    type="button"
+                    className="pagination-button"
+                    onClick={() => handlePressingDiscogsSearch(totalPages)}
+                    disabled={isLoadingPage || currentPage === totalPages}
+                    title="Last page"
+                  >
+                    &gt;&gt;|
+                  </button>
                 </div>
-              )}
+                <div className="discogs-simple-pager-size">
+                  <label htmlFor="pressing-page-size">Per page</label>
+                  <select
+                    id="pressing-page-size"
+                    value={pressingPageSize}
+                    onChange={handlePressingPageSizeChange}
+                    disabled={isLoadingPage}
+                  >
+                    {PRESSING_PAGE_SIZES.map((size) => (
+                      <option key={size} value={size}>
+                        {size}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="discogs-simple-pager-info">
+                  Page {currentPage} of {Math.max(1, totalPages)} ({pressingDiscogsTotal} total)
+                  {showPagination ? '' : ' - single page'}
+                </div>
+              </div>
               <div className="discogs-results-footer">
                 <button type="button" className="discogs-results-cancel" onClick={resetPressingDiscogsState}>
                   Clear results
