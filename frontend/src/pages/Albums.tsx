@@ -78,7 +78,7 @@ export function Albums() {
         year_max: filters.yearMax,
         genre_ids: filters.genreIds,
         style_ids: filters.styleIds,
-        limit: 500,
+        limit: 1000,
         offset: 0,
       };
 
