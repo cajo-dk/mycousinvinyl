@@ -193,6 +193,111 @@ class CollectionImportService:
         async with self.uow:
             return await self.uow.collection_import_repository.get_import(import_id, user_id)
 
+    async def get_latest_import_by_source(self, user_id: UUID, source: str) -> Optional[CollectionImport]:
+        async with self.uow:
+            return await self.uow.collection_import_repository.get_latest_by_source(user_id, source)
+
+    async def preview_discogs_release_import(self, user_id: UUID, release_id: int) -> Dict[str, Any]:
+        release = await self.discogs_service.get_release(release_id)
+        if not release:
+            raise ValueError(f"Discogs release {release_id} was not found")
+
+        master_id = release.get("master_id")
+        master = None
+        if master_id:
+            master = await self.discogs_service.get_album(master_id, "master")
+
+        artist_name = self._extract_primary_artist_name(release)
+        if not artist_name:
+            raise ValueError("Discogs release does not include a primary artist")
+
+        artist_discogs_id = self._extract_primary_artist_discogs_id(release)
+        artist_details: Dict[str, Any] = {}
+        if artist_discogs_id:
+            artist_details = await self.discogs_service.get_artist(artist_discogs_id)
+            artist_name = artist_details.get("name") or artist_name
+
+        album_title = (
+            (master or {}).get("title")
+            or release.get("master_title")
+            or self._extract_album_title_from_release(release)
+            or release.get("title")
+        )
+
+        async with self.uow:
+            existing_artist = None
+            if artist_discogs_id:
+                existing_artist = await self.uow.artist_repository.get_by_discogs_id(artist_discogs_id)
+            if not existing_artist:
+                existing_artist = await self.uow.artist_repository.get_by_name(artist_name)
+
+            album_discogs_id = master_id or release_id
+            existing_album = await self.uow.album_repository.get_by_discogs_id(album_discogs_id)
+            existing_pressing = await self.uow.pressing_repository.get_by_discogs_release_id(release_id)
+            already_in_collection = bool(
+                existing_pressing and await self.uow.collection_repository.exists_for_user_pressing(user_id, existing_pressing.id)
+            )
+
+            format_tokens = [*(release.get("formats") or []), *(release.get("format_descriptions") or [])]
+            format_label = " · ".join([str(token).strip() for token in format_tokens if str(token).strip()]) or None
+            warning = None
+            can_import = True
+            if already_in_collection:
+                warning = "You already own this pressing"
+                can_import = False
+
+            return {
+                "artist": {
+                    "name": artist_name,
+                    "discogs_id": artist_discogs_id,
+                    "country": artist_details.get("country"),
+                    "artist_type": artist_details.get("artist_type"),
+                    "image_url": artist_details.get("image_url"),
+                },
+                "master": {
+                    "id": master_id,
+                    "title": album_title,
+                    "year": (master or {}).get("year"),
+                },
+                "release": {
+                    "id": release_id,
+                    "title": release.get("title") or album_title,
+                    "year": release.get("year"),
+                    "country": release.get("country"),
+                    "label": release.get("label"),
+                    "catalog_number": release.get("catalog_number"),
+                    "format": format_label,
+                    "disc_count": release.get("disc_count"),
+                },
+                "artist_status": {"exists": bool(existing_artist), "id": existing_artist.id if existing_artist else None},
+                "album_status": {"exists": bool(existing_album), "id": existing_album.id if existing_album else None},
+                "pressing_status": {"exists": bool(existing_pressing), "id": existing_pressing.id if existing_pressing else None},
+                "already_in_collection": already_in_collection,
+                "can_import": can_import,
+                "warning": warning,
+            }
+
+    async def import_discogs_release(self, user_id: UUID, release_id: int) -> CollectionImport:
+        preview = await self.preview_discogs_release_import(user_id, release_id)
+        if not preview["can_import"]:
+            raise ValueError(preview.get("warning") or "Release cannot be imported")
+
+        raw_row: Dict[str, Any] = {
+            "release_id": str(release_id),
+            "Artist": preview["artist"]["name"],
+            "Title": preview["master"]["title"] or preview["release"]["title"],
+            "Released": str(preview["release"]["year"]) if preview["release"]["year"] else "",
+            "Label": preview["release"]["label"] or "",
+            "Catalog#": preview["release"]["catalog_number"] or "",
+            "Format": preview["release"]["format"] or "",
+        }
+        return await self.import_discogs_rows(
+            user_id=user_id,
+            rows=[raw_row],
+            filename=f"discogs-release-{release_id}",
+            options={"source": "discogs_release_manual", "skip_counts_as_error": True},
+        )
+
     async def get_import_rows(
         self,
         import_id: UUID,
@@ -753,6 +858,40 @@ class CollectionImportService:
         if "remaster" in lowered:
             return EditionType.REMASTER
         return EditionType.STANDARD
+
+    def _extract_primary_artist_name(self, release: Dict[str, Any]) -> Optional[str]:
+        artists = release.get("artists") or []
+        if artists:
+            first = str(artists[0]).strip()
+            if first:
+                return first
+        return self._parse_artist_from_release_title(release.get("title"))
+
+    def _extract_primary_artist_discogs_id(self, release: Dict[str, Any]) -> Optional[int]:
+        artist_ids = release.get("artist_ids") or []
+        for artist_id in artist_ids:
+            parsed = self._parse_int(artist_id)
+            if parsed:
+                return parsed
+        return None
+
+    def _extract_album_title_from_release(self, release: Dict[str, Any]) -> Optional[str]:
+        title = str(release.get("title") or "").strip()
+        if not title:
+            return None
+        if " - " in title:
+            parts = [part.strip() for part in title.split(" - ", 1)]
+            if len(parts) == 2 and parts[1]:
+                return parts[1]
+        return title
+
+    def _parse_artist_from_release_title(self, title: Optional[str]) -> Optional[str]:
+        if not title:
+            return None
+        text = str(title).strip()
+        if " - " in text:
+            return text.split(" - ", 1)[0].strip() or None
+        return None
 
     def _parse_int(self, value: Optional[str]) -> Optional[int]:
         if value is None:

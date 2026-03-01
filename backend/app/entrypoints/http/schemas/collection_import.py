@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class CollectionImportRowResponse(BaseModel):
@@ -36,3 +36,49 @@ class CollectionImportResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class DiscogsPressingImportRequest(BaseModel):
+    release_id: int = Field(..., ge=1)
+
+
+class DiscogsImportEntityStatusResponse(BaseModel):
+    exists: bool
+    id: Optional[UUID] = None
+
+
+class DiscogsPressingImportArtistPreview(BaseModel):
+    name: str
+    discogs_id: Optional[int] = None
+    country: Optional[str] = None
+    artist_type: Optional[str] = None
+    image_url: Optional[str] = None
+
+
+class DiscogsPressingImportMasterPreview(BaseModel):
+    id: Optional[int] = None
+    title: str
+    year: Optional[int] = None
+
+
+class DiscogsPressingImportReleasePreview(BaseModel):
+    id: int
+    title: str
+    year: Optional[int] = None
+    country: Optional[str] = None
+    label: Optional[str] = None
+    catalog_number: Optional[str] = None
+    format: Optional[str] = None
+    disc_count: Optional[int] = None
+
+
+class DiscogsPressingImportPreviewResponse(BaseModel):
+    artist: DiscogsPressingImportArtistPreview
+    master: DiscogsPressingImportMasterPreview
+    release: DiscogsPressingImportReleasePreview
+    artist_status: DiscogsImportEntityStatusResponse
+    album_status: DiscogsImportEntityStatusResponse
+    pressing_status: DiscogsImportEntityStatusResponse
+    already_in_collection: bool = False
+    can_import: bool = True
+    warning: Optional[str] = None

@@ -13,6 +13,7 @@ import type {
   Condition,
   CollectionItemDetailResponse,
   CollectionImportResponse,
+  DiscogsPressingImportPreviewResponse,
   AlbumPlayIncrementResponse,
   PlayedAlbumEntry,
 } from '@/types/api';
@@ -194,6 +195,38 @@ export const collectionApi = {
       '/api/v1/collection/imports/discogs',
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return response.data;
+  },
+
+  /**
+   * Preview import of a single Discogs release (pressing).
+   */
+  previewDiscogsPressingImport: async (releaseId: number): Promise<DiscogsPressingImportPreviewResponse> => {
+    const response = await apiClient.post<DiscogsPressingImportPreviewResponse>(
+      '/api/v1/collection/imports/discogs/pressings/preview',
+      { release_id: releaseId }
+    );
+    return response.data;
+  },
+
+  /**
+   * Import a single Discogs release (pressing).
+   */
+  importDiscogsPressing: async (releaseId: number): Promise<CollectionImportResponse> => {
+    const response = await apiClient.post<CollectionImportResponse>(
+      '/api/v1/collection/imports/discogs/pressings',
+      { release_id: releaseId }
+    );
+    return response.data;
+  },
+
+  /**
+   * Get latest Discogs API sync import for the current user.
+   */
+  getLatestDiscogsSyncImport: async (): Promise<CollectionImportResponse> => {
+    const response = await apiClient.get<CollectionImportResponse>(
+      '/api/v1/collection/imports/discogs/latest-sync'
     );
     return response.data;
   },

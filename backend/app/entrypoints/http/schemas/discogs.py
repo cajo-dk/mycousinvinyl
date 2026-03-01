@@ -96,6 +96,8 @@ class DiscogsReleaseSearchResponse(BaseModel):
 class DiscogsReleaseDetails(BaseModel):
     id: int
     title: str
+    artists: Optional[List[str]] = None
+    artist_ids: Optional[List[int]] = None
     year: Optional[int] = None
     country: Optional[str] = None
     label: Optional[str] = None

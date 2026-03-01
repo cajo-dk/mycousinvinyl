@@ -33,6 +33,19 @@ class CollectionImportRepositoryAdapter(CollectionImportRepository):
         model = result.scalar_one_or_none()
         return model.to_domain() if model else None
 
+    async def get_latest_by_source(self, user_id: UUID, source: str) -> Optional[CollectionImport]:
+        result = await self.session.execute(
+            select(CollectionImportModel)
+            .where(
+                CollectionImportModel.user_id == user_id,
+                CollectionImportModel.options["source"].astext == source,
+            )
+            .order_by(CollectionImportModel.completed_at.desc().nullslast(), CollectionImportModel.created_at.desc())
+            .limit(1)
+        )
+        model = result.scalar_one_or_none()
+        return model.to_domain() if model else None
+
     async def update_import(self, import_job: CollectionImport) -> CollectionImport:
         result = await self.session.execute(
             select(CollectionImportModel).where(CollectionImportModel.id == import_job.id)
