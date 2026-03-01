@@ -31,6 +31,8 @@ from app.entrypoints.http.schemas.collection import (
 from app.entrypoints.http.schemas.collection_import import (
     CollectionImportResponse,
     CollectionImportRowResponse,
+    DiscogsPressingImportRequest,
+    DiscogsPressingImportPreviewResponse,
 )
 from app.entrypoints.http.schemas.common import PaginatedResponse, MessageResponse
 from app.application.services.collection_service import CollectionService
@@ -112,6 +114,44 @@ async def import_discogs_collection(
 
 
 @router.post(
+    "/imports/discogs/pressings/preview",
+    response_model=DiscogsPressingImportPreviewResponse,
+    summary="Preview importing a Discogs pressing by release ID",
+    dependencies=[Depends(require_editor())],
+)
+async def preview_discogs_pressing_import(
+    payload: DiscogsPressingImportRequest,
+    service: Annotated[CollectionImportService, Depends(get_collection_import_service)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        preview = await service.preview_discogs_release_import(user.sub, payload.release_id)
+        return DiscogsPressingImportPreviewResponse(**preview)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.post(
+    "/imports/discogs/pressings",
+    response_model=CollectionImportResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Import a single Discogs pressing by release ID",
+    dependencies=[Depends(require_editor())],
+)
+async def import_discogs_pressing(
+    payload: DiscogsPressingImportRequest,
+    service: Annotated[CollectionImportService, Depends(get_collection_import_service)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        job = await service.import_discogs_release(user.sub, payload.release_id)
+        rows = await service.get_import_rows(job.id, user.sub)
+        return _build_import_response(job, rows)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.post(
     "/imports/discogs/sync",
     response_model=CollectionImportResponse,
     status_code=status.HTTP_201_CREATED,
@@ -189,6 +229,23 @@ async def stream_discogs_collection_sync(
                 yield ": keep-alive\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@router.get(
+    "/imports/discogs/latest-sync",
+    response_model=CollectionImportResponse,
+    summary="Get latest Discogs API sync import",
+    dependencies=[Depends(require_viewer())],
+)
+async def get_latest_discogs_sync_import(
+    service: Annotated[CollectionImportService, Depends(get_collection_import_service)],
+    user: Annotated[User, Depends(get_current_user)],
+):
+    job = await service.get_latest_import_by_source(user.sub, "discogs_api")
+    if not job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No Discogs sync import found")
+    rows = await service.get_import_rows(job.id, user.sub)
+    return _build_import_response(job, rows)
 
 
 @router.get(

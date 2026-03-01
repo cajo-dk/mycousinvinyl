@@ -73,6 +73,8 @@ class DiscogsReleaseSearchResponse(TypedDict):
 class DiscogsReleaseDetails(TypedDict):
     id: int
     title: str
+    artists: Optional[list[str]]
+    artist_ids: Optional[list[int]]
     year: Optional[int]
     country: Optional[str]
     label: Optional[str]

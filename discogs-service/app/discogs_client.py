@@ -676,6 +676,8 @@ class DiscogsClient:
         return {
             "id": data.get("id"),
             "title": data.get("title"),
+            "artists": _extract_release_artists(data),
+            "artist_ids": _extract_release_artist_ids(data),
             "year": year,
             "country": _normalize_country_code(data.get("country"), fallback_to_original=False),
             "genres": genres or None,
@@ -746,6 +748,34 @@ class DiscogsClient:
             if exc.response.status_code == 404:
                 return None
             raise
+
+
+def _extract_release_artists(payload: dict) -> Optional[list[str]]:
+    artists = []
+    for item in payload.get("artists") or []:
+        if not isinstance(item, dict):
+            continue
+        name = str(item.get("name") or item.get("anv") or "").strip()
+        if not name:
+            continue
+        clean_name = re.sub(r"\s\(\d+\)$", "", name).strip()
+        if clean_name:
+            artists.append(clean_name)
+    return artists or None
+
+
+def _extract_release_artist_ids(payload: dict) -> Optional[list[int]]:
+    artist_ids: list[int] = []
+    for item in payload.get("artists") or []:
+        if not isinstance(item, dict):
+            continue
+        artist_id = item.get("id")
+        try:
+            parsed = int(artist_id)
+        except (TypeError, ValueError):
+            continue
+        artist_ids.append(parsed)
+    return artist_ids or None
 
 
 def _extract_country(profile: str) -> Optional[str]:

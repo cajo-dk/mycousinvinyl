@@ -5,7 +5,7 @@
 import { useEffect, useState } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { preferencesApi, collectionSharingApi, collectionApi, discogsApi } from '@/api/services';
-import { Loading, ErrorAlert } from '@/components/UI';
+import { Loading, ErrorAlert, Modal } from '@/components/UI';
 import { ItemsPerPageView, resolveItemsPerPage } from '@/utils/preferences';
 import { useViewControls } from '@/components/Layout/ViewControlsContext';
 import { IconSelector, ColorPicker, UserSearch } from '@/components/CollectionSharing';
@@ -16,6 +16,7 @@ import {
   CollectionSharingSettings,
   UserOwnerInfo,
   DiscogsOAuthStatusResponse,
+  DiscogsPressingImportPreviewResponse,
 } from '@/types/api';
 import { Icon } from '@/components/UI';
 import * as mdi from '@mdi/js';
@@ -67,6 +68,12 @@ export function Profile() {
   const [discogsPatUsername, setDiscogsPatUsername] = useState('');
   const [discogsPatToken, setDiscogsPatToken] = useState('');
   const [discogsPatSaving, setDiscogsPatSaving] = useState(false);
+  const [discogsPressingReleaseId, setDiscogsPressingReleaseId] = useState('');
+  const [discogsPressingPreviewLoading, setDiscogsPressingPreviewLoading] = useState(false);
+  const [discogsPressingImportLoading, setDiscogsPressingImportLoading] = useState(false);
+  const [discogsPressingPreview, setDiscogsPressingPreview] = useState<DiscogsPressingImportPreviewResponse | null>(null);
+  const [latestDiscogsSyncImport, setLatestDiscogsSyncImport] = useState<CollectionImportResponse | null>(null);
+  const [showDiscogsSyncResultModal, setShowDiscogsSyncResultModal] = useState(false);
 
   // Extract user first name from Azure AD token
   const userFirstName: string = (accounts[0]?.idTokenClaims?.given_name as string) || accounts[0]?.name?.split(' ')[0] || 'A';
@@ -124,10 +131,22 @@ export function Profile() {
     }
   };
 
+  const loadLatestDiscogsSyncImport = async () => {
+    try {
+      const latest = await collectionApi.getLatestDiscogsSyncImport();
+      setLatestDiscogsSyncImport(latest);
+    } catch (err: any) {
+      if (err?.response?.status !== 404) {
+        console.error('Failed to load latest Discogs sync import:', err);
+      }
+    }
+  };
+
   useEffect(() => {
     loadPreferences();
     loadFollows();
     loadDiscogsStatus();
+    loadLatestDiscogsSyncImport();
   }, []);
 
   useEffect(() => {
@@ -294,6 +313,12 @@ export function Profile() {
   };
 
   const handleDiscogsSync = async () => {
+    const confirmed = window.confirm(
+      'Start "Sync All from Discogs"? You can leave this page and come back later to see the result.'
+    );
+    if (!confirmed) {
+      return;
+    }
     setDiscogsNotice(null);
     setImportError(null);
     setDiscogsSyncLoading(true);
@@ -367,7 +392,9 @@ export function Profile() {
               if (payload.import_id) {
                 const job = await collectionApi.getImportStatus(payload.import_id);
                 setImportStatus(job);
+                setLatestDiscogsSyncImport(job);
               }
+              await loadLatestDiscogsSyncImport();
               await loadDiscogsStatus();
               setDiscogsNotice('Discogs sync completed.');
             } else if (payload.type === 'error') {
@@ -409,6 +436,52 @@ export function Profile() {
     }
   };
 
+  const handleDiscogsPressingPreview = async () => {
+    setImportError(null);
+    setDiscogsNotice(null);
+    setDiscogsPressingPreview(null);
+    const releaseId = Number.parseInt(discogsPressingReleaseId.trim(), 10);
+    if (!Number.isFinite(releaseId) || releaseId <= 0) {
+      setImportError('Enter a valid Discogs release ID');
+      return;
+    }
+    setDiscogsPressingPreviewLoading(true);
+    try {
+      const preview = await collectionApi.previewDiscogsPressingImport(releaseId);
+      setDiscogsPressingPreview(preview);
+    } catch (err: any) {
+      setImportError(err.response?.data?.detail || 'Failed to preview Discogs pressing import');
+    } finally {
+      setDiscogsPressingPreviewLoading(false);
+    }
+  };
+
+  const handleDiscogsPressingImport = async () => {
+    if (!discogsPressingPreview) {
+      return;
+    }
+    setImportError(null);
+    setDiscogsNotice(null);
+    setDiscogsPressingImportLoading(true);
+    try {
+      const job = await collectionApi.importDiscogsPressing(discogsPressingPreview.release.id);
+      setImportStatus(job);
+      setDiscogsNotice('Discogs pressing imported.');
+      setDiscogsPressingPreview(null);
+      setDiscogsPressingReleaseId('');
+    } catch (err: any) {
+      setImportError(err.response?.data?.detail || 'Failed to import Discogs pressing');
+    } finally {
+      setDiscogsPressingImportLoading(false);
+    }
+  };
+
+  const handleDiscogsPressingCancel = () => {
+    setDiscogsPressingPreview(null);
+    setDiscogsPressingReleaseId('');
+    setImportError(null);
+  };
+
   const getIconPath = (iconType: string): string => {
     return (mdi as any)[iconType] || mdi.mdiAccount;
   };
@@ -416,6 +489,27 @@ export function Profile() {
   const lastSyncedLabel = discogsStatus?.last_synced_at
     ? new Date(discogsStatus.last_synced_at).toLocaleString()
     : 'Never';
+
+  const formatImportDateTime = (value?: string | null): string => {
+    if (!value) {
+      return 'N/A';
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+      return 'N/A';
+    }
+    const parts = new Intl.DateTimeFormat('en-GB', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    }).formatToParts(date);
+    const map = Object.fromEntries(parts.filter((part) => part.type !== 'literal').map((part) => [part.type, part.value]));
+    return `${map.hour}:${map.minute}:${map.second} ${map.day}/${map.month}/${map.year}`;
+  };
 
   if (loading) {
     return <Loading message="Loading profile..." />;
@@ -619,8 +713,8 @@ export function Profile() {
       <section className="settings-section settings-section--import">
         <div className="settings-section-header">
           <div>
-            <h2>Import Collection</h2>
-            <p>Use a Discogs personal access token for API sync, or upload a CSV export as fallback.</p>
+            <h2>Discogs Link</h2>
+            <p>Connect Discogs with username and personal access token (PAT).</p>
           </div>
         </div>
 
@@ -668,14 +762,6 @@ export function Profile() {
             {discogsStatus?.connected ? (
               <>
                 <button
-                  className="btn-primary"
-                  type="button"
-                  onClick={handleDiscogsSync}
-                  disabled={discogsSyncLoading}
-                >
-                  {discogsSyncLoading ? 'Syncing...' : 'Sync from Discogs'}
-                </button>
-                <button
                   className="btn-secondary"
                   type="button"
                   onClick={handleDiscogsDisconnect}
@@ -692,6 +778,101 @@ export function Profile() {
                 Connect via OAuth
               </button>
             )}
+          </div>
+        </div>
+      </section>
+
+      <section className="settings-section settings-section--import">
+        <div className="settings-section-header">
+          <div>
+            <h2>Discogs Import</h2>
+            <p>Import from Discogs API, import one pressing by release ID, or use CSV fallback.</p>
+          </div>
+        </div>
+
+        <div className="import-divider">Import Pressing</div>
+        <div className="import-csv-row">
+          <input
+            type="text"
+            placeholder="Discogs release ID"
+            value={discogsPressingReleaseId}
+            onChange={(event) => setDiscogsPressingReleaseId(event.target.value)}
+          />
+          <button
+            className="btn-primary"
+            type="button"
+            onClick={handleDiscogsPressingPreview}
+            disabled={discogsPressingPreviewLoading}
+          >
+            {discogsPressingPreviewLoading ? 'Looking up...' : 'Import Pressing'}
+          </button>
+        </div>
+
+        {discogsPressingPreview && (
+          <div className="import-status">
+            <div className="import-preview-grid">
+              <div>
+                <strong>Artist:</strong> {discogsPressingPreview.artist.name}
+                {discogsPressingPreview.artist.discogs_id ? ` (Discogs #${discogsPressingPreview.artist.discogs_id})` : ''}
+              </div>
+              <div>
+                <strong>Master:</strong> {discogsPressingPreview.master.title}
+                {discogsPressingPreview.master.id ? ` (Discogs #${discogsPressingPreview.master.id})` : ''}
+              </div>
+              <div>
+                <strong>Release:</strong> {discogsPressingPreview.release.title} (Discogs #{discogsPressingPreview.release.id})
+              </div>
+              <div>
+                <strong>Status:</strong>{' '}
+                Artist {discogsPressingPreview.artist_status.exists ? 'exists' : 'new'} | Album {discogsPressingPreview.album_status.exists ? 'exists' : 'new'} | Pressing {discogsPressingPreview.pressing_status.exists ? 'exists' : 'new'}
+              </div>
+              {discogsPressingPreview.warning && (
+                <div className="import-status--error">{discogsPressingPreview.warning}</div>
+              )}
+            </div>
+            <div className="import-actions">
+              <button
+                className="btn-primary"
+                type="button"
+                onClick={handleDiscogsPressingImport}
+                disabled={!discogsPressingPreview.can_import || discogsPressingImportLoading}
+              >
+                {discogsPressingImportLoading ? 'Importing...' : 'Confirm Import'}
+              </button>
+              <button
+                className="btn-secondary"
+                type="button"
+                onClick={handleDiscogsPressingCancel}
+                disabled={discogsPressingImportLoading}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="import-divider">Discogs Full Sync</div>
+        <div className="import-actions import-actions--sync-row">
+          <button
+            className="btn-primary"
+            type="button"
+            onClick={handleDiscogsSync}
+            disabled={discogsSyncLoading}
+          >
+            {discogsSyncLoading ? 'Syncing...' : 'Sync All from Discogs'}
+          </button>
+          <div className="import-sync-meta">
+            <span>
+              Last Import {formatImportDateTime(latestDiscogsSyncImport?.completed_at)}
+            </span>
+            <button
+              className="btn-secondary"
+              type="button"
+              onClick={() => setShowDiscogsSyncResultModal(true)}
+              disabled={!latestDiscogsSyncImport}
+            >
+              Show Result
+            </button>
           </div>
         </div>
 
@@ -767,6 +948,49 @@ export function Profile() {
           </div>
         )}
       </section>
+
+      <Modal
+        isOpen={showDiscogsSyncResultModal}
+        onClose={() => setShowDiscogsSyncResultModal(false)}
+        title="Discogs Sync Result"
+        size="large"
+      >
+        {!latestDiscogsSyncImport ? (
+          <div className="import-status import-status--error">No Discogs sync result found.</div>
+        ) : (
+          <div className="import-status">
+            <div>
+              Completed: {formatImportDateTime(latestDiscogsSyncImport.completed_at)}
+            </div>
+            <div>Status: {latestDiscogsSyncImport.status}</div>
+            <div>
+              Processed {latestDiscogsSyncImport.processed_rows}/{latestDiscogsSyncImport.total_rows}
+            </div>
+            <div>
+              Success: {latestDiscogsSyncImport.success_count} | Errors: {latestDiscogsSyncImport.error_count}
+            </div>
+            {latestDiscogsSyncImport.rows && latestDiscogsSyncImport.rows.length > 0 && (
+              <div className="import-status-rows">
+                {latestDiscogsSyncImport.rows.map((row) => {
+                  const rowLabel = [row.artist, row.title].filter(Boolean).join(' - ');
+                  const metadata = rowLabel ? `: ${rowLabel}` : '';
+                  return (
+                    <div
+                      key={`sync-${row.row_number}`}
+                      className={`import-status-row import-status-row--${row.result}`}
+                    >
+                      <span>
+                        Row {row.row_number}{metadata}
+                      </span>
+                      <span>{row.message}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

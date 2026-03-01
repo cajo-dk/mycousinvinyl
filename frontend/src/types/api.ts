@@ -223,6 +223,8 @@ export interface DiscogsReleaseSearchResponse {
 export interface DiscogsReleaseDetails {
   id: number;
   title: string;
+  artists?: string[];
+  artist_ids?: number[];
   year?: number;
   country?: string;
   label?: string;
@@ -780,6 +782,52 @@ export interface CollectionImportRowResponse {
   discogs_release_id?: number | null;
   artist?: string | null;
   title?: string | null;
+}
+
+export interface DiscogsPressingImportRequest {
+  release_id: number;
+}
+
+export interface DiscogsImportEntityStatusResponse {
+  exists: boolean;
+  id?: string | null;
+}
+
+export interface DiscogsPressingImportArtistPreview {
+  name: string;
+  discogs_id?: number | null;
+  country?: string | null;
+  artist_type?: string | null;
+  image_url?: string | null;
+}
+
+export interface DiscogsPressingImportMasterPreview {
+  id?: number | null;
+  title: string;
+  year?: number | null;
+}
+
+export interface DiscogsPressingImportReleasePreview {
+  id: number;
+  title: string;
+  year?: number | null;
+  country?: string | null;
+  label?: string | null;
+  catalog_number?: string | null;
+  format?: string | null;
+  disc_count?: number | null;
+}
+
+export interface DiscogsPressingImportPreviewResponse {
+  artist: DiscogsPressingImportArtistPreview;
+  master: DiscogsPressingImportMasterPreview;
+  release: DiscogsPressingImportReleasePreview;
+  artist_status: DiscogsImportEntityStatusResponse;
+  album_status: DiscogsImportEntityStatusResponse;
+  pressing_status: DiscogsImportEntityStatusResponse;
+  already_in_collection: boolean;
+  can_import: boolean;
+  warning?: string | null;
 }
 
 // ============================================================================

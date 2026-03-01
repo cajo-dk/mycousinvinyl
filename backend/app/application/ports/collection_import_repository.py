@@ -21,6 +21,11 @@ class CollectionImportRepository(ABC):
         pass
 
     @abstractmethod
+    async def get_latest_by_source(self, user_id: UUID, source: str) -> Optional[CollectionImport]:
+        """Get latest import job by source for a user."""
+        pass
+
+    @abstractmethod
     async def update_import(self, import_job: CollectionImport) -> CollectionImport:
         """Update an import job."""
         pass
