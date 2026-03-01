@@ -399,7 +399,7 @@ class DiscogsClient:
             "tracklist": tracklist or None,
         }
 
-    async def search_master_releases(self, master_id: int, query: str, limit: int = 25) -> dict:
+    async def search_master_releases(self, master_id: int, query: str, limit: int = 25, page: int = 1) -> dict:
         """
         Search for releases under a master using Discogs database search.
 
@@ -417,6 +417,7 @@ class DiscogsClient:
                 "master_id": master_id,
                 "q": query,
                 "per_page": limit,
+                "page": page,
             },
         )
 
@@ -470,6 +471,8 @@ class DiscogsClient:
         return {
             "items": results,
             "total": data.get("pagination", {}).get("items", len(results)),
+            "page": data.get("pagination", {}).get("page", page),
+            "pages": data.get("pagination", {}).get("pages", 1),
         }
 
     async def get_master_releases(self, master_id: int, page: int = 1, limit: int = 25) -> dict:

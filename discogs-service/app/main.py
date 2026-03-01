@@ -146,6 +146,7 @@ async def search_master_releases(
     master_id: int,
     q: str = Query(..., min_length=4, description="Search query (min 4 chars)"),
     limit: int = Query(25, ge=1, le=100),
+    page: int = Query(1, ge=1, description="Page number (1-indexed)"),
 ):
     """
     Search for releases under a master by barcode, catalog number, label, etc.
@@ -156,7 +157,7 @@ async def search_master_releases(
         raise HTTPException(status_code=500, detail="Discogs credentials are not configured")
     try:
         response = await discogs_client.search_master_releases(
-            master_id=master_id, query=q, limit=limit
+            master_id=master_id, query=q, limit=limit, page=page
         )
         return JSONResponse(content=response)
     except Exception as exc:

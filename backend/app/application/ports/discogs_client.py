@@ -66,6 +66,8 @@ class DiscogsReleaseSearchResult(TypedDict):
 class DiscogsReleaseSearchResponse(TypedDict):
     items: List[DiscogsReleaseSearchResult]
     total: Optional[int]
+    page: Optional[int]
+    pages: Optional[int]
 
 
 class DiscogsReleaseDetails(TypedDict):
@@ -122,7 +124,9 @@ class DiscogsClient(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def search_master_releases(self, master_id: int, query: str, limit: int = 25) -> DiscogsReleaseSearchResponse:
+    async def search_master_releases(
+        self, master_id: int, query: str, limit: int = 25, page: int = 1
+    ) -> DiscogsReleaseSearchResponse:
         """Search for releases under a master by query string."""
         raise NotImplementedError
 

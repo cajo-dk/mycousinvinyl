@@ -56,10 +56,12 @@ class DiscogsService:
 
         return response
 
-    async def search_master_releases(self, master_id: int, query: str, limit: int = 25) -> DiscogsReleaseSearchResponse:
+    async def search_master_releases(
+        self, master_id: int, query: str, limit: int = 25, page: int = 1
+    ) -> DiscogsReleaseSearchResponse:
         """Search for releases under a master with caching."""
-        # Build cache key: search:{master_id}:{query_normalized}:{limit}
-        cache_key = f"search:{master_id}:{query.lower().strip()}:{limit}"
+        # Build cache key: search:{master_id}:{query_normalized}:{limit}:{page}
+        cache_key = f"search:{master_id}:{query.lower().strip()}:{limit}:{page}"
 
         # Try cache first
         cached = await self._cache.get_search_cache(cache_key)
@@ -70,7 +72,7 @@ class DiscogsService:
         # Cache miss - fetch from Discogs
         logger.info(f"Search cache miss: {cache_key}")
         response = await self._client.search_master_releases(
-            master_id=master_id, query=query, limit=limit
+            master_id=master_id, query=query, limit=limit, page=page
         )
 
         # Cache search results
