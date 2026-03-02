@@ -4,9 +4,10 @@
 
 import { useEffect, useState } from 'react';
 import { lookupApi, preferencesApi, systemLogsApi, toolsApi } from '@/api/services';
-import { Loading, ErrorAlert, Icon, Pager } from '@/components/UI';
+import { Loading, ErrorAlert, Icon, Modal, Pager } from '@/components/UI';
 import { mdiPencilOutline, mdiTrashCanOutline } from '@mdi/js';
 import {
+  DatabaseCliExecuteResponse,
   GenreResponse,
   StyleResponse,
   ArtistTypeResponse,
@@ -667,6 +668,12 @@ export function Settings() {
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
   const [tracklistSyncRunning, setTracklistSyncRunning] = useState(false);
   const [tracklistSyncMessage, setTracklistSyncMessage] = useState<string | null>(null);
+  const [showDatabaseCliModal, setShowDatabaseCliModal] = useState(false);
+  const [databaseCliSql, setDatabaseCliSql] = useState('');
+  const [databaseCliMaxRows, setDatabaseCliMaxRows] = useState(200);
+  const [databaseCliRunning, setDatabaseCliRunning] = useState(false);
+  const [databaseCliError, setDatabaseCliError] = useState<string | null>(null);
+  const [databaseCliResult, setDatabaseCliResult] = useState<DatabaseCliExecuteResponse | null>(null);
   const pageSize = 10;
   const [currency, setCurrency] = useState('');
   const [currencySaving, setCurrencySaving] = useState(false);
@@ -826,6 +833,29 @@ export function Settings() {
       setTracklistSyncMessage(err.response?.data?.detail || 'Failed to run tracklist sync');
     } finally {
       setTracklistSyncRunning(false);
+    }
+  };
+
+  const handleRunDatabaseCli = async () => {
+    const sql = databaseCliSql.trim();
+    if (!sql) {
+      setDatabaseCliError('SQL cannot be empty');
+      return;
+    }
+
+    setDatabaseCliRunning(true);
+    setDatabaseCliError(null);
+    setDatabaseCliResult(null);
+    try {
+      const response = await toolsApi.executeDatabaseCli({
+        sql,
+        max_rows: databaseCliMaxRows,
+      });
+      setDatabaseCliResult(response);
+    } catch (err: any) {
+      setDatabaseCliError(err.response?.data?.detail || 'Failed to execute SQL');
+    } finally {
+      setDatabaseCliRunning(false);
     }
   };
 
@@ -1062,30 +1092,139 @@ export function Settings() {
               <p>Run administrative tasks on demand.</p>
             </div>
           </div>
-          <div className="settings-form-row settings-form-row--compact">
-            <button
-              className="btn-primary"
-              type="button"
-              onClick={handleRunBackup}
-              disabled={backupRunning}
-            >
-              {backupRunning ? 'Starting...' : 'Run Backup Now'}
-            </button>
-            <button
-              className="btn-primary"
-              type="button"
-              onClick={handleRunTracklistSync}
-              disabled={tracklistSyncRunning}
-            >
-              {tracklistSyncRunning ? 'Running...' : 'Sync Tracklists From Discogs'}
-            </button>
+          <div className="settings-tools-list">
+            <div className="settings-tool-row">
+              <button
+                className="btn-primary settings-tool-button"
+                type="button"
+                onClick={handleRunBackup}
+                disabled={backupRunning}
+              >
+                {backupRunning ? 'Starting...' : 'Run Backup Now'}
+              </button>
+              <div className="settings-tool-details">
+                <h3>Run Backup</h3>
+                <p>Starts an immediate backup job using the configured backup destination.</p>
+                {backupMessage && (
+                  <div className="settings-status">{backupMessage}</div>
+                )}
+              </div>
+            </div>
+
+            <div className="settings-tool-row">
+              <button
+                className="btn-primary settings-tool-button"
+                type="button"
+                onClick={handleRunTracklistSync}
+                disabled={tracklistSyncRunning}
+              >
+                {tracklistSyncRunning ? 'Running...' : 'Sync Tracklists From Discogs'}
+              </button>
+              <div className="settings-tool-details">
+                <h3>Tracklist Sync</h3>
+                <p>Refreshes tracklists for existing albums from Discogs metadata.</p>
+                {tracklistSyncMessage && (
+                  <div className="settings-status">{tracklistSyncMessage}</div>
+                )}
+              </div>
+            </div>
+
+            <div className="settings-tool-row">
+              <button
+                className="btn-primary settings-tool-button"
+                type="button"
+                onClick={() => {
+                  setDatabaseCliError(null);
+                  setDatabaseCliResult(null);
+                  setShowDatabaseCliModal(true);
+                }}
+              >
+                Database CLI
+              </button>
+              <div className="settings-tool-details">
+                <h3>Database CLI</h3>
+                <p>Execute a single SQL statement against the application PostgreSQL database.</p>
+              </div>
+            </div>
           </div>
-          {backupMessage && (
-            <div className="settings-status">{backupMessage}</div>
-          )}
-          {tracklistSyncMessage && (
-            <div className="settings-status">{tracklistSyncMessage}</div>
-          )}
+
+          <Modal
+            isOpen={showDatabaseCliModal}
+            onClose={() => setShowDatabaseCliModal(false)}
+            title="Database CLI"
+            size="large"
+          >
+            <div className="db-cli">
+              <p className="db-cli-note">
+                Admin only. One SQL statement per execution.
+              </p>
+              <textarea
+                className="db-cli-input"
+                value={databaseCliSql}
+                onChange={(e) => setDatabaseCliSql(e.target.value)}
+                placeholder="SELECT id, name FROM artists ORDER BY created_at DESC LIMIT 20"
+                rows={8}
+              />
+              <div className="db-cli-actions">
+                <label htmlFor="db-cli-max-rows">Max rows</label>
+                <select
+                  id="db-cli-max-rows"
+                  value={databaseCliMaxRows}
+                  onChange={(e) => setDatabaseCliMaxRows(Number(e.target.value))}
+                >
+                  {[50, 100, 200, 500, 1000].map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  className="btn-primary"
+                  type="button"
+                  onClick={handleRunDatabaseCli}
+                  disabled={databaseCliRunning}
+                >
+                  {databaseCliRunning ? 'Running...' : 'Run SQL'}
+                </button>
+              </div>
+
+              {databaseCliError && (
+                <div className="settings-status settings-status--error">{databaseCliError}</div>
+              )}
+              {databaseCliResult && (
+                <div className="db-cli-result">
+                  <div className="settings-status">{databaseCliResult.message}</div>
+                  {databaseCliResult.affected_rows !== null && databaseCliResult.affected_rows !== undefined && (
+                    <div className="settings-status">
+                      Affected rows: {databaseCliResult.affected_rows}
+                    </div>
+                  )}
+                  {databaseCliResult.rows.length > 0 && (
+                    <div className="table-container">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            {databaseCliResult.columns.map((column) => (
+                              <th key={column}>{column}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {databaseCliResult.rows.map((row, index) => (
+                            <tr key={`${index}-${row.id ?? 'row'}`}>
+                              {databaseCliResult.columns.map((column) => (
+                                <td key={`${index}-${column}`}>{String(row[column] ?? '')}</td>
+                              ))}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </Modal>
         </section>
       )}
 
