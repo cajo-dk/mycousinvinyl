@@ -965,3 +965,22 @@ export interface SystemLogEntry {
 export interface LogRetentionResponse {
   retention_days: number;
 }
+
+// ============================================================================
+// ADMIN TOOLS
+// ============================================================================
+
+export interface DatabaseCliExecuteRequest {
+  sql: string;
+  max_rows?: number;
+}
+
+export interface DatabaseCliExecuteResponse {
+  statement_type: string;
+  columns: string[];
+  rows: Record<string, any>[];
+  row_count: number;
+  rows_truncated: boolean;
+  affected_rows?: number | null;
+  message: string;
+}
