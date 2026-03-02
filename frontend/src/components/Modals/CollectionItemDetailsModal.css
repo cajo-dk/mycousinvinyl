@@ -193,6 +193,31 @@
   margin-bottom: 0.25rem;
 }
 
+.collection-other-owners-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 4px;
+  background: #242424;
+}
+
+.collection-other-owners-title {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+
+.collection-other-owners-empty {
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
 @media (max-width: 768px) {
   .collection-item-card-main {
     grid-template-columns: 1fr;
@@ -212,5 +237,10 @@
 
   .collection-item-meta-grid {
     grid-template-columns: 1fr;
+  }
+
+  .collection-other-owners-bar {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

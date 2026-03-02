@@ -22,6 +22,7 @@ import { PressingListItem } from '@/components/PressingListItem';
 import { AddToCollectionModal } from './AddToCollectionModal';
 import { PressingWizardModal } from './PressingWizardModal';
 import { mdiPencilOutline, mdiPlus, mdiMusicBoxOutline, mdiTrashCanOutline } from '@mdi/js';
+import { useAlbumOwners } from '@/hooks/useAlbumOwners';
 import { usePressingOwners } from '@/hooks/usePressingOwners';
 import './AlbumDetailsModal.css';
 import './CollectionItemDetailsModal.css';
@@ -80,6 +81,22 @@ export function CollectionItemDetailsModal({
     [visibleItems]
   );
   const pressingOwners = usePressingOwners(visiblePressingIds);
+  const albumOwners = useAlbumOwners(albumId ? [albumId] : []);
+  const otherPressingOwners = useMemo(() => {
+    const albumLevelOwners = albumOwners[albumId] || [];
+    if (albumLevelOwners.length === 0) {
+      return [];
+    }
+
+    const samePressingOwnerIds = new Set<string>();
+    visiblePressingIds.forEach((pressingId) => {
+      (pressingOwners[pressingId] || []).forEach((owner) => {
+        samePressingOwnerIds.add(owner.user_id);
+      });
+    });
+
+    return albumLevelOwners.filter((owner) => !samePressingOwnerIds.has(owner.user_id));
+  }, [albumId, albumOwners, pressingOwners, visiblePressingIds]);
   const pressingPickerIds = useMemo(
     () => pressingPickerItems.map((pressing) => pressing.id),
     [pressingPickerItems]
@@ -539,6 +556,20 @@ export function CollectionItemDetailsModal({
                       </div>
                     );
                   })}
+                </div>
+              )}
+              {currentUserId && (
+                <div className="collection-other-owners-bar">
+                  <span className="collection-other-owners-title">Other Pressing Owners</span>
+                  {otherPressingOwners.length > 0 ? (
+                    <OwnersGrid
+                      owners={otherPressingOwners}
+                      currentUserId={currentUserId}
+                      className="owners-grid-large"
+                    />
+                  ) : (
+                    <span className="collection-other-owners-empty">None</span>
+                  )}
                 </div>
               )}
             </div>

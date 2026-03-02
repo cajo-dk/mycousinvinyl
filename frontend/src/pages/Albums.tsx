@@ -40,6 +40,8 @@ export function Albums() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState<AlbumFilterValues>({});
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
+  const [appliedFilters, setAppliedFilters] = useState<AlbumFilterValues>({});
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showWizardModal, setShowWizardModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -52,6 +54,7 @@ export function Albums() {
   const [initialFilter, setInitialFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   const { preferences } = usePreferences();
   const { setControls } = useViewControls();
   const { isPortraitTouch, deviceType, orientation } = useResponsiveMode();
@@ -59,7 +62,17 @@ export function Albums() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const fetchAlbums = useCallback(async (query?: string) => {
+  const fetchAlbums = useCallback(async (options?: {
+    query?: string;
+    filters?: AlbumFilterValues;
+    page?: number;
+    limit?: number;
+  }) => {
+    const query = options?.query ?? appliedSearchQuery;
+    const activeFilters = options?.filters ?? appliedFilters;
+    const page = options?.page ?? currentPage;
+    const limit = options?.limit ?? itemsPerPage;
+    const offset = (page - 1) * limit;
     try {
       setLoading(true);
       setError(null);
@@ -73,13 +86,13 @@ export function Albums() {
         limit: number;
         offset: number;
       } = {
-        release_type: filters.releaseType,
-        year_min: filters.yearMin,
-        year_max: filters.yearMax,
-        genre_ids: filters.genreIds,
-        style_ids: filters.styleIds,
-        limit: 1000,
-        offset: 0,
+        release_type: activeFilters.releaseType,
+        year_min: activeFilters.yearMin,
+        year_max: activeFilters.yearMax,
+        genre_ids: activeFilters.genreIds,
+        style_ids: activeFilters.styleIds,
+        limit,
+        offset,
       };
 
       if (query && query.trim().length > 0) {
@@ -87,8 +100,13 @@ export function Albums() {
       }
 
       const response = await albumsApi.getAlbumsWithDetails(params);
+      const lastPage = Math.max(1, Math.ceil(response.total / limit));
+      if (page > lastPage) {
+        setCurrentPage(lastPage);
+        return;
+      }
       setAlbums(response.items);
-      setCurrentPage(1);
+      setTotalItems(response.total);
     } catch (err: any) {
       const detail = err.response?.data?.detail;
       if (Array.isArray(detail)) {
@@ -100,7 +118,7 @@ export function Albums() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [appliedFilters, appliedSearchQuery, currentPage, itemsPerPage]);
 
   const groupAlbums = (albumsToGroup: AlbumDetailResponse[]) => {
     const artistMap = new Map<string, ArtistGroup>();
@@ -188,7 +206,14 @@ export function Albums() {
   }, [location.state, navigate]);
 
   const handleSearch = () => {
-    fetchAlbums(searchQuery);
+    const nextQuery = searchQuery.trim();
+    setAppliedSearchQuery(nextQuery);
+    setAppliedFilters(filters);
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+    fetchAlbums({ query: nextQuery, filters, page: 1, limit: itemsPerPage });
   };
 
   const handleFilterChange = (newFilters: AlbumFilterValues) => {
@@ -196,15 +221,20 @@ export function Albums() {
   };
 
   const handleResetFilters = () => {
-    setFilters({});
-    fetchAlbums(searchQuery);
+    const clearedFilters: AlbumFilterValues = {};
+    const nextQuery = searchQuery.trim();
+    setFilters(clearedFilters);
+    setAppliedFilters(clearedFilters);
+    setAppliedSearchQuery(nextQuery);
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+    fetchAlbums({ query: nextQuery, filters: clearedFilters, page: 1, limit: itemsPerPage });
   };
 
-  const totalPages = Math.ceil(groupedData.length / itemsPerPage);
-  const visibleGroups = groupedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const visibleGroups = groupedData;
   const visibleAlbumIds = useMemo(() => {
     const albumIds: string[] = [];
     visibleGroups.forEach((artistGroup) => {
@@ -223,7 +253,7 @@ export function Albums() {
 
     try {
       await albumsApi.delete(albumId);
-      fetchAlbums(searchQuery);
+      fetchAlbums();
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to delete album');
     }
@@ -307,7 +337,7 @@ export function Albums() {
         <div>
           <h1>Albums</h1>
           <p className="result-count">
-            {filteredAlbums.length} {filteredAlbums.length === 1 ? 'album' : 'albums'} found
+            {totalItems} {totalItems === 1 ? 'album' : 'albums'} found
           </p>
         </div>
         <button
@@ -319,7 +349,7 @@ export function Albums() {
         </button>
       </div>
 
-      {error && <ErrorAlert message={error} onRetry={() => fetchAlbums()} />}
+      {error && <ErrorAlert message={error} onRetry={fetchAlbums} />}
 
       {!loading && filteredAlbums.length === 0 && (
         <div className="no-results">
@@ -392,7 +422,7 @@ export function Albums() {
                         <td className="col-pressings">{album.pressing_count}</td>
                         <td className="owned-cell col-owned">
                           <OwnersGrid
-                            owners={albumOwners[album.id] || album.owners || []}
+                            owners={albumOwners[album.id] || []}
                             currentUserId={currentUserId}
                             showEmpty
                           />
@@ -563,7 +593,7 @@ export function Albums() {
         <AlbumWithPressingForm
           onSuccess={() => {
             setShowCreateModal(false);
-            fetchAlbums(searchQuery);
+            fetchAlbums();
           }}
           onCancel={() => setShowCreateModal(false)}
         />
@@ -574,7 +604,7 @@ export function Albums() {
         onClose={() => setShowWizardModal(false)}
         onSuccess={() => {
           setShowWizardModal(false);
-          fetchAlbums(searchQuery);
+          fetchAlbums();
         }}
       />
 
@@ -593,7 +623,7 @@ export function Albums() {
             onSuccess={() => {
               setShowEditModal(false);
               setSelectedAlbumId(null);
-              fetchAlbums(searchQuery);
+              fetchAlbums();
             }}
             onCancel={() => {
               setShowEditModal(false);
@@ -615,7 +645,7 @@ export function Albums() {
             setSelectedAlbumForPressing(null);
           }}
           onSuccess={() => {
-            fetchAlbums(searchQuery);
+            fetchAlbums();
           }}
         />
       )}

@@ -2,11 +2,13 @@
  * Artists page - browse and search artists with advanced filters.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useMsal } from '@azure/msal-react';
 import { artistsApi, albumsApi } from '@/api/services';
 import { AlbumDetailResponse, ArtistResponse } from '@/types/api';
 import { Loading, ErrorAlert, Modal, Icon, Pager, ResponsiveRowActions } from '@/components/UI';
+import { OwnersGrid } from '@/components/CollectionSharing';
 import { ArtistFiltersPanel, ArtistFilterValues } from '@/components/Search/ArtistFiltersPanel';
 import { ArtistForm } from '@/components/Forms';
 import { AlbumDetailsModal, AlbumWizardModal, PressingWizardModal } from '@/components/Modals';
@@ -16,6 +18,7 @@ import { formatDate, formatDateTime } from '@/utils/format';
 import { usePreferences } from '@/hooks/usePreferences';
 import { resolveItemsPerPage } from '@/utils/preferences';
 import { useViewControls } from '@/components/Layout/ViewControlsContext';
+import { useAlbumOwners } from '@/hooks/useAlbumOwners';
 import { useResponsiveMode } from '@/hooks/useResponsiveMode';
 import {
   mdiEyeOutline,
@@ -29,12 +32,16 @@ import './Artists.css';
 import '../styles/Table.css';
 
 export function Artists() {
+  const { accounts } = useMsal();
+  const currentUserId = (accounts[0]?.idTokenClaims?.oid as string) || accounts[0]?.localAccountId || '';
   const [artists, setArtists] = useState<ArtistResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState<ArtistFilterValues>({});
+  const [appliedFilters, setAppliedFilters] = useState<ArtistFilterValues>({});
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -58,33 +65,44 @@ export function Artists() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const fetchArtists = async (options?: { resetPage?: boolean }) => {
+  const fetchArtists = useCallback(async (options?: {
+    filters?: ArtistFilterValues;
+    page?: number;
+    limit?: number;
+  }) => {
+    const activeFilters = options?.filters ?? appliedFilters;
+    const page = options?.page ?? currentPage;
+    const limit = options?.limit ?? itemsPerPage;
+    const offset = (page - 1) * limit;
     try {
       setLoading(true);
       setError(null);
 
       const response = await artistsApi.search({
-        query: filters.query,
-        artist_type: filters.artistType,
-        country: filters.country,
-        limit: 500,
-        offset: 0,
+        query: activeFilters.query,
+        artist_type: activeFilters.artistType,
+        country: activeFilters.country,
+        limit,
+        offset,
       });
 
-      setArtists(response.items);
-      if (options?.resetPage ?? true) {
-        setCurrentPage(1);
+      const lastPage = Math.max(1, Math.ceil(response.total / limit));
+      if (page > lastPage) {
+        setCurrentPage(lastPage);
+        return;
       }
+      setArtists(response.items);
+      setTotalItems(response.total);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message || 'Failed to load artists');
     } finally {
       setLoading(false);
     }
-  };
+  }, [appliedFilters, currentPage, itemsPerPage]);
 
   useEffect(() => {
-    fetchArtists({ resetPage: true });
-  }, []);
+    fetchArtists();
+  }, [fetchArtists]);
 
   useEffect(() => {
     const storedPerPage = resolveItemsPerPage(preferences, 'artists');
@@ -121,7 +139,12 @@ export function Artists() {
   };
 
   const handleSearch = () => {
-    fetchArtists({ resetPage: true });
+    setAppliedFilters(filters);
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+    fetchArtists({ filters, page: 1, limit: itemsPerPage });
   };
 
   const handleFilterChange = (newFilters: ArtistFilterValues) => {
@@ -129,8 +152,14 @@ export function Artists() {
   };
 
   const handleResetFilters = () => {
-    setFilters({});
-    fetchArtists({ resetPage: true });
+    const clearedFilters: ArtistFilterValues = {};
+    setFilters(clearedFilters);
+    setAppliedFilters(clearedFilters);
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+    fetchArtists({ filters: clearedFilters, page: 1, limit: itemsPerPage });
   };
 
   const handlePageChange = (page: number) => {
@@ -145,7 +174,7 @@ export function Artists() {
 
     try {
       await artistsApi.delete(artistId);
-      fetchArtists({ resetPage: false });
+      fetchArtists();
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to delete artist');
     }
@@ -229,6 +258,8 @@ export function Artists() {
   const getAlbumStyles = (album: AlbumDetailResponse) => {
     return album.styles.length ? album.styles.join(', ') : '-';
   };
+  const artistAlbumIds = useMemo(() => artistAlbums.map((album) => album.id), [artistAlbums]);
+  const artistAlbumOwners = useAlbumOwners(artistAlbumIds);
 
   const openViewModal = (artist: ArtistResponse) => {
     setSelectedArtist(artist);
@@ -291,11 +322,8 @@ export function Artists() {
     }
   }, [availableInitials, initialFilter]);
 
-  const totalPages = Math.ceil(filteredArtists.length / itemsPerPage);
-  const visibleArtists = filteredArtists.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const visibleArtists = filteredArtists;
 
   useEffect(() => {
     const filtersContent = (
@@ -347,7 +375,7 @@ export function Artists() {
         <div>
           <h1>Artists</h1>
           <p className="result-count">
-            {filteredArtists.length} {filteredArtists.length === 1 ? 'artist' : 'artists'} found
+            {totalItems} {totalItems === 1 ? 'artist' : 'artists'} found
           </p>
         </div>
         <button
@@ -662,7 +690,7 @@ export function Artists() {
         <ArtistForm
           onSuccess={() => {
             setShowCreateModal(false);
-            fetchArtists({ resetPage: false });
+            fetchArtists();
           }}
           onCancel={() => setShowCreateModal(false)}
         />
@@ -683,7 +711,7 @@ export function Artists() {
             onSuccess={() => {
               setShowEditModal(false);
               setSelectedArtistId(null);
-              fetchArtists({ resetPage: false });
+              fetchArtists();
             }}
             onCancel={() => {
               setShowEditModal(false);
@@ -819,6 +847,7 @@ export function Artists() {
                       <th>Genre</th>
                       <th>Styles</th>
                       <th>Pressings</th>
+                      <th>Owned</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -834,6 +863,13 @@ export function Artists() {
                         <td>{getAlbumGenres(album)}</td>
                         <td>{getAlbumStyles(album)}</td>
                         <td>{album.pressing_count || 0}</td>
+                        <td className="owned-cell">
+                          <OwnersGrid
+                            owners={artistAlbumOwners[album.id] || []}
+                            currentUserId={currentUserId}
+                            showEmpty
+                          />
+                        </td>
                         <td className="actions-cell">
                           <button
                             className="btn-action"
@@ -876,7 +912,7 @@ export function Artists() {
           onSuccess={() => {
             setShowAlbumModal(false);
             setSelectedArtistForAlbum(null);
-            fetchArtists({ resetPage: false });
+            fetchArtists();
           }}
         />
       )}

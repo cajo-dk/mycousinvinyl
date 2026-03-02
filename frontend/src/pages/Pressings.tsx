@@ -2,7 +2,7 @@
  * Pressings page - browse pressings with two-level hierarchy: Artist → Album → Pressing.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { pressingsApi } from '@/api/services';
 import { PressingDetailResponse } from '@/types/api';
@@ -51,6 +51,7 @@ export function Pressings() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddToCollectionModal, setShowAddToCollectionModal] = useState(false);
@@ -71,12 +72,21 @@ export function Pressings() {
   const [initialFilter, setInitialFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
   const { preferences } = usePreferences();
   const { setControls } = useViewControls();
   const { isPortraitTouch, deviceType, orientation } = useResponsiveMode();
   const isPhonePortrait = isPortraitTouch && deviceType === 'phone' && orientation === 'portrait';
 
-  const fetchPressings = async (query?: string) => {
+  const fetchPressings = useCallback(async (options?: {
+    query?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const query = options?.query ?? appliedSearchQuery;
+    const page = options?.page ?? currentPage;
+    const limit = options?.limit ?? itemsPerPage;
+    const offset = (page - 1) * limit;
     try {
       setLoading(true);
       setError(null);
@@ -87,8 +97,8 @@ export function Pressings() {
         limit: number;
         offset: number;
       } = {
-        limit: 1000,
-        offset: 0,
+        limit,
+        offset,
       };
 
       if (query && query.trim().length > 0) {
@@ -96,8 +106,13 @@ export function Pressings() {
       }
 
       const response = await pressingsApi.getPressingsWithDetails(params);
+      const lastPage = Math.max(1, Math.ceil(response.total / limit));
+      if (page > lastPage) {
+        setCurrentPage(lastPage);
+        return;
+      }
       setPressings(response.items);
-      setCurrentPage(1);
+      setTotalItems(response.total);
     } catch (err: any) {
       console.error('Failed to load pressings:', err);
 
@@ -122,7 +137,7 @@ export function Pressings() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [appliedSearchQuery, currentPage, itemsPerPage]);
 
   const groupPressings = (pressingsToGroup: PressingDetailResponse[]) => {
     const artistMap = new Map<string, ArtistGroup>();
@@ -187,7 +202,7 @@ export function Pressings() {
 
   useEffect(() => {
     fetchPressings();
-  }, []);
+  }, [fetchPressings]);
 
   useEffect(() => {
     const storedPerPage = resolveItemsPerPage(preferences, 'pressings');
@@ -223,14 +238,17 @@ export function Pressings() {
   }, [availableInitials, initialFilter]);
 
   const handleSearch = () => {
-    fetchPressings(searchQuery);
+    const nextQuery = searchQuery.trim();
+    setAppliedSearchQuery(nextQuery);
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+    fetchPressings({ query: nextQuery, page: 1, limit: itemsPerPage });
   };
 
-  const totalPages = Math.ceil(groupedData.length / itemsPerPage);
-  const visibleGroups = groupedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const visibleGroups = groupedData;
   const visiblePressingIds = useMemo(() => {
     const pressingIds: string[] = [];
     visibleGroups.forEach((artistGroup) => {
@@ -253,7 +271,7 @@ export function Pressings() {
 
     try {
       await pressingsApi.delete(pressingId);
-      fetchPressings(searchQuery);
+      fetchPressings();
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to delete pressing');
     }
@@ -391,12 +409,12 @@ export function Pressings() {
         <div>
           <h1>Pressings</h1>
           <p className="result-count">
-            {filteredPressings.length} {filteredPressings.length === 1 ? 'pressing' : 'pressings'} found
+            {totalItems} {totalItems === 1 ? 'pressing' : 'pressings'} found
           </p>
         </div>
       </div>
 
-      {error && <ErrorAlert message={error} onRetry={() => fetchPressings()} />}
+      {error && <ErrorAlert message={error} onRetry={fetchPressings} />}
 
       {!loading && filteredPressings.length === 0 && (
         <div className="no-results">
@@ -963,7 +981,7 @@ export function Pressings() {
             onSuccess={() => {
               setShowCreateModal(false);
               setSelectedAlbumForPressing(null);
-              fetchPressings(searchQuery);
+              fetchPressings();
             }}
             onCancel={() => {
               setShowCreateModal(false);
@@ -989,7 +1007,7 @@ export function Pressings() {
               onSuccess={() => {
                 setShowEditModal(false);
                 setSelectedPressingId(null);
-                fetchPressings(searchQuery);
+                fetchPressings();
               }}
               onCancel={() => {
                 setShowEditModal(false);
@@ -1032,7 +1050,7 @@ export function Pressings() {
           onSuccess={() => {
             setShowPressingWizardModal(false);
             setSelectedAlbumForPressing(null);
-            fetchPressings(searchQuery);
+            fetchPressings();
           }}
           albumId={selectedAlbumForPressing.id}
           albumTitle={selectedAlbumForPressing.title}
