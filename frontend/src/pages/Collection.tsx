@@ -2,7 +2,7 @@
  * Collection page - user's vinyl collection grouped by artist.
  */
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { collectionApi } from '@/api/services';
 import { CollectionItemDetailResponse } from '@/types/api';
@@ -17,7 +17,7 @@ import { getInitialToken } from '@/utils/alpha';
 import { usePreferences } from '@/hooks/usePreferences';
 import { resolveItemsPerPage } from '@/utils/preferences';
 import { useViewControls } from '@/components/Layout/ViewControlsContext';
-import { usePressingOwners } from '@/hooks/usePressingOwners';
+import { useAlbumOwners } from '@/hooks/useAlbumOwners';
 import { useResponsiveMode } from '@/hooks/useResponsiveMode';
 import './Collection.css';
 import '../styles/Table.css';
@@ -63,6 +63,8 @@ export function Collection() {
   const [initialFilter, setInitialFilter] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState('');
   const [playIncrementing, setPlayIncrementing] = useState<Set<string>>(new Set());
   const { preferences } = usePreferences();
   const { setControls } = useViewControls();
@@ -71,17 +73,31 @@ export function Collection() {
   const isPhonePortrait = isPhoneLayout && orientation === 'portrait';
   const isTabletPortrait = deviceType === 'tablet' && orientation === 'portrait';
 
-  const fetchCollection = async (query?: string) => {
-    const cleanedQuery = query?.trim();
+  const fetchCollection = useCallback(async (options?: {
+    query?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    const query = options?.query ?? appliedSearchQuery;
+    const page = options?.page ?? currentPage;
+    const limit = options?.limit ?? itemsPerPage;
+    const cleanedQuery = query.trim();
+    const offset = (page - 1) * limit;
     try {
       setLoading(true);
       setError(null);
       const response = await collectionApi.getCollectionWithDetails({
         ...(cleanedQuery ? { query: cleanedQuery } : {}),
-        limit: 500,
-        offset: 0,
+        limit,
+        offset,
       });
+      const lastPage = Math.max(1, Math.ceil(response.total / limit));
+      if (page > lastPage) {
+        setCurrentPage(lastPage);
+        return;
+      }
       setItems(response.items);
+      setTotalItems(response.total);
       if (selectedAlbumId) {
         setSelectedAlbumItems(response.items.filter((item) => item.album?.id === selectedAlbumId));
       }
@@ -95,7 +111,7 @@ export function Collection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [appliedSearchQuery, currentPage, itemsPerPage, selectedAlbumId]);
 
   const groupItems = (itemsToGroup: CollectionItemDetailResponse[]) => {
     const artistMap = new Map<string, ArtistGroup>();
@@ -143,7 +159,7 @@ export function Collection() {
 
   useEffect(() => {
     fetchCollection();
-  }, []);
+  }, [fetchCollection]);
 
   useEffect(() => {
     const storedPerPage = resolveItemsPerPage(preferences, 'collection');
@@ -178,26 +194,27 @@ export function Collection() {
   }, [availableInitials, initialFilter]);
 
   const handleSearch = () => {
-    fetchCollection(searchQuery);
+    const nextQuery = searchQuery.trim();
+    setAppliedSearchQuery(nextQuery);
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+      return;
+    }
+    fetchCollection({ query: nextQuery, page: 1, limit: itemsPerPage });
   };
 
-  const totalPages = Math.ceil(groupedData.length / itemsPerPage);
-  const visibleGroups = groupedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-  const visiblePressingIds = useMemo(() => {
-    const pressingIds: string[] = [];
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const visibleGroups = groupedData;
+  const visibleAlbumIds = useMemo(() => {
+    const albumIds = new Set<string>();
     visibleGroups.forEach((artistGroup) => {
       artistGroup.albums.forEach((albumGroup) => {
-        albumGroup.items.forEach((item) => {
-          pressingIds.push(item.pressing_id);
-        });
+        albumIds.add(albumGroup.albumId);
       });
     });
-    return pressingIds;
+    return Array.from(albumIds);
   }, [visibleGroups]);
-  const pressingOwners = usePressingOwners(visiblePressingIds);
+  const albumOwners = useAlbumOwners(visibleAlbumIds);
 
   const handleDelete = async (itemId: string, albumTitle: string) => {
     if (!confirm(`Are you sure you want to remove "${albumTitle}" from your collection? This action cannot be undone.`)) {
@@ -207,7 +224,7 @@ export function Collection() {
     const previousExpanded = new Set(expandedArtists);
     try {
       await collectionApi.removeItem(itemId);
-      fetchCollection(searchQuery);
+      fetchCollection();
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to remove item from collection');
       setExpandedArtists(previousExpanded);
@@ -346,10 +363,10 @@ export function Collection() {
     <div className="collection">
       <div className="collection-header">
         <h1>My Collection</h1>
-        <p>{filteredItems.length} albums</p>
+        <p>{totalItems} albums</p>
       </div>
 
-      {error && <ErrorAlert message={error} onRetry={() => fetchCollection()} />}
+      {error && <ErrorAlert message={error} onRetry={fetchCollection} />}
 
       {!loading && items.length === 0 && (
         <div className="no-results">
@@ -428,7 +445,7 @@ export function Collection() {
                             <td className="col-condition">{item.media_condition} / {item.sleeve_condition}</td>
                             <td className="owned-cell col-owned">
                               <OwnersGrid
-                                owners={pressingOwners[item.pressing_id] || []}
+                                owners={albumOwners[album.albumId] || []}
                                 currentUserId={currentUserId}
                                 showEmpty
                                 className="owners-grid-large"
@@ -691,7 +708,7 @@ export function Collection() {
             onSuccess={() => {
               setShowEditModal(false);
               setSelectedItemId(null);
-              fetchCollection(searchQuery);
+              fetchCollection();
             }}
             onCancel={() => {
               setShowEditModal(false);
@@ -712,7 +729,7 @@ export function Collection() {
             setSelectedAlbumId(null);
             setSelectedAlbumItems([]); 
           }}
-          onCollectionChange={() => fetchCollection(searchQuery)}
+          onCollectionChange={fetchCollection}
         />
       )}
 
