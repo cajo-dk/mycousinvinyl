@@ -39,6 +39,9 @@ class ArtistRepositoryAdapter(ArtistRepository):
             query = query.where(ArtistModel.country == country)
         return query
 
+    def _artist_sort_expression(self):
+        return func.lower(func.coalesce(ArtistModel.sort_name, ArtistModel.name))
+
     async def add(self, artist: Artist) -> Artist:
         """Add a new artist."""
         model = ArtistModel.from_domain(artist)
@@ -59,7 +62,7 @@ class ArtistRepositoryAdapter(ArtistRepository):
         self,
         limit: int = 100,
         offset: int = 0,
-        sort_by: str = "name",
+        sort_by: str = "sort_name",
         artist_type: Optional[str] = None,
         country: Optional[str] = None
     ) -> Tuple[List[Artist], int]:
@@ -70,13 +73,13 @@ class ArtistRepositoryAdapter(ArtistRepository):
 
         # Apply sorting
         if sort_by == "name":
-            query = query.order_by(ArtistModel.name)
+            query = query.order_by(func.lower(ArtistModel.name))
         elif sort_by == "sort_name":
-            query = query.order_by(ArtistModel.sort_name)
+            query = query.order_by(self._artist_sort_expression(), func.lower(ArtistModel.name))
         elif sort_by == "created_at":
             query = query.order_by(ArtistModel.created_at.desc())
         else:
-            query = query.order_by(ArtistModel.name)
+            query = query.order_by(self._artist_sort_expression(), func.lower(ArtistModel.name))
 
         # Get total count
         count_query = select(func.count()).select_from(ArtistModel)
@@ -109,7 +112,7 @@ class ArtistRepositoryAdapter(ArtistRepository):
             ArtistModel.name.ilike(f"%{query}%")
         )
         search_query = self._apply_filters(search_query, artist_type, country)
-        search_query = search_query.order_by(ArtistModel.name)
+        search_query = search_query.order_by(self._artist_sort_expression(), func.lower(ArtistModel.name))
 
         # Get total count
         count_query = select(func.count()).select_from(ArtistModel).where(
