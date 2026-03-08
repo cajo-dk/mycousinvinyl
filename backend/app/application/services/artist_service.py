@@ -118,7 +118,7 @@ class ArtistService:
         self,
         limit: int = 100,
         offset: int = 0,
-        sort_by: str = "name",
+        sort_by: str = "sort_name",
         artist_type: Optional[str] = None,
         country: Optional[str] = None
     ) -> Tuple[List[Artist], int]:

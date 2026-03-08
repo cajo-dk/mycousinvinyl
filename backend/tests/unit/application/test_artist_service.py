@@ -233,7 +233,7 @@ class TestListArtists:
 
         assert len(results) == 2
         assert total == 2
-        mock_uow.artist_repository.get_all.assert_called_once_with(100, 0, "name")
+        mock_uow.artist_repository.get_all.assert_called_once_with(100, 0, "sort_name")
 
     @pytest.mark.asyncio
     async def test_list_artists_with_custom_pagination(self, artist_service, mock_uow):
@@ -245,7 +245,7 @@ class TestListArtists:
 
         assert len(results) == 1
         assert total == 50
-        mock_uow.artist_repository.get_all.assert_called_once_with(10, 10, "name")
+        mock_uow.artist_repository.get_all.assert_called_once_with(10, 10, "sort_name")
 
     @pytest.mark.asyncio
     async def test_list_artists_with_custom_sort(self, artist_service, mock_uow):
